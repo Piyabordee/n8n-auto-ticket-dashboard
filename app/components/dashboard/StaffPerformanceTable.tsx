@@ -39,6 +39,25 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
     return 'bg-red-100 text-red-700'
   }
 
+  const formatMinutes = (minutes: number) => {
+    if (minutes >= 1440) {
+      const days = Math.floor(minutes / 1440)
+      const remainingMinutes = minutes % 1440
+      const hours = Math.floor(remainingMinutes / 60)
+      const mins = remainingMinutes % 60
+      let result = `${days} วัน`
+      if (hours > 0) result += ` ${hours} ชม.`
+      if (mins > 0) result += ` ${mins} นาที`
+      return result
+    }
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      return mins > 0 ? `${hours} ชม. ${mins} นาที` : `${hours} ชม.`
+    }
+    return `${minutes} นาที`
+  }
+
   // Check if any staff member has outlier data
   const hasOutlierData = showOutlierColumns && staff && staff.some(s => s.outlierCount !== undefined)
 
@@ -59,7 +78,7 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
               {hasOutlierData && (
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Outliers</th>
               )}
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">เวลาเฉลี่ย (นาที)</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">เวลาเฉลี่ย</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -103,9 +122,9 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                   {hasOutlierData && person.avgTimeNormal !== undefined && person.avgTimeOutlier !== undefined ? (
                     <div className="flex flex-col items-center">
-                      <span className="text-gray-900">{person.avgTimeNormal.toFixed(1)}</span>
+                      <span className="text-gray-900">{formatMinutes(Math.round(person.avgTimeNormal))}</span>
                       {person.outlierCount && person.outlierCount > 0 && (
-                        <span className="text-red-600 text-xs">({person.avgTimeOutlier.toFixed(1)})</span>
+                        <span className="text-red-600 text-xs">({formatMinutes(Math.round(person.avgTimeOutlier))})</span>
                       )}
                     </div>
                   ) : (

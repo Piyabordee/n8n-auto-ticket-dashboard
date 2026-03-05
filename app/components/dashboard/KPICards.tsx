@@ -24,6 +24,25 @@ export default function KPICards({
   outlierCount,
   outlierThreshold
 }: KPICardsProps) {
+  const formatMinutes = (minutes: number) => {
+    if (minutes >= 1440) {
+      const days = Math.floor(minutes / 1440)
+      const remainingMinutes = minutes % 1440
+      const hours = Math.floor(remainingMinutes / 60)
+      const mins = remainingMinutes % 60
+      let result = `${days} วัน`
+      if (hours > 0) result += ` ${hours} ชม.`
+      if (mins > 0) result += ` ${mins} นาที`
+      return result
+    }
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      return mins > 0 ? `${hours} ชม. ${mins} นาที` : `${hours} ชม.`
+    }
+    return `${minutes} นาที`
+  }
+
   // Determine if we have outlier data
   const hasOutlierData = avgTimeNormal !== undefined && avgTimeOutlier !== undefined
 
@@ -55,16 +74,17 @@ export default function KPICards({
         <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500">
           <div className="text-sm text-gray-600 mb-1">เวลาเฉลี่ย (ปกติ / Outlier)</div>
           <div className="text-xl font-bold text-orange-600">
-            {avgTimeNormal > 0 ? `${avgTimeNormal} / ` : '- / '}
-            <span className="text-red-600">{avgTimeOutlier > 0 ? avgTimeOutlier : '-'}</span>
+            {avgTimeNormal > 0 ? formatMinutes(Math.round(avgTimeNormal)) : '-'}
+            <span className="text-red-600"> / </span>
+            <span className="text-red-600">{avgTimeOutlier > 0 ? formatMinutes(Math.round(avgTimeOutlier)) : '-'}</span>
           </div>
-          <div className="text-xs text-gray-500 mt-1">นาที (Per-Person Threshold)</div>
+          <div className="text-xs text-gray-500 mt-1">Per-Person Threshold</div>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500">
           <div className="text-sm text-gray-600 mb-1">เวลาเฉลี่ย</div>
           <div className="text-3xl font-bold text-orange-600">
-            {avgTime > 0 ? `${avgTime} นาที` : '-'}
+            {avgTime > 0 ? formatMinutes(Math.round(avgTime)) : '-'}
           </div>
           <div className="text-xs text-gray-500 mt-1">ต่อ Ticket</div>
         </div>

@@ -37,6 +37,23 @@ export default function TopOutliersList({ outliers = [], onViewAll, loading = fa
   }
 
   const formatMinutes = (minutes: number) => {
+    // More than 24 hours (1440 minutes) - show days
+    if (minutes >= 1440) {
+      const days = Math.floor(minutes / 1440)
+      const remainingMinutes = minutes % 1440
+      const hours = Math.floor(remainingMinutes / 60)
+      const mins = remainingMinutes % 60
+
+      let result = `${days} วัน`
+      if (hours > 0) {
+        result += ` ${hours} ชม.`
+      }
+      if (mins > 0) {
+        result += ` ${mins} นาที`
+      }
+      return result
+    }
+    // More than 60 minutes - show hours
     if (minutes >= 60) {
       const hours = Math.floor(minutes / 60)
       const mins = minutes % 60
