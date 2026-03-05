@@ -99,6 +99,10 @@ export default function TeamDashboard() {
   const [ticketModalOpen, setTicketModalOpen] = useState(false)
   const [ticketFilterType, setTicketFilterType] = useState<FilterType>('all')
 
+  // Staff tickets modal state
+  const [staffTicketModalOpen, setStaffTicketModalOpen] = useState(false)
+  const [selectedStaffName, setSelectedStaffName] = useState<string>('')
+
   // Loading state
   const [loading, setLoading] = useState(true)
   const [outliersLoading, setOutliersLoading] = useState(false)
@@ -121,7 +125,7 @@ export default function TeamDashboard() {
         const monthlyRes = await fetch(`/api/dashboard/monthly?${yearParam}`)
         const monthlyData = await monthlyRes.json()
         // Add monthIndex to each entry for click handling
-        const monthlyWithIndex = monthlyData.data.map((d: MonthlyData, index: number) => ({
+        const monthlyWithIndex = (monthlyData.data || []).map((d: MonthlyData, index: number) => ({
           ...d,
           monthIndex: index
         }))
@@ -165,6 +169,12 @@ export default function TeamDashboard() {
   const handleStatCardClick = (filterType: FilterType) => {
     setTicketFilterType(filterType)
     setTicketModalOpen(true)
+  }
+
+  // Handle staff name click - open modal with all tickets for that staff
+  const handleStaffClick = (staffName: string) => {
+    setSelectedStaffName(staffName)
+    setStaffTicketModalOpen(true)
   }
 
   // Handle month click - open modal with daily + staff data
@@ -213,6 +223,12 @@ export default function TeamDashboard() {
   // Close ticket list modal
   const handleCloseTicketModal = () => {
     setTicketModalOpen(false)
+  }
+
+  // Close staff ticket modal
+  const handleCloseStaffTicketModal = () => {
+    setStaffTicketModalOpen(false)
+    setSelectedStaffName('')
   }
 
   if (loading) {
@@ -273,6 +289,7 @@ export default function TeamDashboard() {
           staff={staffData}
           showOutlierColumns={true}
           onOutlierClick={handleViewStaffOutliers}
+          onStaffClick={handleStaffClick}
         />
       </div>
 
@@ -282,7 +299,7 @@ export default function TeamDashboard() {
           data={dailyData}
           monthName={selectedMonthName}
           year={year}
-          monthIndex={selectedMonth - 1}
+          monthIndex={selectedMonth}
           staffData={monthlyStaffData}
           onClose={handleCloseModal}
           loading={loadingModal}
@@ -297,6 +314,17 @@ export default function TeamDashboard() {
         month={month}
         filterType={ticketFilterType}
         title={FILTER_TITLES[ticketFilterType]}
+      />
+
+      {/* Staff Tickets Modal */}
+      <TicketListModal
+        isOpen={staffTicketModalOpen}
+        onClose={handleCloseStaffTicketModal}
+        year={year}
+        month={month}
+        filterType="all"
+        title="งานของพนักงาน"
+        staffName={selectedStaffName}
       />
     </div>
   )

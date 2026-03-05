@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
   const year = searchParams.get('year')
   const month = searchParams.get('month')
   const status = searchParams.get('status') || 'all'
+  const staff = searchParams.get('staff')
 
   // Validate year parameter
   const currentYear = year ? parseInt(year) : new Date().getFullYear()
@@ -94,9 +95,15 @@ export async function GET(request: NextRequest) {
 
     // Add status filter
     if (status === 'pending') {
-      query += ` AND status = 'pending'`
+      query += ` AND status IN ('pending', 'assigned')`
     } else if (status === 'closed') {
       query += ` AND status = 'closed'`
+    }
+
+    // Add staff filter
+    if (staff) {
+      query += ` AND assigned_to = @staff`
+      requestQuery.input('staff', sql.NVarChar, staff)
     }
 
     query += ` ORDER BY created_date DESC`

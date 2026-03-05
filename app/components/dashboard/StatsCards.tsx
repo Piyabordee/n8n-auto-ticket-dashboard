@@ -51,57 +51,48 @@ export default function StatsCards({
   // Determine if we have outlier data
   const hasOutlierData = avgTimeNormal !== undefined && avgTimeOutlier !== undefined
 
-  // Card wrapper component for clickable cards
-  const CardWrapper = ({ filterType, children }: { filterType: FilterType; children: React.ReactNode }) => {
-    if (!onCardClick) return <>{children}</>
-
-    return (
-      <div
-        onClick={() => onCardClick(filterType)}
-        className="cursor-pointer hover:shadow-md transition-shadow duration-200"
-      >
-        {children}
-      </div>
-    )
+  // Helper for clickable card styles
+  const getCardClassName = (baseColor: string) => {
+    return onCardClick
+      ? `bg-white rounded-lg shadow-sm hover:shadow-lg p-4 border-l-4 border-${baseColor}-500 relative cursor-pointer transition-shadow duration-200`
+      : `bg-white rounded-lg shadow-sm p-4 border-l-4 border-${baseColor}-500 relative`
   }
 
   return (
     <div className={`grid gap-4 mb-6 ${hasOutlierData ? 'grid-cols-5' : 'grid-cols-4'}`}>
       {/* Total Tickets */}
-      <CardWrapper filterType="all">
-        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500 relative">
-          {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
-          <div className="text-sm text-gray-600 mb-1">จำนวนงานทั้งหมด</div>
-          <div className="text-3xl font-bold text-gray-900">{total}</div>
-          <div className="text-xs text-gray-500 mt-1">Tickets</div>
-        </div>
-      </CardWrapper>
+      <div
+        onClick={() => onCardClick?.('all')}
+        className={`bg-white rounded-lg shadow-sm hover:shadow-lg p-4 border-l-4 border-blue-500 relative ${onCardClick ? 'cursor-pointer transition-shadow duration-200' : ''}`}
+      >
+        {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
+        <div className="text-sm text-gray-600 mb-1">จำนวนงานทั้งหมด</div>
+        <div className="text-3xl font-bold text-gray-900">{total}</div>
+        <div className="text-xs text-gray-500 mt-1">Tickets</div>
+      </div>
 
       {/* Pending Tickets */}
-      <CardWrapper filterType="pending">
-        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-red-500 relative">
-          {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
-          <div className="text-sm text-gray-600 mb-1">ยังไม่ปิด</div>
-          <div className="text-3xl font-bold text-red-600">{pending}</div>
-          <div className="text-xs text-gray-500 mt-1">Tickets</div>
-        </div>
-      </CardWrapper>
+      <div
+        onClick={() => onCardClick?.('pending')}
+        className={`bg-white rounded-lg shadow-sm hover:shadow-lg p-4 border-l-4 border-red-500 relative ${onCardClick ? 'cursor-pointer transition-shadow duration-200' : ''}`}
+      >
+        {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
+        <div className="text-sm text-gray-600 mb-1">ยังไม่ปิด</div>
+        <div className="text-3xl font-bold text-red-600">{pending}</div>
+        <div className="text-xs text-gray-500 mt-1">Tickets</div>
+      </div>
 
-      {/* Close Rate */}
-      <CardWrapper filterType="closed">
-        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-500 relative">
-          {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
-          <div className="text-sm text-gray-600 mb-1">อัตราการปิดงาน</div>
-          <div className="text-3xl font-bold text-purple-600">{closeRate}%</div>
-          <div className="text-xs text-gray-500 mt-1">Closed / Total</div>
-        </div>
-      </CardWrapper>
+      {/* Close Rate - not clickable */}
+      <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-500 relative">
+        <div className="text-sm text-gray-600 mb-1">อัตราการปิดงาน</div>
+        <div className="text-3xl font-bold text-purple-600">{closeRate}%</div>
+        <div className="text-xs text-gray-500 mt-1">Closed / Total</div>
+      </div>
 
-      {/* Avg Resolution Time - Normal vs Outlier breakdown */}
-      <CardWrapper filterType="all">
+      {/* Avg Resolution Time - Normal vs Outlier breakdown - not clickable */}
+      <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500 relative">
         {hasOutlierData ? (
-          <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500 relative">
-            {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
+          <>
             <div className="text-sm text-gray-600 mb-1">เวลาเฉลี่ย (ปกติ / Outlier)</div>
             <div className="text-xl font-bold text-orange-600">
               {avgTimeNormal > 0 ? formatMinutes(Math.round(avgTimeNormal)) : '-'}
@@ -109,18 +100,17 @@ export default function StatsCards({
               <span className="text-red-600">{avgTimeOutlier > 0 ? formatMinutes(Math.round(avgTimeOutlier)) : '-'}</span>
             </div>
             <div className="text-xs text-gray-500 mt-1">Per-Person Threshold</div>
-          </div>
+          </>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500 relative">
-            {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
+          <>
             <div className="text-sm text-gray-600 mb-1">เวลาเฉลี่ย</div>
             <div className="text-3xl font-bold text-orange-600">
               {avgTime > 0 ? formatMinutes(Math.round(avgTime)) : '-'}
             </div>
             <div className="text-xs text-gray-500 mt-1">ต่อ Ticket</div>
-          </div>
+          </>
         )}
-      </CardWrapper>
+      </div>
 
       {/* Outlier Count (only show when outlier data exists) */}
       {hasOutlierData && (

@@ -23,6 +23,7 @@ interface TicketListModalProps {
   month: number | null
   filterType: 'all' | 'pending' | 'closed'
   title: string
+  staffName?: string
 }
 
 const FILTER_LABELS: Record<string, string> = {
@@ -37,7 +38,8 @@ export default function TicketListModal({
   year,
   month,
   filterType,
-  title
+  title,
+  staffName
 }: TicketListModalProps) {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(false)
@@ -49,7 +51,8 @@ export default function TicketListModal({
       setLoading(true)
       try {
         const monthParam = month ? `&month=${month}` : ''
-        const url = `/api/dashboard/tickets?year=${year}${monthParam}&status=${filterType}`
+        const staffParam = staffName ? `&staff=${encodeURIComponent(staffName)}` : ''
+        const url = `/api/dashboard/tickets?year=${year}${monthParam}&status=${filterType}${staffParam}`
         const res = await fetch(url)
         const data = await res.json()
         setTickets(data.tickets || [])
@@ -62,7 +65,7 @@ export default function TicketListModal({
     }
 
     fetchTickets()
-  }, [isOpen, year, month, filterType])
+  }, [isOpen, year, month, filterType, staffName])
 
   if (!isOpen) return null
 
@@ -75,6 +78,7 @@ export default function TicketListModal({
             <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
             <p className="text-sm text-gray-500 mt-1">
               {FILTER_LABELS[filterType]} - {tickets.length} งาน
+              {staffName && <span className="ml-2">• พนักงาน: {staffName}</span>}
             </p>
           </div>
           <button

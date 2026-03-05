@@ -15,9 +15,10 @@ interface StaffPerformanceTableProps {
   staff?: StaffData[]
   showOutlierColumns?: boolean
   onOutlierClick?: (staffName: string) => void
+  onStaffClick?: (staffName: string) => void
 }
 
-export default function StaffPerformanceTable({ staff, showOutlierColumns = false, onOutlierClick }: StaffPerformanceTableProps) {
+export default function StaffPerformanceTable({ staff, showOutlierColumns = false, onOutlierClick, onStaffClick }: StaffPerformanceTableProps) {
   const getRankBadge = (rank: number) => {
     if (rank === 1) return 'bg-yellow-100 text-yellow-800'
     if (rank === 2) return 'bg-gray-100 text-gray-600'
@@ -89,8 +90,18 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
                     {getRankIcon(person.rank)}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {person.name}
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  {onStaffClick ? (
+                    <button
+                      onClick={() => onStaffClick(person.name)}
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      title={`ดูงานทั้งหมดของ ${person.name}`}
+                    >
+                      {person.name}
+                    </button>
+                  ) : (
+                    <span className="text-gray-900">{person.name}</span>
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                   {person.totalAssigned}

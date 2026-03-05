@@ -35,8 +35,9 @@ export async function GET(request: NextRequest) {
   const year = searchParams.get('year')
 
   const currentYear = year ? parseInt(year) : new Date().getFullYear()
-  const startDate = new Date(currentYear, 0, 1)
-  const endDate = new Date(currentYear, 11, 31, 23, 59, 59)
+  // Use UTC dates to ensure consistent behavior across timezones
+  const startDate = new Date(Date.UTC(currentYear, 0, 1, 0, 0, 0))
+  const endDate = new Date(Date.UTC(currentYear, 11, 31, 23, 59, 59, 999))
 
   try {
     const pool = await getPool()

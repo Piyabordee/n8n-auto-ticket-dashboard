@@ -42,8 +42,10 @@ export async function GET(request: NextRequest) {
 
   // Get the number of days in the month
   const daysInMonth = new Date(currentYear, currentMonth, 0).getDate()
-  const startDate = new Date(currentYear, currentMonth - 1, 1)
-  const endDate = new Date(currentYear, currentMonth - 1, daysInMonth, 23, 59, 59)
+
+  // Use UTC dates to ensure consistent behavior across timezones
+  const startDate = new Date(Date.UTC(currentYear, currentMonth - 1, 1, 0, 0, 0))
+  const endDate = new Date(Date.UTC(currentYear, currentMonth - 1, daysInMonth, 23, 59, 59, 999))
 
   try {
     const pool = await getPool()
