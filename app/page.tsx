@@ -8,7 +8,10 @@ import MonthlyBarChart from './components/dashboard/MonthlyBarChart'
 import StaffPerformanceTable from './components/dashboard/StaffPerformanceTable'
 import DailyBarChart from './components/dashboard/DailyBarChart'
 import TopOutliersList from './components/dashboard/TopOutliersList'
+import TicketListModal from './components/dashboard/TicketListModal'
 import type { OutlierTicket } from '../types/outlier'
+
+type FilterType = 'all' | 'pending' | 'closed'
 
 interface DashboardStats {
   total: number
@@ -60,6 +63,12 @@ const THAI_MONTHS = [
   'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
 ]
 
+const FILTER_TITLES: Record<FilterType, string> = {
+  all: 'รายการงานทั้งหมด',
+  pending: 'รายการงานที่ยังไม่ปิด',
+  closed: 'รายการงานที่ปิดแล้ว'
+}
+
 export default function TeamDashboard() {
   const router = useRouter()
   // Filter states - default to year that has data
@@ -85,6 +94,10 @@ export default function TeamDashboard() {
   const [dailyData, setDailyData] = useState<DailyData[]>([])
   const [monthlyStaffData, setMonthlyStaffData] = useState<StaffData[]>([])
   const [loadingModal, setLoadingModal] = useState(false)
+
+  // Ticket list modal state
+  const [ticketModalOpen, setTicketModalOpen] = useState(false)
+  const [ticketFilterType, setTicketFilterType] = useState<FilterType>('all')
 
   // Loading state
   const [loading, setLoading] = useState(true)
@@ -148,6 +161,12 @@ export default function TeamDashboard() {
     fetchTopOutliers()
   }, [year, month])
 
+  // Handle stat card click - open ticket list modal
+  const handleStatCardClick = (filterType: FilterType) => {
+    setTicketFilterType(filterType)
+    setTicketModalOpen(true)
+  }
+
   // Handle month click - open modal with daily + staff data
   const handleMonthClick = async (monthIndex: number, monthName: string) => {
     setSelectedMonth(monthIndex + 1)
@@ -191,6 +210,11 @@ export default function TeamDashboard() {
     setMonthlyStaffData([])
   }
 
+  // Close ticket list modal
+  const handleCloseTicketModal = () => {
+    setTicketModalOpen(false)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -222,6 +246,7 @@ export default function TeamDashboard() {
           avgTimeOutlier={outlierSummary?.avgTimeOutlier}
           outlierCount={outlierSummary?.totalOutliers}
           outlierThreshold={outlierSummary?.outlierThreshold}
+          onCardClick={handleStatCardClick}
         />
 
         {/* Monthly Bar Chart */}
@@ -263,6 +288,16 @@ export default function TeamDashboard() {
           loading={loadingModal}
         />
       )}
+
+      {/* Ticket List Modal */}
+      <TicketListModal
+        isOpen={ticketModalOpen}
+        onClose={handleCloseTicketModal}
+        year={year}
+        month={month}
+        filterType={ticketFilterType}
+        title={FILTER_TITLES[ticketFilterType]}
+      />
     </div>
   )
 }
