@@ -5,27 +5,41 @@ interface HeaderFilterProps {
   setYear: (year: number) => void
   month: number | null
   setMonth: (month: number | null) => void
+  availableYears?: number[]
+  availableMonths?: { year: number; month: number; count: number }[]
 }
 
-export default function HeaderFilter({ year, setYear, month, setMonth }: HeaderFilterProps) {
-  // Years that actually have data in the database
-  const years = [2024, 2025, 2026]
-  // Months that actually have data in the database
-  const months = [
-    { value: null, label: 'ทั้งปี' },
-    { value: 1, label: 'ม.ค.' },
-    { value: 2, label: 'ก.พ.' },
-    { value: 3, label: 'มี.ค.' },
-    { value: 4, label: 'เม.ย.' },
-    { value: 5, label: 'พ.ค.' },
-    { value: 6, label: 'มิ.ย.' },
-    { value: 7, label: 'ก.ค.' },
-    { value: 8, label: 'ส.ค.' },
-    { value: 9, label: 'ก.ย.' },
-    { value: 10, label: 'ต.ค.' },
-    { value: 11, label: 'พ.ย.' },
-    { value: 12, label: 'ธ.ค.' },
+const THAI_MONTHS = [
+  '', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+  'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+]
+
+export default function HeaderFilter({
+  year,
+  setYear,
+  month,
+  setMonth,
+  availableYears,
+  availableMonths
+}: HeaderFilterProps) {
+  // Filter months for the selected year that have data
+  const monthsForSelectedYear = availableMonths
+    ? availableMonths.filter(m => m.year === year)
+    : []
+
+  // Build month options - include "All Year" and months that have data
+  const monthOptions = [
+    { value: null as number | null, label: 'ทั้งปี' },
+    ...monthsForSelectedYear
+      .sort((a, b) => a.month - b.month)
+      .map(m => ({
+        value: m.month,
+        label: THAI_MONTHS[m.month]
+      }))
   ]
+
+  // Use provided years or fallback to current year
+  const years = availableYears || [year]
 
   return (
     <div className="bg-header-yellow">
@@ -47,7 +61,12 @@ export default function HeaderFilter({ year, setYear, month, setMonth }: HeaderF
             {/* Year Filter */}
             <select
               value={year}
-              onChange={(e) => setYear(parseInt(e.target.value))}
+              onChange={(e) => {
+                const newYear = parseInt(e.target.value)
+                setYear(newYear)
+                // Reset month when year changes (since different years have different data)
+                setMonth(null)
+              }}
               className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {years.map((y) => (
@@ -62,8 +81,9 @@ export default function HeaderFilter({ year, setYear, month, setMonth }: HeaderF
               value={month ?? 'all'}
               onChange={(e) => setMonth(e.target.value === 'all' ? null : parseInt(e.target.value))}
               className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={monthOptions.length <= 1}
             >
-              {months.map((m) => (
+              {monthOptions.map((m) => (
                 <option key={m.label} value={m.value ?? 'all'}>
                   {m.label}
                 </option>

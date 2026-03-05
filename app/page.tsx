@@ -7,6 +7,7 @@ import StatsCards from './components/dashboard/StatsCards'
 import MonthlyBarChart from './components/dashboard/MonthlyBarChart'
 import StaffPerformanceTable from './components/dashboard/StaffPerformanceTable'
 import DailyBarChart from './components/dashboard/DailyBarChart'
+import InlineDailyChart from './components/dashboard/InlineDailyChart'
 import TopOutliersList from './components/dashboard/TopOutliersList'
 import TicketListModal from './components/dashboard/TicketListModal'
 import type { OutlierTicket } from '../types/outlier'
@@ -107,6 +108,10 @@ export default function TeamDashboard() {
   const [loading, setLoading] = useState(true)
   const [outliersLoading, setOutliersLoading] = useState(false)
 
+  // Available months state
+  const [availableYears, setAvailableYears] = useState<number[]>([])
+  const [availableMonths, setAvailableMonths] = useState<{ year: number; month: number; count: number }[]>([])
+
   // Fetch all dashboard data
   useEffect(() => {
     const fetchData = async () => {
@@ -145,6 +150,22 @@ export default function TeamDashboard() {
 
     fetchData()
   }, [year, month])
+
+  // Fetch available years and months
+  useEffect(() => {
+    const fetchAvailableMonths = async () => {
+      try {
+        const res = await fetch('/api/dashboard/available-months')
+        const data = await res.json()
+        setAvailableYears(data.years || [])
+        setAvailableMonths(data.months || [])
+      } catch (error) {
+        console.error('Error fetching available months:', error)
+      }
+    }
+
+    fetchAvailableMonths()
+  }, [])
 
   // Fetch top 3 outliers
   useEffect(() => {
@@ -247,6 +268,8 @@ export default function TeamDashboard() {
         setYear={setYear}
         month={month}
         setMonth={setMonth}
+        availableYears={availableYears}
+        availableMonths={availableMonths}
       />
 
       {/* Main Content */}
@@ -265,13 +288,21 @@ export default function TeamDashboard() {
           onCardClick={handleStatCardClick}
         />
 
-        {/* Monthly Bar Chart */}
+        {/* Chart - Monthly or Daily based on selection */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <MonthlyBarChart
-              data={monthlyData}
-              onMonthClick={handleMonthClick}
-            />
+            {month ? (
+              <InlineDailyChart
+                year={year}
+                month={month}
+                monthName={THAI_MONTHS[month - 1]}
+              />
+            ) : (
+              <MonthlyBarChart
+                data={monthlyData}
+                onMonthClick={handleMonthClick}
+              />
+            )}
           </div>
 
           {/* Top Outliers List */}
