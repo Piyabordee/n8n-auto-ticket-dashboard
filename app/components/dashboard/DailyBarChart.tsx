@@ -1,6 +1,8 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import MonthlyTicketList from './MonthlyTicketList'
 
 interface DailyData {
   day: string
@@ -16,16 +18,54 @@ interface StaffData {
   avgTimeAll: number
 }
 
+interface Ticket {
+  message_id: string
+  subject: string
+  assigned_to: string
+  status: string
+  category: string
+  sub_category: string
+  branch_name: string
+  created_date: string | null
+  assigned_date: string | null
+  close_time_minute: number | null
+}
+
 interface DailyBarChartProps {
   data: DailyData[]
   monthName: string
   year: number
+  monthIndex?: number
   staffData: StaffData[]
   onClose: () => void
   loading?: boolean
 }
 
-export default function DailyBarChart({ data, monthName, year, staffData, onClose, loading }: DailyBarChartProps) {
+export default function DailyBarChart({ data, monthName, year, monthIndex, staffData, onClose, loading }: DailyBarChartProps) {
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [ticketsLoading, setTicketsLoading] = useState(true)
+  const [showTickets, setShowTickets] = useState(true)
+
+  // Fetch monthly tickets when modal opens
+  useEffect(() => {
+    if (monthIndex !== undefined) {
+      const fetchTickets = async () => {
+        setTicketsLoading(true)
+        try {
+          const res = await fetch(`/api/dashboard/monthly-tickets?year=${year}&month=${monthIndex}`)
+          const data = await res.json()
+          setTickets(data.tickets || [])
+        } catch (error) {
+          console.error('Error fetching monthly tickets:', error)
+        } finally {
+          setTicketsLoading(false)
+        }
+      }
+
+      fetchTickets()
+    }
+  }, [year, monthIndex])
+
   const getRankBadge = (rank: number) => {
     if (rank === 1) return 'bg-yellow-100 text-yellow-800'
     if (rank === 2) return 'bg-gray-100 text-gray-600'
@@ -40,16 +80,35 @@ export default function DailyBarChart({ data, monthName, year, staffData, onClos
     return `#${rank}`
   }
 
+  const formatMinutes = (minutes: number) => {
+    if (minutes >= 1440) {
+      const days = Math.floor(minutes / 1440)
+      const remainingMinutes = minutes % 1440
+      const hours = Math.floor(remainingMinutes / 60)
+      const mins = remainingMinutes % 60
+      let result = `${days} วัน`
+      if (hours > 0) result += ` ${hours} ชม.`
+      if (mins > 0) result += ` ${mins} นาที`
+      return result
+    }
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      return mins > 0 ? `${hours} ชม. ${mins} นาที` : `${hours} ชม.`
+    }
+    return `${minutes} นาที`
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-header-yellow shrink-0">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
               รายละเอียดประจำเดือน - {monthName} {year + 543}
             </h2>
-            <p className="text-sm text-gray-700">กราฟรายวันและผลงานทีม</p>
+            <p className="text-sm text-gray-700">กราฟรายวัน ผลงานทีม และรายการงานทั้งหมด</p>
           </div>
           <button
             onClick={onClose}
@@ -108,7 +167,7 @@ export default function DailyBarChart({ data, monthName, year, staffData, onClos
               </div>
 
               {/* Staff Performance Section */}
-              <div className="p-6">
+              <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">👥 ผลงานทีม (Staff Performance)</h3>
 
                 {staffData.length > 0 ? (
@@ -121,7 +180,7 @@ export default function DailyBarChart({ data, monthName, year, staffData, onClos
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อพนักงาน</th>
                             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">รับงาน</th>
                             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">ปิดแล้ว</th>
-                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">เวลาเฉลี่ย (นาที)</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">เวลาเฉลี่ย</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -142,7 +201,7 @@ export default function DailyBarChart({ data, monthName, year, staffData, onClos
                                 <span className="text-green-600 font-semibold">{person.totalClosed}</span>
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
-                                {person.avgTimeAll > 0 ? person.avgTimeAll.toFixed(1) : '-'}
+                                {person.avgTimeAll > 0 ? formatMinutes(Math.round(person.avgTimeAll)) : '-'}
                               </td>
                             </tr>
                           ))}
@@ -152,6 +211,23 @@ export default function DailyBarChart({ data, monthName, year, staffData, onClos
                   </div>
                 ) : (
                   <div className="text-center text-gray-500 py-8">ไม่มีข้อมูลผลงานทีมในเดือนนี้</div>
+                )}
+              </div>
+
+              {/* Monthly Tickets Section */}
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">📋 รายการงานทั้งหมด</h3>
+                  <button
+                    onClick={() => setShowTickets(!showTickets)}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    {showTickets ? 'ซ่อน' : 'แสดง'} ↓
+                  </button>
+                </div>
+
+                {showTickets && (
+                  <MonthlyTicketList tickets={tickets} loading={ticketsLoading} />
                 )}
               </div>
             </>

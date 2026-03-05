@@ -257,6 +257,7 @@ export default function TeamKPIDashboard() {
           data={dailyData}
           monthName={selectedMonthName}
           year={year}
+          monthIndex={selectedMonth - 1}
           staffData={monthlyStaffData}
           onClose={handleCloseModal}
           loading={loadingModal}
