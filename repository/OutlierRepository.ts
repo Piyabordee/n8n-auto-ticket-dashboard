@@ -316,7 +316,7 @@ export class OutlierRepository {
           GROUP BY assigned_to
           HAVING COUNT(*) >= 2  -- Need at least 2 tickets for SD
         ),
-        -- Filtered data for results display
+        -- Filtered data for results display - ALL tickets including pending
         filtered_base AS (
           SELECT
             assigned_to,
@@ -329,7 +329,6 @@ export class OutlierRepository {
             AND created_date <= @filterEndDate
             AND assigned_to IS NOT NULL
             AND assigned_to != ''
-            AND close_time_minute IS NOT NULL
         ),
         classified AS (
           -- Classify each ticket based on FULL YEAR baseline
@@ -342,6 +341,7 @@ export class OutlierRepository {
             s.sd_val AS personal_sd,
             s.mean_val + (2 * s.sd_val) AS personal_threshold,
             CASE
+              WHEN b.diff_minutes IS NULL THEN 0  -- Pending tickets have no close time
               WHEN s.mean_val IS NULL THEN 0  -- Insufficient data
               WHEN b.diff_minutes > s.mean_val + (2 * s.sd_val) THEN 1
               ELSE 0
@@ -353,13 +353,14 @@ export class OutlierRepository {
           CAST(assigned_to AS NVARCHAR(MAX)) as assigned_to,
           COUNT(*) as totalAssigned,
           SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as totalClosed,
+          SUM(CASE WHEN status != 'closed' THEN 1 ELSE 0 END) as totalPending,
           AVG(CASE WHEN diff_minutes IS NOT NULL THEN diff_minutes END) as avgTimeAll,
           AVG(CASE WHEN is_outlier = 0 AND diff_minutes IS NOT NULL THEN diff_minutes END) as avgTimeNormal,
           AVG(CASE WHEN is_outlier = 1 AND diff_minutes IS NOT NULL THEN diff_minutes END) as avgTimeOutlier,
           SUM(is_outlier) as outlierCount
         FROM classified
         GROUP BY CAST(assigned_to AS NVARCHAR(MAX))
-        ORDER BY totalClosed DESC
+        ORDER BY totalAssigned DESC
       `)
 
     // Get summary stats (using per-person classification, aggregated)
@@ -432,6 +433,7 @@ export class OutlierRepository {
       name: normalizeStylizedText(row.assigned_to),
       totalAssigned: row.totalAssigned,
       totalClosed: row.totalClosed,
+      totalPending: row.totalPending || 0,
       avgTimeAll: row.avgTimeAll ? Math.round(row.avgTimeAll * 10) / 10 : 0,
       avgTimeNormal: row.avgTimeNormal ? Math.round(row.avgTimeNormal * 10) / 10 : 0,
       avgTimeOutlier: row.avgTimeOutlier ? Math.round(row.avgTimeOutlier * 10) / 10 : 0,

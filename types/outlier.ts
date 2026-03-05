@@ -49,6 +49,7 @@ export interface StaffStats {
   name: string
   totalAssigned: number
   totalClosed: number
+  totalPending: number
   avgTimeAll: number
   avgTimeNormal: number
   avgTimeOutlier: number
@@ -89,6 +90,7 @@ export interface StaffOutlierRow {
   assigned_to: string
   totalAssigned: number
   totalClosed: number
+  totalPending: number
   avgTimeAll: number
   avgTimeNormal: number
   avgTimeOutlier: number

@@ -5,6 +5,7 @@ interface StaffData {
   name: string
   totalAssigned: number
   totalClosed: number
+  totalPending: number
   avgTimeAll: number
   avgTimeNormal?: number
   avgTimeOutlier?: number
@@ -75,7 +76,7 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">อันดับ</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อพนักงาน</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">รับงาน</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ปิดแล้ว</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ยังไม่ปิด</th>
               {hasOutlierData && (
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Outliers</th>
               )}
@@ -107,7 +108,7 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
                   {person.totalAssigned}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                  <span className="text-green-600 font-semibold">{person.totalClosed}</span>
+                  <span className="text-red-600 font-semibold">{person.totalPending}</span>
                 </td>
                 {hasOutlierData && (
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center">

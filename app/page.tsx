@@ -34,6 +34,7 @@ interface StaffData {
   name: string
   totalAssigned: number
   totalClosed: number
+  totalPending: number
   avgTimeAll: number
   avgTimeNormal?: number
   avgTimeOutlier?: number
