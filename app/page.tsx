@@ -42,9 +42,8 @@ const THAI_MONTHS = [
 ]
 
 export default function TeamKPIDashboard() {
-  // Filter states
-  const currentYear = new Date().getFullYear()
-  const [year, setYear] = useState(currentYear)
+  // Filter states - default to year that has data
+  const [year, setYear] = useState(2026)
   const [month, setMonth] = useState<number | null>(null)
 
   // Data states

@@ -8,22 +8,13 @@ interface HeaderFilterProps {
 }
 
 export default function HeaderFilter({ year, setYear, month, setMonth }: HeaderFilterProps) {
-  const currentYear = new Date().getFullYear()
-  const years = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1]
+  // Years that actually have data in the database
+  const years = [2026]
+  // Months that actually have data in the database
   const months = [
     { value: null, label: 'ทั้งปี' },
-    { value: 1, label: 'ม.ค.' },
     { value: 2, label: 'ก.พ.' },
     { value: 3, label: 'มี.ค.' },
-    { value: 4, label: 'เม.ย.' },
-    { value: 5, label: 'พ.ค.' },
-    { value: 6, label: 'มิ.ย.' },
-    { value: 7, label: 'ก.ค.' },
-    { value: 8, label: 'ส.ค.' },
-    { value: 9, label: 'ก.ย.' },
-    { value: 10, label: 'ต.ค.' },
-    { value: 11, label: 'พ.ย.' },
-    { value: 12, label: 'ธ.ค.' },
   ]
 
   return (
