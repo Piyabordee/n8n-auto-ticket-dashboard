@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import HeaderFilter from './components/dashboard/HeaderFilter'
-import KPICards from './components/dashboard/KPICards'
+import StatsCards from './components/dashboard/StatsCards'
 import MonthlyBarChart from './components/dashboard/MonthlyBarChart'
 import StaffPerformanceTable from './components/dashboard/StaffPerformanceTable'
 import DailyBarChart from './components/dashboard/DailyBarChart'
 import TopOutliersList from './components/dashboard/TopOutliersList'
 import type { OutlierTicket } from '../types/outlier'
 
-interface KPIStats {
+interface DashboardStats {
   total: number
   closed: number
   closeRate: number
@@ -60,14 +60,14 @@ const THAI_MONTHS = [
   'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
 ]
 
-export default function TeamKPIDashboard() {
+export default function TeamDashboard() {
   const router = useRouter()
   // Filter states - default to year that has data
   const [year, setYear] = useState(2026)
   const [month, setMonth] = useState<number | null>(null)
 
   // Data states
-  const [kpi, setKpi] = useState<KPIStats>({
+  const [stats, setStats] = useState<DashboardStats>({
     total: 0,
     closed: 0,
     closeRate: 0,
@@ -99,10 +99,10 @@ export default function TeamKPIDashboard() {
         const monthParam = month ? `&month=${month}` : ''
         const yearParam = `year=${year}`
 
-        // Fetch KPI stats
-        const kpiRes = await fetch(`/api/dashboard/kpi?${yearParam}${monthParam}`)
-        const kpiData = await kpiRes.json()
-        setKpi(kpiData)
+        // Fetch stats
+        const statsRes = await fetch(`/api/dashboard/stats?${yearParam}${monthParam}`)
+        const statsData = await statsRes.json()
+        setStats(statsData)
 
         // Fetch monthly data (always for the selected year)
         const monthlyRes = await fetch(`/api/dashboard/monthly?${yearParam}`)
@@ -211,13 +211,13 @@ export default function TeamKPIDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* KPI Cards */}
-        <KPICards
-          total={kpi.total}
-          closed={kpi.closed}
-          closeRate={kpi.closeRate}
-          avgTime={kpi.avgTime}
-          pending={kpi.pending}
+        {/* Stats Cards */}
+        <StatsCards
+          total={stats.total}
+          closed={stats.closed}
+          closeRate={stats.closeRate}
+          avgTime={stats.avgTime}
+          pending={stats.pending}
           avgTimeNormal={outlierSummary?.avgTimeNormal}
           avgTimeOutlier={outlierSummary?.avgTimeOutlier}
           outlierCount={outlierSummary?.totalOutliers}

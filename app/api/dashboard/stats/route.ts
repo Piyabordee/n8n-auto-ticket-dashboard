@@ -95,9 +95,9 @@ export async function GET(request: NextRequest) {
       pending
     })
   } catch (error) {
-    console.error('KPI API Error:', error)
+    console.error('Stats API Error:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch KPI stats', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to fetch Stats', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

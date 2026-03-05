@@ -37,7 +37,7 @@ export default function HeaderFilter({ year, setYear, month, setMonth }: HeaderF
               <span className="text-xl">📊</span>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">Team KPI Dashboard</h1>
+              <h1 className="text-lg font-semibold text-gray-900">Team Dashboard</h1>
               <p className="text-sm text-gray-700">ระบบวัดผลงานทีม IT Support</p>
             </div>
           </div>

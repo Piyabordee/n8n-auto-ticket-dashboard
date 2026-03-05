@@ -1,6 +1,6 @@
 'use client'
 
-interface KPICardsProps {
+interface StatsCardsProps {
   total: number
   closed: number
   closeRate: number
@@ -13,7 +13,7 @@ interface KPICardsProps {
   outlierThreshold?: number
 }
 
-export default function KPICards({
+export default function StatsCards({
   total,
   closed,
   closeRate,
@@ -23,7 +23,7 @@ export default function KPICards({
   avgTimeOutlier,
   outlierCount,
   outlierThreshold
-}: KPICardsProps) {
+}: StatsCardsProps) {
   const formatMinutes = (minutes: number) => {
     if (minutes >= 1440) {
       const days = Math.floor(minutes / 1440)
