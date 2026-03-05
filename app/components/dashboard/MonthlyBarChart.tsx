@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts'
 
 interface MonthlyData {
@@ -15,6 +16,14 @@ interface MonthlyBarChartProps {
 }
 
 export default function MonthlyBarChart({ data, onMonthClick }: MonthlyBarChartProps) {
+  // Transform data to add pending count for stacked bar chart
+  const chartData = useMemo(() => {
+    return data.map((d) => ({
+      ...d,
+      pending: d.total - d.closed
+    }))
+  }, [data])
+
   const handleBarClick = (entry: any) => {
     if (onMonthClick && entry.monthIndex !== undefined) {
       onMonthClick(entry.monthIndex, entry.month)
@@ -30,28 +39,14 @@ export default function MonthlyBarChart({ data, onMonthClick }: MonthlyBarChartP
         )}
       </div>
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
+        <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" tick={{ fontSize: 12 }} />
           <YAxis />
           <Tooltip />
           <Legend />
-          <Bar
-            dataKey="total"
-            fill="#3b82f6"
-            name="ทั้งหมด"
-            radius={[4, 4, 0, 0]}
-            cursor="pointer"
-            onClick={handleBarClick}
-          />
-          <Bar
-            dataKey="closed"
-            fill="#22c55e"
-            name="ปิดแล้ว"
-            radius={[4, 4, 0, 0]}
-            cursor="pointer"
-            onClick={handleBarClick}
-          />
+          <Bar dataKey="closed" fill="#3b82f6" name="ปิดแล้ว" stackId="1" cursor="pointer" onClick={handleBarClick} />
+          <Bar dataKey="pending" fill="#ef4444" name="ยังไม่ปิด" stackId="1" cursor="pointer" onClick={handleBarClick} />
         </BarChart>
       </ResponsiveContainer>
     </div>

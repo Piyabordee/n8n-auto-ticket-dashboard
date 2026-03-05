@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import MonthlyTicketList from './MonthlyTicketList'
 
@@ -99,6 +99,14 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
     return `${minutes} นาที`
   }
 
+  // Transform data to add pending count for stacked bar chart
+  const chartData = useMemo(() => {
+    return data.map((d) => ({
+      ...d,
+      pending: d.total - d.closed
+    }))
+  }, [data])
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -128,7 +136,7 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 กราฟรายวัน</h3>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={data}>
+                  <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       dataKey="day"
@@ -138,8 +146,8 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
                     <YAxis label={{ value: 'จำนวน', angle: -90, position: 'insideLeft' }} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="total" fill="#3b82f6" name="ทั้งหมด" radius={[2, 2, 0, 0]} />
-                    <Bar dataKey="closed" fill="#22c55e" name="ปิดแล้ว" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="closed" fill="#3b82f6" name="ปิดแล้ว" stackId="1" />
+                    <Bar dataKey="pending" fill="#ef4444" name="ยังไม่ปิด" stackId="1" />
                   </BarChart>
                 </ResponsiveContainer>
 

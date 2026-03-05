@@ -55,10 +55,10 @@ export default function KPICards({
         <div className="text-xs text-gray-500 mt-1">Tickets</div>
       </div>
 
-      {/* Closed Tickets */}
-      <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
-        <div className="text-sm text-gray-600 mb-1">ปิดแล้ว</div>
-        <div className="text-3xl font-bold text-green-600">{closed}</div>
+      {/* Pending Tickets */}
+      <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-red-500">
+        <div className="text-sm text-gray-600 mb-1">ยังไม่ปิด</div>
+        <div className="text-3xl font-bold text-red-600">{pending}</div>
         <div className="text-xs text-gray-500 mt-1">Tickets</div>
       </div>
 
