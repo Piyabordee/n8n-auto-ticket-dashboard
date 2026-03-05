@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
-import { normalizeStylizedText } from '../lib/normalizeText'
+import { normalizeStylizedText } from '../../lib/normalizeText'
 
 const sqlConfig = {
   server: process.env.SQL_SERVER || '',
