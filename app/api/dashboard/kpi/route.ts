@@ -9,84 +9,89 @@ const sqlConfig = {
   options: {
     encrypt: false,
     trustServerCertificate: true,
-    enableArithAbort: true
+    enableArithAbort: true,
+    useUTC: false
+  },
+  parseJSON: true
+}
+
+// Singleton connection pool
+let pool: sql.ConnectionPool | null = null
+
+async function getPool(): Promise<sql.ConnectionPool> {
+  if (!pool || !pool.connected) {
+    pool = await sql.connect(sqlConfig)
   }
+  return pool
 }
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const year = searchParams.get('year')
-  const month = searchParams.get('month') // null = all months
-
-  let pool: sql.ConnectionPool | null = null
+  const month = searchParams.get('month')
 
   try {
-    pool = await sql.connect(sqlConfig)
+    const pool = await getPool()
 
     // Build date range
     const currentYear = year ? parseInt(year) : new Date().getFullYear()
     const startMonth = month ? parseInt(month) : 1
     const endMonth = month ? parseInt(month) : 12
 
-    const startDate = new Date(currentYear, startMonth - 1, 1).toISOString()
-    const endDate = new Date(currentYear, endMonth, 0, 23, 59, 59).toISOString()
+    const startDate = new Date(currentYear, startMonth - 1, 1)
+    const endDate = new Date(currentYear, endMonth, 0, 23, 59, 59)
 
-    // Total tickets
-    const totalResult = await pool.request()
-      .input('startDate', sql.DateTime, startDate)
-      .input('endDate', sql.DateTime, endDate)
-      .query(`
-        SELECT COUNT(*) as total
-        FROM [Dev_Born].[dbo].[ticket]
-        WHERE created_date >= @startDate AND created_date <= @endDate
-      `)
+    // Run all queries in parallel for better performance
+    const [totalResult, closedResult, avgTimeResult, pendingResult] = await Promise.all([
+      pool.request()
+        .input('startDate', sql.DateTime, startDate)
+        .input('endDate', sql.DateTime, endDate)
+        .query(`
+          SELECT COUNT(*) as total
+          FROM [Dev_Born].[dbo].[ticket]
+          WHERE created_date >= @startDate AND created_date <= @endDate
+        `),
+      pool.request()
+        .input('startDate', sql.DateTime, startDate)
+        .input('endDate', sql.DateTime, endDate)
+        .query(`
+          SELECT COUNT(*) as closed
+          FROM [Dev_Born].[dbo].[ticket]
+          WHERE created_date >= @startDate AND created_date <= @endDate
+          AND status = 'closed'
+        `),
+      pool.request()
+        .input('startDate', sql.DateTime, startDate)
+        .input('endDate', sql.DateTime, endDate)
+        .query(`
+          SELECT AVG(close_time_minute) as avgTime
+          FROM [Dev_Born].[dbo].[ticket]
+          WHERE created_date >= @startDate AND created_date <= @endDate
+          AND status = 'closed'
+          AND close_time_minute IS NOT NULL
+        `),
+      pool.request()
+        .input('startDate', sql.DateTime, startDate)
+        .input('endDate', sql.DateTime, endDate)
+        .query(`
+          SELECT COUNT(*) as pending
+          FROM [Dev_Born].[dbo].[ticket]
+          WHERE created_date >= @startDate AND created_date <= @endDate
+          AND status IN ('pending', 'assigned')
+        `)
+    ])
+
     const total = totalResult.recordset[0].total
-
-    // Closed tickets
-    const closedResult = await pool.request()
-      .input('startDate', sql.DateTime, startDate)
-      .input('endDate', sql.DateTime, endDate)
-      .query(`
-        SELECT COUNT(*) as closed
-        FROM [Dev_Born].[dbo].[ticket]
-        WHERE created_date >= @startDate AND created_date <= @endDate
-        AND status = 'closed'
-      `)
     const closed = closedResult.recordset[0].closed
-
-    // Average resolution time (in minutes)
-    const avgTimeResult = await pool.request()
-      .input('startDate', sql.DateTime, startDate)
-      .input('endDate', sql.DateTime, endDate)
-      .query(`
-        SELECT AVG(close_time_minute) as avgTime
-        FROM [Dev_Born].[dbo].[ticket]
-        WHERE created_date >= @startDate AND created_date <= @endDate
-        AND status = 'closed'
-        AND close_time_minute IS NOT NULL
-      `)
     const avgTime = avgTimeResult.recordset[0].avgTime || 0
-
-    // Pending tickets (not closed yet)
-    const pendingResult = await pool.request()
-      .input('startDate', sql.DateTime, startDate)
-      .input('endDate', sql.DateTime, endDate)
-      .query(`
-        SELECT COUNT(*) as pending
-        FROM [Dev_Born].[dbo].[ticket]
-        WHERE created_date >= @startDate AND created_date <= @endDate
-        AND status IN ('pending', 'assigned')
-      `)
     const pending = pendingResult.recordset[0].pending
-
-    // Close rate percentage
     const closeRate = total > 0 ? Math.round((closed / total) * 100) : 0
 
     return NextResponse.json({
       total,
       closed,
       closeRate,
-      avgTime: Math.round(avgTime * 10) / 10, // 1 decimal place
+      avgTime: Math.round(avgTime * 10) / 10,
       pending
     })
   } catch (error) {
@@ -95,7 +100,6 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch KPI stats', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
-  } finally {
-    if (pool) await pool.close()
   }
+  // Don't close the pool - let it be reused for subsequent requests
 }

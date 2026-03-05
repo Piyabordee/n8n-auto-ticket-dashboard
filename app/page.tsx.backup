@@ -1,14 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import HeaderFilter from './components/dashboard/HeaderFilter'
 import KPICards from './components/dashboard/KPICards'
 import MonthlyBarChart from './components/dashboard/MonthlyBarChart'
 import StaffPerformanceTable from './components/dashboard/StaffPerformanceTable'
 import DailyBarChart from './components/dashboard/DailyBarChart'
-import TopOutliersList from './components/dashboard/TopOutliersList'
-import type { OutlierTicket } from '../types/outlier'
 
 interface KPIStats {
   total: number
@@ -30,23 +27,7 @@ interface StaffData {
   name: string
   totalAssigned: number
   totalClosed: number
-  avgTimeAll: number
-  avgTimeNormal?: number
-  avgTimeOutlier?: number
-  outlierCount?: number
-}
-
-interface OutlierSummaryStats {
-  totalOutliers: number
-  avgTimeAll: number
-  avgTimeNormal: number
-  avgTimeOutlier: number
-  outlierThreshold: number
-}
-
-interface StaffApiResponse {
-  staff: StaffData[]
-  summary: OutlierSummaryStats
+  avgTime: number
 }
 
 interface DailyData {
@@ -61,7 +42,6 @@ const THAI_MONTHS = [
 ]
 
 export default function TeamKPIDashboard() {
-  const router = useRouter()
   // Filter states - default to year that has data
   const [year, setYear] = useState(2026)
   const [month, setMonth] = useState<number | null>(null)
@@ -76,8 +56,6 @@ export default function TeamKPIDashboard() {
   })
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([])
   const [staffData, setStaffData] = useState<StaffData[]>([])
-  const [outlierSummary, setOutlierSummary] = useState<OutlierSummaryStats | null>(null)
-  const [topOutliers, setTopOutliers] = useState<OutlierTicket[]>([])
 
   // Modal states
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
@@ -88,7 +66,6 @@ export default function TeamKPIDashboard() {
 
   // Loading state
   const [loading, setLoading] = useState(true)
-  const [outliersLoading, setOutliersLoading] = useState(false)
 
   // Fetch all dashboard data
   useEffect(() => {
@@ -114,11 +91,10 @@ export default function TeamKPIDashboard() {
         }))
         setMonthlyData(monthlyWithIndex)
 
-        // Fetch staff performance with outlier stats
+        // Fetch staff performance
         const staffRes = await fetch(`/api/dashboard/staff?${yearParam}${monthParam}`)
-        const staffResponse: StaffApiResponse = await staffRes.json()
-        setStaffData(staffResponse.staff)
-        setOutlierSummary(staffResponse.summary)
+        const staffData = await staffRes.json()
+        setStaffData(staffData.staff)
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
       } finally {
@@ -127,25 +103,6 @@ export default function TeamKPIDashboard() {
     }
 
     fetchData()
-  }, [year, month])
-
-  // Fetch top 3 outliers
-  useEffect(() => {
-    const fetchTopOutliers = async () => {
-      setOutliersLoading(true)
-      try {
-        const monthParam = month ? `&month=${month}` : ''
-        const res = await fetch(`/api/dashboard/outliers/top3?year=${year}${monthParam}`)
-        const data = await res.json()
-        setTopOutliers(data.top3 || [])
-      } catch (error) {
-        console.error('Error fetching top outliers:', error)
-      } finally {
-        setOutliersLoading(false)
-      }
-    }
-
-    fetchTopOutliers()
   }, [year, month])
 
   // Handle month click - open modal with daily + staff data
@@ -169,18 +126,6 @@ export default function TeamKPIDashboard() {
     } finally {
       setLoadingModal(false)
     }
-  }
-
-  // Navigate to outliers page
-  const handleViewAllOutliers = () => {
-    const monthParam = month ? `?month=${month}` : ''
-    router.push(`/dashboard/outliers?year=${year}${monthParam}`)
-  }
-
-  // Navigate to outliers page filtered by staff
-  const handleViewStaffOutliers = (staffName: string) => {
-    const monthParam = month ? `&month=${month}` : ''
-    router.push(`/dashboard/outliers?year=${year}${monthParam}&staff=${encodeURIComponent(staffName)}`)
   }
 
   // Close modal
@@ -218,37 +163,16 @@ export default function TeamKPIDashboard() {
           closeRate={kpi.closeRate}
           avgTime={kpi.avgTime}
           pending={kpi.pending}
-          avgTimeNormal={outlierSummary?.avgTimeNormal}
-          avgTimeOutlier={outlierSummary?.avgTimeOutlier}
-          outlierCount={outlierSummary?.totalOutliers}
-          outlierThreshold={outlierSummary?.outlierThreshold}
         />
 
         {/* Monthly Bar Chart */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <MonthlyBarChart
-              data={monthlyData}
-              onMonthClick={handleMonthClick}
-            />
-          </div>
-
-          {/* Top Outliers List */}
-          <div>
-            <TopOutliersList
-              outliers={topOutliers}
-              onViewAll={handleViewAllOutliers}
-              loading={outliersLoading}
-            />
-          </div>
-        </div>
+        <MonthlyBarChart
+          data={monthlyData}
+          onMonthClick={handleMonthClick}
+        />
 
         {/* Staff Performance Table */}
-        <StaffPerformanceTable
-          staff={staffData}
-          showOutlierColumns={true}
-          onOutlierClick={handleViewStaffOutliers}
-        />
+        <StaffPerformanceTable staff={staffData} />
       </div>
 
       {/* Modal with Daily Chart + Staff Performance */}

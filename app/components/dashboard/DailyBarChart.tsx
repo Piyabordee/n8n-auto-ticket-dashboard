@@ -13,7 +13,7 @@ interface StaffData {
   name: string
   totalAssigned: number
   totalClosed: number
-  avgTime: number
+  avgTimeAll: number
 }
 
 interface DailyBarChartProps {
@@ -142,7 +142,7 @@ export default function DailyBarChart({ data, monthName, year, staffData, onClos
                                 <span className="text-green-600 font-semibold">{person.totalClosed}</span>
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
-                                {person.avgTime > 0 ? person.avgTime.toFixed(1) : '-'}
+                                {person.avgTimeAll > 0 ? person.avgTimeAll.toFixed(1) : '-'}
                               </td>
                             </tr>
                           ))}

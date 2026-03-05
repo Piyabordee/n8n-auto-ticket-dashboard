@@ -9,8 +9,20 @@ const sqlConfig = {
   options: {
     encrypt: false,
     trustServerCertificate: true,
-    enableArithAbort: true
+    enableArithAbort: true,
+    useUTC: false
+  },
+  parseJSON: true
+}
+
+// Singleton connection pool
+let pool: sql.ConnectionPool | null = null
+
+async function getPool(): Promise<sql.ConnectionPool> {
+  if (!pool || !pool.connected) {
+    pool = await sql.connect(sqlConfig)
   }
+  return pool
 }
 
 const THAI_MONTHS = [
@@ -23,13 +35,11 @@ export async function GET(request: NextRequest) {
   const year = searchParams.get('year')
 
   const currentYear = year ? parseInt(year) : new Date().getFullYear()
-  const startDate = new Date(currentYear, 0, 1).toISOString()
-  const endDate = new Date(currentYear, 11, 31, 23, 59, 59).toISOString()
-
-  let pool: sql.ConnectionPool | null = null
+  const startDate = new Date(currentYear, 0, 1)
+  const endDate = new Date(currentYear, 11, 31, 23, 59, 59)
 
   try {
-    pool = await sql.connect(sqlConfig)
+    const pool = await getPool()
 
     // Get monthly totals
     const monthlyResult = await pool.request()
@@ -63,7 +73,5 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch monthly data', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
-  } finally {
-    if (pool) await pool.close()
   }
 }

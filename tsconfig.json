@@ -20,6 +20,12 @@
     "paths": {
       "@/*": [
         "./app/*"
+      ],
+      "@/types/*": [
+        "./types/*"
+      ],
+      "@/repository/*": [
+        "./repository/*"
       ]
     },
     "plugins": [

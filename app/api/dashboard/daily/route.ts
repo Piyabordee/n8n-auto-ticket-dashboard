@@ -9,8 +9,20 @@ const sqlConfig = {
   options: {
     encrypt: false,
     trustServerCertificate: true,
-    enableArithAbort: true
+    enableArithAbort: true,
+    useUTC: false
+  },
+  parseJSON: true
+}
+
+// Singleton connection pool
+let pool: sql.ConnectionPool | null = null
+
+async function getPool(): Promise<sql.ConnectionPool> {
+  if (!pool || !pool.connected) {
+    pool = await sql.connect(sqlConfig)
   }
+  return pool
 }
 
 export async function GET(request: NextRequest) {
@@ -30,13 +42,11 @@ export async function GET(request: NextRequest) {
 
   // Get the number of days in the month
   const daysInMonth = new Date(currentYear, currentMonth, 0).getDate()
-  const startDate = new Date(currentYear, currentMonth - 1, 1).toISOString()
-  const endDate = new Date(currentYear, currentMonth - 1, daysInMonth, 23, 59, 59).toISOString()
-
-  let pool: sql.ConnectionPool | null = null
+  const startDate = new Date(currentYear, currentMonth - 1, 1)
+  const endDate = new Date(currentYear, currentMonth - 1, daysInMonth, 23, 59, 59)
 
   try {
-    pool = await sql.connect(sqlConfig)
+    const pool = await getPool()
 
     // Get daily totals
     const dailyResult = await pool.request()
@@ -71,7 +81,5 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to fetch daily data', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
-  } finally {
-    if (pool) await pool.close()
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getOutlierRepository } from '@/repository/OutlierRepository'
-import type { StaffPerformanceResponse } from '@/types/outlier'
+import type { TopOutliersResponse } from '@/types/outlier'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -36,18 +36,23 @@ export async function GET(request: NextRequest) {
   const repository = getOutlierRepository()
 
   try {
-    const data = await repository.getStaffPerformanceWithOutliers(startDate, endDate)
+    const top3 = await repository.getTopOutliers(startDate, endDate)
+    const totalCount = top3.length
 
-    const response: StaffPerformanceResponse = {
-      staff: data.staff,
-      summary: data.summary
+    const response: TopOutliersResponse = {
+      top3,
+      total_count: totalCount,
+      cache_ttl: 60  // 1 minute cache recommendation
     }
 
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Staff API Error:', error)
+    console.error('Top Outliers API Error:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch staff performance', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to fetch top outliers',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   } finally {
