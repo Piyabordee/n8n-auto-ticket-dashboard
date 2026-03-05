@@ -1,0 +1,95 @@
+# ============ Dependencies ============
+node_modules
+/.pnp
+.pnp.js
+
+# ============ Testing ============
+/coverage
+.nyc_output
+
+# ============ Next.js ============
+/.next/
+/out/
+/build
+dist
+
+# ============ Production ============
+.vercel
+
+# ============ Misc ============
+.DS_Store
+*.pem
+*.swp
+*.swo
+*~
+
+# ============ Debug ============
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ============ Local env files ============
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# ============ TypeScript ============
+*.tsbuildinfo
+
+# ============ IDE ============
+.vscode/
+.idea/
+*.code-workspace
+.history/
+
+# ============ Logs ============
+logs/
+*.log
+
+# ============ OS specific ============
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# ============ OneDrive - stop syncing these folders ============
+.next
+node_modules
+out
+build
+dist
+
+# ============ Sensitive Data (Extra Protection) ============
+data.csv
+data.csv.backup
+*.csv.backup
+secrets/
+secrets.json
+credentials.json
+credentials*.json
+*.key
+*.p12
+*.pfx
+*.cert
+*.crt
+
+# ============ Runtime data ============
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ============ Temporary files ============
+tmp/
+temp/
+*.tmp
+.cache/
+
+# ============ Package manager ============
+# package-lock.json (comment out if you commit this)
+# yarn.lock (comment out if you commit this)
+# pnpm-lock.yaml (comment out if you commit this)
