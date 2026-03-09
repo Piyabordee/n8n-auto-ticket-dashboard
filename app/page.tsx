@@ -10,6 +10,7 @@ import DailyBarChart from './components/dashboard/DailyBarChart'
 import InlineDailyChart from './components/dashboard/InlineDailyChart'
 import TopOutliersList from './components/dashboard/TopOutliersList'
 import TicketListModal from './components/dashboard/TicketListModal'
+import { useModal } from './components/modals/ModalProvider'
 import type { OutlierTicket } from '../types/outlier'
 
 type FilterType = 'all' | 'pending' | 'closed' | 'outliers'
@@ -112,6 +113,9 @@ export default function TeamDashboard() {
   // Loading state
   const [loading, setLoading] = useState(true)
   const [outliersLoading, setOutliersLoading] = useState(false)
+
+  // Modal hooks
+  const { openModal, closeModal } = useModal()
 
   // Available months state
   const [availableYears, setAvailableYears] = useState<number[]>([])
@@ -238,6 +242,19 @@ export default function TeamDashboard() {
     setTicketModalOpen(true)
   }
 
+  // Handle day click from DailyBarChart modal - open TicketListModal
+  const handleDayClickForModal = (day: string) => {
+    openModal(TicketListModal, {
+      isOpen: true,
+      onClose: closeModal,
+      year: year,
+      month: month,
+      day: day,
+      filterType: 'all',
+      title: FILTER_TITLES.all
+    })
+  }
+
   // Navigate to outliers page
   const handleViewAllOutliers = () => {
     const monthParam = month ? `?month=${month}` : ''
@@ -353,6 +370,7 @@ export default function TeamDashboard() {
           staffData={monthlyStaffData}
           onClose={handleCloseModal}
           loading={loadingModal}
+          onDayClick={handleDayClickForModal}
         />
       )}
 

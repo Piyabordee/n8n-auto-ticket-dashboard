@@ -39,9 +39,10 @@ interface DailyBarChartProps {
   staffData: StaffData[]
   onClose: () => void
   loading?: boolean
+  onDayClick?: (day: string) => void
 }
 
-export default function DailyBarChart({ data, monthName, year, monthIndex, staffData, onClose, loading }: DailyBarChartProps) {
+export default function DailyBarChart({ data, monthName, year, monthIndex, staffData, onClose, loading, onDayClick }: DailyBarChartProps) {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [ticketsLoading, setTicketsLoading] = useState(true)
   const [showTickets, setShowTickets] = useState(true)
@@ -133,7 +134,7 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
           ) : (
             <>
               {/* Daily Chart Section */}
-              <div className="p-6 border-b border-gray-200">
+              <div className={`p-6 border-b border-gray-200 ${onDayClick ? 'cursor-pointer' : ''}`}>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 กราฟรายวัน</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData}>
@@ -146,8 +147,22 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
                     <YAxis label={{ value: 'จำนวน', angle: -90, position: 'insideLeft' }} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="closed" fill="#3b82f6" name="ปิดแล้ว" stackId="1" />
-                    <Bar dataKey="pending" fill="#ef4444" name="ยังไม่ปิด" stackId="1" />
+                    <Bar
+                      dataKey="closed"
+                      fill="#3b82f6"
+                      name="ปิดแล้ว"
+                      stackId="1"
+                      cursor="pointer"
+                      onClick={(data) => onDayClick?.(data.payload?.day)}
+                    />
+                    <Bar
+                      dataKey="pending"
+                      fill="#ef4444"
+                      name="ยังไม่ปิด"
+                      stackId="1"
+                      cursor="pointer"
+                      onClick={(data) => onDayClick?.(data.payload?.day)}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
 
