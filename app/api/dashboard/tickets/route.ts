@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
   const month = searchParams.get('month')
   const status = searchParams.get('status') || 'all'
   const staff = searchParams.get('staff')
+  const day = searchParams.get('day')
 
   // Validate year parameter
   const currentYear = year ? parseInt(year) : new Date().getFullYear()
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
 
   // Use mock data if USE_MOCK_DATA is enabled
   if (process.env.USE_MOCK_DATA === 'true') {
-    return NextResponse.json(generateTickets(currentYear, month ? parseInt(month) : undefined, status as 'all' | 'pending' | 'closed', staff || undefined))
+    return NextResponse.json(generateTickets(currentYear, month ? parseInt(month) : undefined, status as 'all' | 'pending' | 'closed', staff || undefined, day || undefined))
   }
 
   try {
@@ -99,6 +100,17 @@ export async function GET(request: NextRequest) {
       requestQuery.input('monthEnd', sql.DateTime, monthEnd)
     }
 
+    // Validate day parameter if provided
+    if (day) {
+      const dayNum = parseInt(day)
+      if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
+        return NextResponse.json(
+          { error: 'Invalid day parameter' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Add status filter
     if (status === 'pending') {
       query += ` AND status IN ('pending', 'assigned')`
@@ -110,6 +122,13 @@ export async function GET(request: NextRequest) {
     if (staff) {
       query += ` AND assigned_to = @staff`
       requestQuery.input('staff', sql.NVarChar, staff)
+    }
+
+    // Add day filter if provided
+    if (day) {
+      const dayNum = parseInt(day)
+      query += ` AND DAY(created_date) = @day`
+      requestQuery.input('day', sql.Int, dayNum)
     }
 
     query += ` ORDER BY created_date DESC`
@@ -134,6 +153,6 @@ export async function GET(request: NextRequest) {
     console.error('Filtered tickets API Error:', error)
     // Fallback to mock data if database connection fails
     console.log('Falling back to mock data due to database error')
-    return NextResponse.json(generateTickets(currentYear, month ? parseInt(month) : undefined, status as 'all' | 'pending' | 'closed', staff || undefined))
+    return NextResponse.json(generateTickets(currentYear, month ? parseInt(month) : undefined, status as 'all' | 'pending' | 'closed', staff || undefined, day || undefined))
   }
 }
