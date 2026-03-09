@@ -106,6 +106,9 @@ export default function TeamDashboard() {
   const [staffTicketModalOpen, setStaffTicketModalOpen] = useState(false)
   const [selectedStaffName, setSelectedStaffName] = useState<string>('')
 
+  // Day click state
+  const [selectedDay, setSelectedDay] = useState<string | null>(null)
+
   // Loading state
   const [loading, setLoading] = useState(true)
   const [outliersLoading, setOutliersLoading] = useState(false)
@@ -169,6 +172,11 @@ export default function TeamDashboard() {
     fetchAvailableMonths()
   }, [])
 
+  // Reset selected day when year or month changes
+  useEffect(() => {
+    setSelectedDay(null)
+  }, [year, month])
+
   // Fetch top 3 outliers
   useEffect(() => {
     const fetchTopOutliers = async () => {
@@ -223,6 +231,13 @@ export default function TeamDashboard() {
     }
   }
 
+  // Handle day click - open ticket list modal for that day
+  const handleDayClick = (day: string) => {
+    setSelectedDay(day)
+    setTicketFilterType('all')
+    setTicketModalOpen(true)
+  }
+
   // Navigate to outliers page
   const handleViewAllOutliers = () => {
     const monthParam = month ? `?month=${month}` : ''
@@ -246,6 +261,7 @@ export default function TeamDashboard() {
   // Close ticket list modal
   const handleCloseTicketModal = () => {
     setTicketModalOpen(false)
+    setSelectedDay(null)
   }
 
   // Close staff ticket modal
@@ -298,6 +314,7 @@ export default function TeamDashboard() {
                 year={year}
                 month={month}
                 monthName={THAI_MONTHS[month - 1]}
+                onDayClick={handleDayClick}
               />
             ) : (
               <MonthlyBarChart
@@ -345,6 +362,7 @@ export default function TeamDashboard() {
         onClose={handleCloseTicketModal}
         year={year}
         month={month}
+        day={selectedDay}
         filterType={ticketFilterType}
         title={FILTER_TITLES[ticketFilterType]}
       />

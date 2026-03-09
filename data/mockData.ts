@@ -321,7 +321,8 @@ export function generateTickets(
   year: number,
   month?: number,
   status: 'all' | 'pending' | 'closed' = 'all',
-  staffName?: string
+  staffName?: string,
+  day?: number
 ) {
   const multiplier = month ? 0.08 : 1
   let count = Math.floor(randomInt(20, 50) * multiplier)
@@ -358,6 +359,13 @@ export function generateTickets(
 
   if (staffName) {
     tickets = tickets.filter(t => t.assigned_to === staffName)
+  }
+
+  if (day !== undefined) {
+    tickets = tickets.filter(t => {
+      const ticketDate = new Date(t.created_date || '')
+      return ticketDate.getDate() === day
+    })
   }
 
   // Sort by created_date DESC
