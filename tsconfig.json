@@ -26,6 +26,9 @@
       ],
       "@/repository/*": [
         "./repository/*"
+      ],
+      "@/data/*": [
+        "./data/*"
       ]
     },
     "plugins": [
