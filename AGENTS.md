@@ -1,8 +1,9 @@
 # IT Helpdesk Dashboard - Project Context
 
-> **Version**: 1.5.0
+> **Version**: 1.6.0
 > **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
 > **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
+> **Last Updated**: 2026-03-09 - LIFF integration removed, Auth Provider added
 
 ---
 
@@ -30,7 +31,27 @@
 ### Feature 1: Auth Provider
 A global context that provides authentication state. Currently uses mock user data.
 
-**File**: app/components/auth/AuthProvider.tsx
+**Files**:
+- `app/components/auth/AuthProvider.tsx` - Provider component and useAuth() hook
+- `types/auth.ts` - User and AuthContextType interfaces
+
+**Mock User**:
+```typescript
+{
+  id: 'admin',
+  name: 'Admin User',
+  role: 'admin'
+}
+```
+
+**Usage**:
+```typescript
+import { useAuth } from '@/components/auth/AuthProvider'
+
+const { user, loading, isAuthenticated } = useAuth()
+```
+
+**Future Auth**: Structure prepared for NextAuth.js, Clerk, Auth0, or Supabase Auth.
 
 ### Feature 2: Dashboard Page (/)
 Shows KPI Cards, charts, staff performance table, and outliers list with year/month filtering.
@@ -198,6 +219,14 @@ Used in: /api/dashboard/staff, /api/tickets
 - Wrong name: normalizeStylizedText()
 - No data: /available-months
 - Chart stuck: useEffect deps
+
+### Auth Migration (2026-03-09):
+LIFF integration removed and replaced with placeholder auth:
+- LiffProvider → AuthProvider
+- useLiff() → useAuth()
+- profile → user
+- @line/liff package removed
+- types/liff.ts removed, replaced with types/auth.ts
 
 ---
 
