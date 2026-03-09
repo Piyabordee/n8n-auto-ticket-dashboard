@@ -1,10 +1,10 @@
-# IT Helpdesk Dashboard & LIFF Application
+# IT Helpdesk Dashboard
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A modern enterprise IT helpdesk system built with Next.js 14, featuring a comprehensive KPI dashboard with statistical outlier detection and LINE Front-end Framework (LIFF) integration for mobile ticket submission.
+A modern enterprise IT helpdesk system built with Next.js 14, featuring a comprehensive KPI dashboard with statistical outlier detection and ticket submission functionality.
 
 **Live Demo**: https://n8n-auto-ticket-dashboard.vercel.app/
 
@@ -20,7 +20,7 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 - Filtering: Year and month-based data filtering for trend analysis
 
 ### Ticket Creation (/create)
-- Mobile-optimized ticket submission via LINE app
+- Web-based ticket submission
 - Category and sub-category selection with dynamic options
 - Branch selection with hierarchical data
 - Image attachment with Base64 encoding
@@ -41,7 +41,7 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 | Styling | Tailwind CSS |
 | UI Components | shadcn/ui |
 | Charts | Recharts |
-| LINE SDK | @line/liff |
+| Authentication | Placeholder (prepared for NextAuth.js, Clerk, etc.) |
 | Database | Microsoft SQL Server via mssql |
 | Integration | n8n workflow automation |
 | Deployment | Vercel |
@@ -50,7 +50,6 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 
 - Node.js 18+
 - Microsoft SQL Server
-- LINE Developers Account (for LIFF app)
 - n8n instance (for ticket workflow)
 
 ## Quick Start
@@ -76,6 +75,8 @@ n8n-auto-ticket-dashboard/
 ├── app/
 │   ├── api/dashboard/      # API routes
 │   ├── components/         # React components
+│   │   ├── auth/          # Authentication components
+│   │   └── dashboard/     # Dashboard components
 │   ├── lib/               # Utilities
 │   └── types/             # TypeScript types
 ├── repository/            # Database access layer
@@ -136,7 +137,6 @@ n8n-auto-ticket-dashboard/
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| NEXT_PUBLIC_LIFF_ID | Yes | LIFF app ID |
 | NEXT_PUBLIC_N8N_WEBHOOK_URL | Yes | n8n webhook URL |
 | SQL_SERVER | Yes | SQL Server host |
 | SQL_DATABASE | Yes | Database name |
@@ -157,5 +157,5 @@ MIT License
 
 ---
 
-Built with Next.js and LINE LIFF  
+Built with Next.js
 Developed with 99% AI assistance via Vibe Code

@@ -1,8 +1,8 @@
-﻿# IT Helpdesk LIFF App - Project Context
+# IT Helpdesk Dashboard - Project Context
 
-> **Version**: 1.4.0
-> **Purpose**: Frontend web application using LINE Front-end Framework (LIFF) for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
-> **Integration**: LIFF SDK + Next.js + n8n Webhook + Microsoft SQL Server
+> **Version**: 1.5.0
+> **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
+> **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
 
 ---
 
@@ -10,15 +10,15 @@
 * **Framework**: Next.js 14 App Router
 * **Language**: TypeScript
 * **Styling**: Tailwind CSS
-* **UI Components**: shadcn/ui (for fast, clean enterprise UI)
+* **UI Components**: shadcn/ui
 * **Charts**: Recharts
-* **LINE SDK**: @line/liff
+* **Authentication**: Placeholder (prepared for NextAuth.js, Clerk, etc.)
 * **Database Client**: mssql (SQL Server)
 
 ---
 
 ## 2. System Architecture
-1. **Frontend (Next.js)**: Runs inside LINE App via LIFF. Handles UI/UX, authenticates user via liff.init(), gets userId and displayName, and converts image uploads to Base64.
+1. **Frontend (Next.js)**: Handles UI/UX with mock authentication. Prepared for future auth integration.
 2. **API Routes (Next.js)**: Dashboard queries SQL Server directly via /api/* endpoints using mssql package.
 3. **API/Middleware (n8n)**: Frontend sends POST request to existing n8n webhook (Auto_Ticket_1.7) for ticket creation.
 4. **Database**: Microsoft SQL Server [Dev_Born].[dbo].[ticket].
@@ -27,10 +27,10 @@
 
 ## 3. Core Features
 
-### Feature 1: LIFF Initialization Provider
-A global context that initializes LIFF and stores user profile data globally. Supports mock data for local development.
+### Feature 1: Auth Provider
+A global context that provides authentication state. Currently uses mock user data.
 
-**File**: app/LiffProvider.tsx
+**File**: app/components/auth/AuthProvider.tsx
 
 ### Feature 2: Dashboard Page (/)
 Shows KPI Cards, charts, staff performance table, and outliers list with year/month filtering.
@@ -205,4 +205,3 @@ Used in: /api/dashboard/staff, /api/tickets
 
 SQL_SERVER, SQL_DATABASE, SQL_USER, SQL_PASSWORD
 NEXT_PUBLIC_N8N_WEBHOOK_URL
-NEXT_PUBLIC_LIFF_ID
