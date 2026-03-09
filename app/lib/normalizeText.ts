@@ -56,10 +56,13 @@ export function normalizeStylizedText(text: string): string {
     result = result.replace(new RegExp(stylized, 'gu'), normal)
   }
 
-  // Normalize Unicode combining characters
+  // Remove combining marks BEFORE normalization (to catch e + combining accent)
+  result = result.replace(/[\u0300-\u036f]/g, '')
+
+  // Normalize Unicode (NFKC)
   result = result.normalize('NFKC')
 
-  // Remove any remaining combining marks (for accented characters, etc.)
+  // Remove any remaining combining marks after normalization
   result = result.replace(/[\u0300-\u036f]/g, '')
 
   return result
@@ -69,17 +72,22 @@ export function normalizeStylizedText(text: string): string {
  * Check if text contains stylized Unicode characters
  */
 export function hasStylizedText(text: string): boolean {
-  // Check for Enclosed Alphanumerics U+1F100-U+1F1FF
-  const enclosedRegex = /\u{1F100}-\u{1F1FF}/u
-  if (enclosedRegex.test(text)) return true
+  // Check for Enclosed Alphanumerics U+1F100-U+1F1FF (squared letters like 🆃🅾)
+  // Must use fromCodePoint for characters outside BMP (code points > 0xFFFF)
+  for (let i = 0x1F100; i <= 0x1F1FF; i++) {
+    if (text.includes(String.fromCodePoint(i))) return true
+  }
 
   // Check for Halfwidth and Fullwidth Forms U+FF00-U+FFEF
-  const fullwidthRegex = /\uFF00-\uFFEF/
-  if (fullwidthRegex.test(text)) return true
+  for (let i = 0xFF00; i <= 0xFFEF; i++) {
+    if (text.includes(String.fromCharCode(i))) return true
+  }
 
   // Check for Mathematical Alphanumeric Symbols U+1D400-U+1D7FF
-  const mathRegex = /\u{1D400}-\u{1D7FF}/u
-  if (mathRegex.test(text)) return true
+  // Must use fromCodePoint for characters outside BMP (code points > 0xFFFF)
+  for (let i = 0x1D400; i <= 0x1D7FF; i++) {
+    if (text.includes(String.fromCodePoint(i))) return true
+  }
 
   return false
 }

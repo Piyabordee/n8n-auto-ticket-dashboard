@@ -34,10 +34,11 @@ export function ImageUpload({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="image-upload" className="block text-sm font-medium text-gray-700 mb-2">
           Upload Image (Optional)
         </label>
         <input
+          id="image-upload"
           ref={fileInputRef}
           type="file"
           accept="image/*"
