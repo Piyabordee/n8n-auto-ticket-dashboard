@@ -1,6 +1,6 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { LiffProvider } from '@/components/LiffProvider'
+import { AuthProvider } from '@/components/auth/AuthProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,9 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <LiffProvider>
+        <AuthProvider>
           {children}
-        </LiffProvider>
+        </AuthProvider>
       </body>
     </html>
   )

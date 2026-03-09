@@ -1,10 +1,10 @@
 'use client'
 
-import { useLiff } from '@/components/LiffProvider'
+import { useAuth } from '@/components/auth/AuthProvider'
 import { TicketForm } from '@/components/TicketForm'
 
 export default function CreateTicketPage() {
-  const { profile, loading } = useLiff()
+  const { user, loading } = useAuth()
 
   if (loading) {
     return <div>Loading...</div>
