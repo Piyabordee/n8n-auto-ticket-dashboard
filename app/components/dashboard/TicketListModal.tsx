@@ -21,6 +21,7 @@ interface TicketListModalProps {
   onClose: () => void
   year: number
   month: number | null
+  day?: string
   filterType: 'all' | 'pending' | 'closed' | 'outliers'
   title: string
   staffName?: string
@@ -38,6 +39,7 @@ export default function TicketListModal({
   onClose,
   year,
   month,
+  day,
   filterType,
   title,
   staffName
@@ -75,8 +77,9 @@ export default function TicketListModal({
         } else {
           // Handle regular ticket filters
           const monthParam = month ? `&month=${month}` : ''
+          const dayParam = day ? `&day=${day}` : ''
           const staffParam = staffName ? `&staff=${encodeURIComponent(staffName)}` : ''
-          const url = `/api/dashboard/tickets?year=${year}${monthParam}&status=${filterType}${staffParam}`
+          const url = `/api/dashboard/tickets?year=${year}${monthParam}${dayParam}&status=${filterType}${staffParam}`
           const res = await fetch(url)
           const data = await res.json()
           setTickets(data.tickets || [])
@@ -90,7 +93,7 @@ export default function TicketListModal({
     }
 
     fetchTickets()
-  }, [isOpen, year, month, filterType, staffName])
+  }, [isOpen, year, month, day, filterType, staffName])
 
   if (!isOpen) return null
 
@@ -102,7 +105,7 @@ export default function TicketListModal({
           <div>
             <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
             <p className="text-sm text-gray-500 mt-1">
-              {FILTER_LABELS[filterType]} - {tickets.length} งาน
+              {day ? `${day} ` : ''}{FILTER_LABELS[filterType]} - {tickets.length} งาน
               {staffName && <span className="ml-2">• พนักงาน: {staffName}</span>}
             </p>
           </div>
