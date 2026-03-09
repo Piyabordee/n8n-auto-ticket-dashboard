@@ -2,7 +2,6 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import HeaderFilter from '../../components/dashboard/HeaderFilter'
 import OutlierTable from '../../components/dashboard/OutlierTable'
 import type { OutlierTicket, OutlierSummary } from '../../../types/outlier'
 
@@ -121,13 +120,41 @@ function OutliersContent() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Filters */}
-        <div className="mb-6">
-          <HeaderFilter
-            year={year}
-            setYear={handleYearChange}
-            month={month}
-            setMonth={handleMonthChange}
-          />
+        <div className="mb-6 flex flex-wrap gap-4 items-center bg-white p-4 rounded-lg shadow-sm">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">ปี (Year)</label>
+            <select
+              value={year}
+              onChange={(e) => handleYearChange(parseInt(e.target.value))}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={2025}>2025</option>
+              <option value={2026}>2026</option>
+              <option value={2027}>2027</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">เดือน (Month)</label>
+            <select
+              value={month ?? ''}
+              onChange={(e) => handleMonthChange(e.target.value ? parseInt(e.target.value) : null)}
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">ทั้งปี (All Year)</option>
+              <option value="1">มกราคม (January)</option>
+              <option value="2">กุมภาพันธ์ (February)</option>
+              <option value="3">มีนาคม (March)</option>
+              <option value="4">เมษายน (April)</option>
+              <option value="5">พฤษภาคม (May)</option>
+              <option value="6">มิถุนายน (June)</option>
+              <option value="7">กรกฎาคม (July)</option>
+              <option value="8">สิงหาคม (August)</option>
+              <option value="9">กันยายน (September)</option>
+              <option value="10">ตุลาคม (October)</option>
+              <option value="11">พฤศจิกายน (November)</option>
+              <option value="12">ธันวาคม (December)</option>
+            </select>
+          </div>
         </div>
 
         {/* Outliers Table */}
