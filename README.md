@@ -4,7 +4,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A modern enterprise IT helpdesk system built with Next.js 14, featuring a comprehensive KPI dashboard with statistical outlier detection and ticket submission functionality.
+A modern enterprise IT helpdesk system built with Next.js 14, featuring a comprehensive dashboard with statistical outlier detection and ticket submission functionality.
 
 **Live Demo**: https://n8n-auto-ticket-dashboard.vercel.app/
 
@@ -13,7 +13,7 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 ## Features
 
 ### Dashboard (/)
-- Real-time KPI Cards: Track total tickets, closed tickets, pending items, close rates, and average resolution time
+- Real-time Stats Cards: Track total tickets, closed tickets, pending items, close rates, and average resolution time
 - Statistical Outlier Detection: Per-person Mean + 2SD methodology
 - Interactive Visualizations: Monthly and daily bar charts with drill-down capabilities
 - Staff Performance Rankings: Comprehensive team performance metrics with outlier breakdown
@@ -88,7 +88,7 @@ n8n-auto-ticket-dashboard/
 
 | Endpoint | Method | Query Params | Description |
 |----------|--------|--------------|-------------|
-| /api/dashboard/kpi | GET | year, month? | KPI statistics |
+| /api/dashboard/stats | GET | year, month? | Statistics |
 | /api/dashboard/monthly | GET | year | Monthly volume |
 | /api/dashboard/daily | GET | year, month | Daily breakdown |
 | /api/dashboard/staff | GET | year, month? | Staff rankings |
@@ -180,7 +180,7 @@ The project includes comprehensive testing with **100% pass rate** for productio
 - AuthProvider: 10/10 tests (mock user, login/logout, context values)
 - ImageUpload: 11/11 tests (file selection, preview, removal, CSS classes)
 - StaffPerformanceTable: 20/20 tests (ranking, outliers, click handlers, time formatting)
-- StatsCards: 20/20 tests (KPI cards, outlier breakdown, clickable cards, time formatting)
+- StatsCards: 20/20 tests (stats cards, outlier breakdown, clickable cards, time formatting)
 - CategorySelect: 15/15 tests (category selection, sub-category filtering)
 - BranchSelect: 6/6 tests (branch selection, hierarchical data)
 - OutlierRepository: 15/15 tests (SQL queries, normalization, connection pooling)
