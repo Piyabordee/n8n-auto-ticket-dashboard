@@ -85,14 +85,14 @@ export default function InlineDailyChart({ year, month, monthName, onDayClick }:
             fill="#3b82f6"
             name="ปิดแล้ว"
             stackId="1"
-            onClick={(data) => onDayClick?.(data.day)}
+            onClick={(data) => onDayClick?.(data.payload?.day)}
           />
           <Bar
             dataKey="pending"
             fill="#ef4444"
             name="ยังไม่ปิด"
             stackId="1"
-            onClick={(data) => onDayClick?.(data.day)}
+            onClick={(data) => onDayClick?.(data.payload?.day)}
           />
         </BarChart>
       </ResponsiveContainer>
