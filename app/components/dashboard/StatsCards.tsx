@@ -1,6 +1,6 @@
 'use client'
 
-type FilterType = 'all' | 'pending' | 'closed'
+type FilterType = 'all' | 'pending' | 'closed' | 'outliers'
 
 interface StatsCardsProps {
   total: number
@@ -114,12 +114,16 @@ export default function StatsCards({
 
       {/* Outlier Count (only show when outlier data exists) */}
       {hasOutlierData && (
-        <div className={`bg-white rounded-lg shadow-sm p-4 border-l-4 ${
-          (outlierCount || 0) === 0 ? 'border-gray-300' :
-          (outlierCount || 0) <= 3 ? 'border-yellow-400' :
-          (outlierCount || 0) <= 7 ? 'border-orange-400' :
-          'border-red-500'
-        }`}>
+        <div
+          onClick={() => onCardClick?.('outliers')}
+          className={`bg-white rounded-lg shadow-sm hover:shadow-lg p-4 border-l-4 ${
+            (outlierCount || 0) === 0 ? 'border-gray-300' :
+            (outlierCount || 0) <= 3 ? 'border-yellow-400' :
+            (outlierCount || 0) <= 7 ? 'border-orange-400' :
+            'border-red-500'
+          } ${onCardClick ? 'cursor-pointer transition-shadow duration-200 relative' : ''}`}
+        >
+          {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
           <div className="text-sm text-gray-600 mb-1">Outliers</div>
           <div className={`text-3xl font-bold ${
             (outlierCount || 0) === 0 ? 'text-gray-500' :

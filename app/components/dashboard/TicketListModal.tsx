@@ -21,7 +21,7 @@ interface TicketListModalProps {
   onClose: () => void
   year: number
   month: number | null
-  filterType: 'all' | 'pending' | 'closed'
+  filterType: 'all' | 'pending' | 'closed' | 'outliers'
   title: string
   staffName?: string
 }
@@ -29,7 +29,8 @@ interface TicketListModalProps {
 const FILTER_LABELS: Record<string, string> = {
   all: 'ทั้งหมด',
   pending: 'ยังไม่ปิด',
-  closed: 'ปิดแล้ว'
+  closed: 'ปิดแล้ว',
+  outliers: 'Outliers'
 }
 
 export default function TicketListModal({
@@ -50,12 +51,36 @@ export default function TicketListModal({
     const fetchTickets = async () => {
       setLoading(true)
       try {
-        const monthParam = month ? `&month=${month}` : ''
-        const staffParam = staffName ? `&staff=${encodeURIComponent(staffName)}` : ''
-        const url = `/api/dashboard/tickets?year=${year}${monthParam}&status=${filterType}${staffParam}`
-        const res = await fetch(url)
-        const data = await res.json()
-        setTickets(data.tickets || [])
+        // Handle outliers filter type - use outliers API endpoint
+        if (filterType === 'outliers') {
+          const monthParam = month ? `&month=${month}` : ''
+          const url = `/api/dashboard/outliers?year=${year}${monthParam}`
+          const res = await fetch(url)
+          const data = await res.json()
+
+          // Convert OutlierTicket[] to Ticket[] format
+          const outlierTickets: Ticket[] = (data.outliers || []).map((o: any) => ({
+            message_id: o.message_id,
+            subject: o.subject,
+            assigned_to: o.assigned_to,
+            status: 'closed', // Outliers are tickets that took too long to close
+            category: '-',
+            sub_category: '-',
+            branch_name: '-',
+            created_date: o.created_date,
+            assigned_date: o.assigned_date,
+            close_time_minute: o.diff_minutes
+          }))
+          setTickets(outlierTickets)
+        } else {
+          // Handle regular ticket filters
+          const monthParam = month ? `&month=${month}` : ''
+          const staffParam = staffName ? `&staff=${encodeURIComponent(staffName)}` : ''
+          const url = `/api/dashboard/tickets?year=${year}${monthParam}&status=${filterType}${staffParam}`
+          const res = await fetch(url)
+          const data = await res.json()
+          setTickets(data.tickets || [])
+        }
       } catch (error) {
         console.error('Error fetching tickets:', error)
         setTickets([])

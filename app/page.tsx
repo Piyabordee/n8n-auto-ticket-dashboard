@@ -12,7 +12,7 @@ import TopOutliersList from './components/dashboard/TopOutliersList'
 import TicketListModal from './components/dashboard/TicketListModal'
 import type { OutlierTicket } from '../types/outlier'
 
-type FilterType = 'all' | 'pending' | 'closed'
+type FilterType = 'all' | 'pending' | 'closed' | 'outliers'
 
 interface DashboardStats {
   total: number
@@ -68,7 +68,8 @@ const THAI_MONTHS = [
 const FILTER_TITLES: Record<FilterType, string> = {
   all: 'รายการงานทั้งหมด',
   pending: 'รายการงานที่ยังไม่ปิด',
-  closed: 'รายการงานที่ปิดแล้ว'
+  closed: 'รายการงานที่ปิดแล้ว',
+  outliers: 'รายการงาน Outliers'
 }
 
 export default function TeamDashboard() {
