@@ -27,10 +27,11 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 - Real-time form validation
 
 ### Technical Highlights
-- Per-Person Outlier Detection: Each staff member has their own statistical threshold
-- Text Normalization: Handles stylized Unicode text (Thai characters) with ASCII conversion
-- Connection Pooling: Optimized SQL Server connection management for concurrent requests
-- Responsive Design: Mobile-first UI using Tailwind CSS and shadcn/ui components
+- **Per-Person Outlier Detection**: Each staff member has their own statistical threshold
+- **Text Normalization**: Handles stylized Unicode text (Thai characters) with ASCII conversion
+- **Connection Pooling**: Optimized SQL Server connection management for concurrent requests
+- **Responsive Design**: Mobile-first UI using Tailwind CSS and shadcn/ui components
+- **Auth-Ready Architecture**: Mock authentication structure prepared for NextAuth.js, Clerk, Auth0, or Supabase
 
 ## Tech Stack
 
@@ -115,6 +116,29 @@ n8n-auto-ticket-dashboard/
 - Baseline from full year data
 - Threshold: personal_mean + (2 × personal_stddev)
 - Requires min 2 tickets per person for SD calculation
+
+## Authentication
+
+The application currently uses a mock authentication provider for development:
+
+```typescript
+import { useAuth } from '@/components/auth/AuthProvider'
+
+const { user, loading, isAuthenticated } = useAuth()
+```
+
+**Mock User**:
+- ID: `admin`
+- Name: `Admin User`
+- Role: `admin`
+
+The auth structure is prepared for future integration with:
+- NextAuth.js
+- Clerk
+- Auth0
+- Supabase Auth
+
+See [types/auth.ts](types/auth.ts) and [app/components/auth/AuthProvider.tsx](app/components/auth/AuthProvider.tsx) for implementation details.
 
 ## Development
 
