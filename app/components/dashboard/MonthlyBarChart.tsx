@@ -13,9 +13,29 @@ interface MonthlyData {
 interface MonthlyBarChartProps {
   data: MonthlyData[]
   onMonthClick?: (monthIndex: number, monthName: string) => void
+  year?: number
+  setYear?: (year: number) => void
+  month?: number | null
+  setMonth?: (month: number | null) => void
+  availableYears?: number[]
+  availableMonths?: { year: number; month: number; count: number }[]
 }
 
-export default function MonthlyBarChart({ data, onMonthClick }: MonthlyBarChartProps) {
+const THAI_MONTHS = [
+  '', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+  'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+]
+
+export default function MonthlyBarChart({
+  data,
+  onMonthClick,
+  year,
+  setYear,
+  month,
+  setMonth,
+  availableYears,
+  availableMonths
+}: MonthlyBarChartProps) {
   // Transform data to add pending count for stacked bar chart
   const chartData = useMemo(() => {
     return data.map((d) => ({
@@ -30,13 +50,63 @@ export default function MonthlyBarChart({ data, onMonthClick }: MonthlyBarChartP
     }
   }
 
+  // Filter months for the selected year that have data
+  const monthsForSelectedYear = availableMonths
+    ? availableMonths.filter(m => m.year === year)
+    : []
+
+  // Build month options - include "All Year" and months that have data
+  const monthOptions = [
+    { value: null as number | null, label: 'ทั้งปี' },
+    ...monthsForSelectedYear
+      .sort((a, b) => a.month - b.month)
+      .map(m => ({
+        value: m.month,
+        label: THAI_MONTHS[m.month]
+      }))
+  ]
+
+  // Use provided years or fallback to current year
+  const years = availableYears || (year ? [year] : [])
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">ปริมาณงานรายเดือน</h3>
-        {onMonthClick && (
-          <span className="text-sm text-gray-500">👆 คลิกที่แท่งกราฟเพื่อดูรายละเอียด</span>
-        )}
+        <div className="flex items-center gap-3">
+          {year && setYear && (
+            <select
+              value={year}
+              onChange={(e) => {
+                const newYear = parseInt(e.target.value)
+                setYear(newYear)
+                // Reset month when year changes (since different years have different data)
+                if (setMonth) setMonth(null)
+              }}
+              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y + 543}
+                </option>
+              ))}
+            </select>
+          )}
+          {month !== undefined && setMonth && (
+            <select
+              value={month ?? 'all'}
+              onChange={(e) => setMonth(e.target.value === 'all' ? null : parseInt(e.target.value))}
+              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={monthOptions.length <= 1}
+            >
+              {monthOptions.map((m) => (
+                <option key={m.label} value={m.value ?? 'all'}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
       </div>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData}>

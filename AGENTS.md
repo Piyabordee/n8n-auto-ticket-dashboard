@@ -1,9 +1,9 @@
 # IT Helpdesk Dashboard - Project Context
 
-> **Version**: 1.6.0
+> **Version**: 1.7.0
 > **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
 > **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
-> **Last Updated**: 2026-03-09 - LIFF integration removed, Auth Provider added
+> **Last Updated**: 2026-03-09 - Outlier detection changed to Median + 15×MAD method
 
 ---
 
@@ -68,13 +68,14 @@ Shows KPI Cards, charts, staff performance table, and outliers list with year/mo
 A form capturing Category, Sub-category, Branch, Problem details, and an Image Upload field with preview capability.
 
 ### Feature 4: Outlier Detection System
-**Statistical outlier detection using Per-Person Mean + 2SD method**
+**Statistical outlier detection using Per-Person Median + 15×MAD method**
 
 **Methodology**:
-- Each staff member has their own threshold: personal_average + (2 × personal_stddev)
+- Each staff member has their own threshold: personal_median + (15 × personal_mad)
+- MAD (Median Absolute Deviation) is robust against outliers
 - Baseline from FULL YEAR data
 - Month filter affects display only, NOT baseline calculation
-- Requires at least 2 tickets per person for SD calculation
+- Requires at least 2 tickets per person for MAD calculation
 
 **Key Types**: types/outlier.ts
 - OutlierTicket: message_id, assigned_to, subject, diff_minutes, created_date, assigned_date, deviation_score
@@ -211,7 +212,7 @@ Used in: /api/dashboard/staff, /api/tickets
 ### Debug outlier:
 - repository/OutlierRepository.ts SQL
 - Full year CTE baseline
-- Threshold: mean + 2*sd
+- Threshold: median + 15*mad (MAD = Median Absolute Deviation)
 - Pending: diff_minutes = NULL
 
 ### Database Connection (Updated 2026-03-09):

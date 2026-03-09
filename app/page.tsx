@@ -297,15 +297,8 @@ export default function TeamDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header with Filters */}
-      <HeaderFilter
-        year={year}
-        setYear={setYear}
-        month={month}
-        setMonth={setMonth}
-        availableYears={availableYears}
-        availableMonths={availableMonths}
-      />
+      {/* Header */}
+      <HeaderFilter />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -337,6 +330,12 @@ export default function TeamDashboard() {
               <MonthlyBarChart
                 data={monthlyData}
                 onMonthClick={handleMonthClick}
+                year={year}
+                setYear={setYear}
+                month={month}
+                setMonth={setMonth}
+                availableYears={availableYears}
+                availableMonths={availableMonths}
               />
             )}
           </div>

@@ -101,7 +101,7 @@ describe('OutlierRepository', () => {
           diff_minutes: 150,
           created_date: new Date('2026-03-01'),
           assigned_date: new Date('2026-03-01'),
-          personal_mean: 40,
+          personal_median: 40,
           personal_sd: 20,
         },
         {
@@ -111,7 +111,7 @@ describe('OutlierRepository', () => {
           diff_minutes: 120,
           created_date: new Date('2026-03-02'),
           assigned_date: new Date('2026-03-02'),
-          personal_mean: 35,
+          personal_median: 35,
           personal_sd: 15,
         },
       ]
@@ -138,7 +138,7 @@ describe('OutlierRepository', () => {
           diff_minutes: 100,
           created_date: new Date('2026-03-01'),
           assigned_date: new Date('2026-03-01'),
-          personal_mean: 40,
+          personal_median: 40,
           personal_sd: 20,
         },
       ]
@@ -163,7 +163,7 @@ describe('OutlierRepository', () => {
           diff_minutes: 120,
           created_date: new Date('2026-03-01'),
           assigned_date: new Date('2026-03-01'),
-          personal_mean: 40,
+          personal_median: 40,
           personal_sd: 20,
         },
       ]
@@ -202,7 +202,7 @@ describe('OutlierRepository', () => {
           diff_minutes: 100,
           created_date: new Date('2026-03-01'),
           assigned_date: new Date('2026-03-01'),
-          personal_mean: 40,
+          personal_median: 40,
           personal_sd: 20,
         },
         {
@@ -212,7 +212,7 @@ describe('OutlierRepository', () => {
           diff_minutes: 150,
           created_date: new Date('2026-03-02'),
           assigned_date: new Date('2026-03-02'),
-          personal_mean: 40,
+          personal_median: 40,
           personal_sd: 20,
         },
       ]
@@ -242,7 +242,7 @@ describe('OutlierRepository', () => {
           diff_minutes: 200,
           created_date: new Date('2026-03-01'),
           assigned_date: new Date('2026-03-01'),
-          personal_mean: 40,
+          personal_median: 40,
         },
         {
           message_id: 'MSG002',
@@ -251,7 +251,7 @@ describe('OutlierRepository', () => {
           diff_minutes: 150,
           created_date: new Date('2026-03-02'),
           assigned_date: new Date('2026-03-02'),
-          personal_mean: 40,
+          personal_median: 40,
         },
         {
           message_id: 'MSG003',
@@ -260,7 +260,7 @@ describe('OutlierRepository', () => {
           diff_minutes: 120,
           created_date: new Date('2026-03-03'),
           assigned_date: new Date('2026-03-03'),
-          personal_mean: 40,
+          personal_median: 40,
         },
       ]
 
@@ -285,7 +285,7 @@ describe('OutlierRepository', () => {
           diff_minutes: 100,
           created_date: new Date('2026-03-01'),
           assigned_date: new Date('2026-03-01'),
-          personal_mean: 40,
+          personal_median: 40,
         },
       ]
 

@@ -1,9 +1,10 @@
 /**
  * Outlier Detection Repository
- * Handles all SQL queries for statistical outlier detection using Mean + 2SD method
+ * Handles all SQL queries for statistical outlier detection using Median + 15×MAD method
  *
  * Method: PER-PERSON Outlier Detection
- * Each staff member has their own threshold based on their personal average + 2SD
+ * Each staff member has their own threshold based on their personal Median + 15×MAD
+ * MAD (Median Absolute Deviation) is robust against outliers
  * Baseline is calculated from FULL YEAR data, month filter only affects results display
  */
 
@@ -74,16 +75,40 @@ export class OutlierRepository {
             AND created_date >= @yearStartDate
             AND created_date <= @yearEndDate
         ),
-        per_person_stats AS (
-          -- Calculate mean and SD per person from FULL YEAR
-          SELECT
+        -- Calculate per-person median using PERCENTILE_CONT
+        per_person_median AS (
+          SELECT DISTINCT
             assigned_to,
-            AVG(CAST(diff_minutes AS FLOAT)) AS mean_val,
-            STDEV(diff_minutes) AS sd_val,
-            COUNT(*) as ticket_count
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY assigned_to) AS personal_median,
+            COUNT(*) OVER (PARTITION BY assigned_to) AS ticket_count
           FROM full_year_base
-          GROUP BY assigned_to
-          HAVING COUNT(*) >= 2  -- Need at least 2 tickets to calculate SD
+        ),
+        -- Calculate absolute deviations from median
+        absolute_deviations AS (
+          SELECT
+            f.assigned_to,
+            ABS(f.diff_minutes - m.personal_median) AS abs_deviation
+          FROM full_year_base f
+          INNER JOIN per_person_median m ON f.assigned_to = m.assigned_to
+          WHERE m.ticket_count >= 2  -- Need at least 2 tickets
+        ),
+        -- Calculate MAD (Median of Absolute Deviations)
+        per_person_mad AS (
+          SELECT DISTINCT
+            assigned_to,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY assigned_to) AS personal_mad
+          FROM absolute_deviations
+        ),
+        -- Combined stats: median + 15*MAD
+        per_person_stats AS (
+          SELECT
+            m.assigned_to,
+            m.personal_median,
+            mad.personal_mad,
+            m.personal_median + (15 * mad.personal_mad) AS personal_threshold
+          FROM per_person_median m
+          INNER JOIN per_person_mad mad ON m.assigned_to = mad.assigned_to
+          WHERE m.ticket_count >= 2
         ),
         -- Filtered data (for results display)
         filtered_base AS (
@@ -105,12 +130,12 @@ export class OutlierRepository {
         classified AS (
           SELECT
             b.*,
-            s.mean_val AS personal_mean,
-            s.sd_val AS personal_sd,
-            s.mean_val + (2 * s.sd_val) AS personal_threshold,
+            s.personal_median,
+            s.personal_mad,
+            s.personal_threshold,
             CASE
-              WHEN s.mean_val IS NULL THEN 'Insufficient Data'
-              WHEN b.diff_minutes > s.mean_val + (2 * s.sd_val) THEN 'Outlier'
+              WHEN s.personal_median IS NULL THEN 'Insufficient Data'
+              WHEN b.diff_minutes > s.personal_threshold THEN 'Outlier'
               ELSE 'Normal'
             END AS is_outlier
           FROM filtered_base b
@@ -138,8 +163,8 @@ export class OutlierRepository {
       diff_minutes: row.diff_minutes,
       created_date: row.created_date.toISOString(),
       assigned_date: row.assigned_date.toISOString(),
-      deviation_score: row.personal_mean > 0
-        ? Math.round((row.diff_minutes / row.personal_mean) * 100) / 100
+      deviation_score: row.personal_median > 0
+        ? Math.round((row.diff_minutes / row.personal_median) * 100) / 100
         : 0
     }))
 
@@ -191,14 +216,40 @@ export class OutlierRepository {
             AND created_date >= @yearStartDate
             AND created_date <= @yearEndDate
         ),
+        -- Calculate per-person median
+        per_person_median AS (
+          SELECT DISTINCT
+            assigned_to,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY assigned_to) AS personal_median,
+            COUNT(*) OVER (PARTITION BY assigned_to) AS ticket_count
+          FROM full_year_base
+        ),
+        -- Calculate absolute deviations from median
+        absolute_deviations AS (
+          SELECT
+            f.assigned_to,
+            ABS(f.diff_minutes - m.personal_median) AS abs_deviation
+          FROM full_year_base f
+          INNER JOIN per_person_median m ON f.assigned_to = m.assigned_to
+          WHERE m.ticket_count >= 2
+        ),
+        -- Calculate MAD (Median of Absolute Deviations)
+        per_person_mad AS (
+          SELECT DISTINCT
+            assigned_to,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY assigned_to) AS personal_mad
+          FROM absolute_deviations
+        ),
+        -- Combined stats: median + 15*MAD
         per_person_stats AS (
           SELECT
-            assigned_to,
-            AVG(CAST(diff_minutes AS FLOAT)) AS mean_val,
-            STDEV(diff_minutes) AS sd_val
-          FROM full_year_base
-          GROUP BY assigned_to
-          HAVING COUNT(*) >= 2
+            m.assigned_to,
+            m.personal_median,
+            mad.personal_mad,
+            m.personal_median + (15 * mad.personal_mad) AS personal_threshold
+          FROM per_person_median m
+          INNER JOIN per_person_mad mad ON m.assigned_to = mad.assigned_to
+          WHERE m.ticket_count >= 2
         ),
         -- Filtered data for results
         filtered_base AS (
@@ -220,12 +271,12 @@ export class OutlierRepository {
         classified AS (
           SELECT
             b.*,
-            s.mean_val AS personal_mean,
-            s.sd_val AS personal_sd,
-            s.mean_val + (2 * s.sd_val) AS personal_threshold
+            s.personal_median,
+            s.personal_mad,
+            s.personal_threshold
           FROM filtered_base b
           INNER JOIN per_person_stats s ON b.assigned_to = s.assigned_to
-          WHERE b.diff_minutes > s.mean_val + (2 * s.sd_val)
+          WHERE b.diff_minutes > s.personal_threshold
         )
         SELECT TOP 3
           message_id,
@@ -234,7 +285,7 @@ export class OutlierRepository {
           diff_minutes,
           created_date,
           assigned_date,
-          personal_mean
+          personal_median
         FROM classified
         ORDER BY diff_minutes DESC
       `)
@@ -246,8 +297,8 @@ export class OutlierRepository {
       diff_minutes: row.diff_minutes,
       created_date: row.created_date.toISOString(),
       assigned_date: row.assigned_date.toISOString(),
-      deviation_score: row.personal_mean > 0
-        ? Math.round((row.diff_minutes / row.personal_mean) * 100) / 100
+      deviation_score: row.personal_median > 0
+        ? Math.round((row.diff_minutes / row.personal_median) * 100) / 100
         : 0
     }))
   }
@@ -287,15 +338,40 @@ export class OutlierRepository {
             AND assigned_to IS NOT NULL
             AND assigned_to != ''
         ),
-        per_person_stats AS (
-          -- Calculate per-person mean and SD from FULL YEAR
-          SELECT
+        -- Calculate per-person median
+        per_person_median AS (
+          SELECT DISTINCT
             assigned_to,
-            AVG(CAST(diff_minutes AS FLOAT)) AS mean_val,
-            STDEV(diff_minutes) AS sd_val
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY assigned_to) AS personal_median,
+            COUNT(*) OVER (PARTITION BY assigned_to) AS ticket_count
           FROM full_year_base
-          GROUP BY assigned_to
-          HAVING COUNT(*) >= 2  -- Need at least 2 tickets for SD
+        ),
+        -- Calculate absolute deviations from median
+        absolute_deviations AS (
+          SELECT
+            f.assigned_to,
+            ABS(f.diff_minutes - m.personal_median) AS abs_deviation
+          FROM full_year_base f
+          INNER JOIN per_person_median m ON f.assigned_to = m.assigned_to
+          WHERE m.ticket_count >= 2
+        ),
+        -- Calculate MAD (Median of Absolute Deviations)
+        per_person_mad AS (
+          SELECT DISTINCT
+            assigned_to,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY assigned_to) AS personal_mad
+          FROM absolute_deviations
+        ),
+        -- Combined stats: median + 15*MAD
+        per_person_stats AS (
+          SELECT
+            m.assigned_to,
+            m.personal_median,
+            mad.personal_mad,
+            m.personal_median + (15 * mad.personal_mad) AS personal_threshold
+          FROM per_person_median m
+          INNER JOIN per_person_mad mad ON m.assigned_to = mad.assigned_to
+          WHERE m.ticket_count >= 2
         ),
         -- Filtered data for results display - ALL tickets including pending
         filtered_base AS (
@@ -318,13 +394,13 @@ export class OutlierRepository {
             b.message_id,
             b.status,
             b.diff_minutes,
-            s.mean_val AS personal_mean,
-            s.sd_val AS personal_sd,
-            s.mean_val + (2 * s.sd_val) AS personal_threshold,
+            s.personal_median,
+            s.personal_mad,
+            s.personal_threshold,
             CASE
               WHEN b.diff_minutes IS NULL THEN 0  -- Pending tickets have no close time
-              WHEN s.mean_val IS NULL THEN 0  -- Insufficient data
-              WHEN b.diff_minutes > s.mean_val + (2 * s.sd_val) THEN 1
+              WHEN s.personal_median IS NULL THEN 0  -- Insufficient data
+              WHEN b.diff_minutes > s.personal_threshold THEN 1
               ELSE 0
             END AS is_outlier
           FROM filtered_base b
@@ -362,14 +438,40 @@ export class OutlierRepository {
             AND created_date >= @yearStartDate
             AND created_date <= @yearEndDate
         ),
+        -- Calculate per-person median
+        per_person_median AS (
+          SELECT DISTINCT
+            assigned_to,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY assigned_to) AS personal_median,
+            COUNT(*) OVER (PARTITION BY assigned_to) AS ticket_count
+          FROM full_year_base
+        ),
+        -- Calculate absolute deviations from median
+        absolute_deviations AS (
+          SELECT
+            f.assigned_to,
+            ABS(f.diff_minutes - m.personal_median) AS abs_deviation
+          FROM full_year_base f
+          INNER JOIN per_person_median m ON f.assigned_to = m.assigned_to
+          WHERE m.ticket_count >= 2
+        ),
+        -- Calculate MAD (Median of Absolute Deviations)
+        per_person_mad AS (
+          SELECT DISTINCT
+            assigned_to,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY assigned_to) AS personal_mad
+          FROM absolute_deviations
+        ),
+        -- Combined stats: median + 15*MAD
         per_person_stats AS (
           SELECT
-            assigned_to,
-            AVG(CAST(diff_minutes AS FLOAT)) AS mean_val,
-            STDEV(diff_minutes) AS sd_val
-          FROM full_year_base
-          GROUP BY assigned_to
-          HAVING COUNT(*) >= 2
+            m.assigned_to,
+            m.personal_median,
+            mad.personal_mad,
+            m.personal_median + (15 * mad.personal_mad) AS personal_threshold
+          FROM per_person_median m
+          INNER JOIN per_person_mad mad ON m.assigned_to = mad.assigned_to
+          WHERE m.ticket_count >= 2
         ),
         -- Filtered data for results
         filtered_base AS (
@@ -387,11 +489,11 @@ export class OutlierRepository {
         classified AS (
           SELECT
             b.*,
-            s.mean_val,
-            s.sd_val,
+            s.personal_median,
+            s.personal_mad,
             CASE
-              WHEN s.mean_val IS NULL THEN 0
-              WHEN b.diff_minutes > s.mean_val + (2 * s.sd_val) THEN 1
+              WHEN s.personal_median IS NULL THEN 0
+              WHEN b.diff_minutes > s.personal_threshold THEN 1
               ELSE 0
             END AS is_outlier
           FROM filtered_base b

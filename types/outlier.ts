@@ -1,6 +1,8 @@
 /**
  * Outlier Detection Feature Types
- * Statistical outlier detection using Mean + 2SD method
+ * Statistical outlier detection using Median + 15×MAD method
+ * - Per-person baseline calculated from FULL YEAR data
+ * - MAD (Median Absolute Deviation) is robust against outliers
  */
 
 // ============================================================================
@@ -14,7 +16,7 @@ export interface OutlierTicket {
   diff_minutes: number
   created_date: string
   assigned_date: string
-  deviation_score: number  // How many SD above mean (e.g., 2.3)
+  deviation_score: number  // Ratio of ticket time to personal median (e.g., 136.5 = ticket is 136.5x the median)
 }
 
 export interface OutlierSummary {
@@ -22,7 +24,7 @@ export interface OutlierSummary {
   avgTime: number
   maxTime: number
   minTime: number
-  threshold: number  // Mean + 2SD
+  threshold: number  // Per-person threshold (not applicable globally, set to 0)
 }
 
 export interface OutliersResponse {
@@ -80,9 +82,9 @@ export interface OutlierRow {
   diff_minutes: number
   created_date: Date
   assigned_date: Date
-  mean_val: number
-  sd_val: number
-  upper_threshold: number
+  personal_median: number
+  personal_mad: number
+  personal_threshold: number
   is_outlier: 'Normal' | 'Outlier'
 }
 

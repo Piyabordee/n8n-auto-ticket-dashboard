@@ -14,7 +14,7 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 
 ### Dashboard (/)
 - Real-time Stats Cards: Track total tickets, closed tickets, pending items, close rates, and average resolution time
-- Statistical Outlier Detection: Per-person Mean + 2SD methodology
+- Statistical Outlier Detection: Per-person Median + 15×MAD methodology (robust against outliers)
 - Interactive Visualizations: Monthly and daily bar charts with drill-down capabilities
 - Staff Performance Rankings: Comprehensive team performance metrics with outlier breakdown
 - Filtering: Year and month-based data filtering for trend analysis
@@ -112,10 +112,11 @@ n8n-auto-ticket-dashboard/
 
 ## Outlier Detection
 
-**Per-Person Mean + 2SD Method:**
+**Per-Person Median + 15×MAD Method:**
 - Baseline from full year data
-- Threshold: personal_mean + (2 × personal_stddev)
-- Requires min 2 tickets per person for SD calculation
+- Threshold: personal_median + (15 × personal_mad)
+- MAD (Median Absolute Deviation) is robust against outliers
+- Requires min 2 tickets per person for MAD calculation
 
 ## Authentication
 
