@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import ClickableSubject from './ClickableSubject'
 
 interface Ticket {
   message_id: string
@@ -194,9 +195,10 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
                   {formatDate(ticket.created_date)}
                 </td>
                 <td className="px-3 py-2 max-w-xs">
-                  <div className="text-gray-900 font-medium truncate" title={ticket.subject}>
-                    {ticket.subject}
-                  </div>
+                  <ClickableSubject
+                    subject={ticket.subject}
+                    messageId={ticket.message_id}
+                  />
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap text-gray-700">
                   {ticket.assigned_to}

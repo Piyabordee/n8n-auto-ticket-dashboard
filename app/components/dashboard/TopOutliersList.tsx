@@ -1,6 +1,7 @@
 'use client'
 
 import type { OutlierTicket } from '@/types/outlier'
+import ClickableSubject from './ClickableSubject'
 
 interface TopOutliersListProps {
   outliers?: OutlierTicket[]
@@ -109,8 +110,11 @@ export default function TopOutliersList({ outliers = [], onViewAll, loading = fa
                     {formatDate(outlier.assigned_date)}
                   </span>
                 </div>
-                <div className="text-sm text-gray-600 truncate mb-1">
-                  {outlier.subject}
+                <div className="text-sm truncate mb-1">
+                  <ClickableSubject
+                    subject={outlier.subject}
+                    messageId={outlier.message_id}
+                  />
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-lg font-bold text-red-600">

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { OutlierTicket } from '@/types/outlier'
+import ClickableSubject from './ClickableSubject'
 
 interface OutlierTableProps {
   outliers?: OutlierTicket[]
@@ -197,8 +198,11 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {outlier.assigned_to}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
-                  {outlier.subject}
+                <td className="px-6 py-4 text-sm max-w-xs truncate">
+                  <ClickableSubject
+                    subject={outlier.subject}
+                    messageId={outlier.message_id}
+                  />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {formatDate(outlier.assigned_date)}

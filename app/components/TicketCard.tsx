@@ -1,3 +1,7 @@
+'use client'
+
+import ClickableSubject from './dashboard/ClickableSubject'
+
 interface Ticket {
   message_id: string
   subject: string
@@ -44,7 +48,12 @@ export function TicketCard({ ticket }: TicketCardProps) {
   return (
     <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-gray-900 flex-1">{ticket.subject || '(ไม่ระบุหัวข้อ)'}</h3>
+        <h3 className="font-semibold text-gray-900 flex-1">
+          <ClickableSubject
+            subject={ticket.subject || '(ไม่ระบุหัวข้อ)'}
+            messageId={ticket.message_id}
+          />
+        </h3>
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorClass}`}>
           {statusLabel}
         </span>
