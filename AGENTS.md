@@ -214,11 +214,40 @@ Used in: /api/dashboard/staff, /api/tickets
 - Threshold: mean + 2*sd
 - Pending: diff_minutes = NULL
 
-### Issues:
-- Pending=0: Check NULL close_time_minute
-- Wrong name: normalizeStylizedText()
-- No data: /available-months
-- Chart stuck: useEffect deps
+### Database Connection (Updated 2026-03-09):
+
+**Shared Connection Pool Architecture:**
+
+All API routes use a centralized shared connection pool defined in `app/lib/sql.ts`:
+
+```typescript
+import { getConnection } from '@/lib/sql'
+
+export async function GET(request: NextRequest) {
+  const pool = await getConnection()
+  const result = await pool.request().query(...)
+}
+```
+
+**Key Implementation Details:**
+- **Singleton Pattern**: Single `sharedPool` instance shared across all requests
+- **Promise Locking**: `connectingPromise` prevents multiple simultaneous connection attempts
+- **Connection Verification**: Checks `pool.connected` before returning the pool
+- **Error Tracking**: `connectionError` caches failed connection attempts
+
+**How It Works:**
+1. First request triggers `sql.connect(sqlConfig)` and stores the promise
+2. Concurrent requests wait for the same promise (prevents race conditions)
+3. Once connected, `sharedPool.connected` check returns immediately
+4. Promise is kept after connection to indicate completion
+
+**Common Issues:**
+- **ENOTOPEN Error**: "Connection not yet open" - occurs when multiple routes create separate pools
+  - **Solution**: All routes must use `getConnection()` from `app/lib/sql.ts`
+- **Pending=0**: Check NULL close_time_minute
+- **Wrong name**: Use normalizeStylizedText()
+- **No data**: Check /available-months endpoint
+- **Chart stuck**: Check useEffect dependencies
 
 ### Auth Migration (2026-03-09):
 LIFF integration removed and replaced with placeholder auth:

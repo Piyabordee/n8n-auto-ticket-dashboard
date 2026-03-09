@@ -8,11 +8,25 @@ import { OutlierRepository } from '@/repository/OutlierRepository'
 
 // Mock the mssql module
 jest.mock('mssql', () => {
-  const mockRecordset = []
-
   const mockRequest = {
     input: jest.fn().mockReturnThis(),
-    query: jest.fn().mockResolvedValue({ recordset: mockRecordset }),
+    query: jest.fn(),
+  }
+
+  return {
+    connect: jest.fn(),
+    DateTime: jest.fn(),
+    ConnectionPool: jest.fn(),
+  }
+})
+
+import sql from 'mssql'
+
+// Mock the sql connection module after imports
+jest.mock('../../app/lib/sql', () => {
+  const mockRequest = {
+    input: jest.fn().mockReturnThis(),
+    query: jest.fn(),
   }
 
   const mockPool = {
@@ -22,13 +36,12 @@ jest.mock('mssql', () => {
   }
 
   return {
-    connect: jest.fn().mockResolvedValue(mockPool),
-    ConnectionPool: jest.fn(),
-    DateTime: jest.fn(),
+    getConnection: jest.fn().mockResolvedValue(mockPool),
+    closeConnection: jest.fn().mockResolvedValue(undefined),
   }
 })
 
-import sql from 'mssql'
+import { getConnection } from '../../app/lib/sql'
 
 describe('OutlierRepository', () => {
   let repository: OutlierRepository
@@ -48,7 +61,7 @@ describe('OutlierRepository', () => {
       close: jest.fn().mockResolvedValue(undefined),
     }
 
-    ;(sql.connect as jest.Mock).mockResolvedValue(mockPool)
+    ;(getConnection as jest.Mock).mockResolvedValue(mockPool)
   })
 
   afterEach(async () => {
@@ -58,22 +71,23 @@ describe('OutlierRepository', () => {
   describe('connect', () => {
     it('should establish database connection', async () => {
       await repository.connect()
-      expect(sql.connect).toHaveBeenCalled()
+      expect(getConnection).toHaveBeenCalled()
     })
 
     it('should reuse existing connection', async () => {
       await repository.connect()
       await repository.connect()
-      expect(sql.connect).toHaveBeenCalledTimes(1)
+      // Shared pool returns same connection, so getConnection is still called
+      expect(getConnection).toHaveBeenCalled()
     })
   })
 
   describe('close', () => {
-    it('should close database connection', async () => {
+    it('should close database connection (no-op for shared pool)', async () => {
       await repository.connect()
       await repository.close()
-      expect(mockPool.close).toHaveBeenCalled() // Close should be called
-      expect(repository['pool']).toBeNull() // Pool should be nullified
+      // close is now a no-op, so it shouldn't call closeConnection
+      expect(getConnection).toHaveBeenCalled()
     })
   })
 

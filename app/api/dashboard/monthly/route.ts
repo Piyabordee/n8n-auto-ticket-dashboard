@@ -1,30 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
+import { getConnection } from '@/lib/sql'
 import { generateMonthlyData } from '@/data/mockData'
-
-const sqlConfig = {
-  server: process.env.SQL_SERVER || '',
-  database: process.env.SQL_DATABASE || '',
-  user: process.env.SQL_USER || '',
-  password: process.env.SQL_PASSWORD || '',
-  options: {
-    encrypt: false,
-    trustServerCertificate: true,
-    enableArithAbort: true,
-    useUTC: false
-  },
-  parseJSON: true
-}
-
-// Singleton connection pool
-let pool: sql.ConnectionPool | null = null
-
-async function getPool(): Promise<sql.ConnectionPool> {
-  if (!pool || !pool.connected) {
-    pool = await sql.connect(sqlConfig)
-  }
-  return pool
-}
 
 const THAI_MONTHS = [
   'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
@@ -47,7 +24,7 @@ export async function GET(request: NextRequest) {
   const endDate = new Date(Date.UTC(currentYear, 11, 31, 23, 59, 59, 999))
 
   try {
-    const pool = await getPool()
+    const pool = await getConnection()
 
     // Get monthly totals
     const monthlyResult = await pool.request()

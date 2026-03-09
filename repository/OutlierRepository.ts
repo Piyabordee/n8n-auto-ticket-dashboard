@@ -7,7 +7,8 @@
  * Baseline is calculated from FULL YEAR data, month filter only affects results display
  */
 
-import sql, { ConnectionPool } from 'mssql'
+import sql from 'mssql'
+import { getConnection } from '../app/lib/sql'
 import { normalizeStylizedText } from '../app/lib/normalizeText'
 import type {
   OutlierRow,
@@ -19,40 +20,20 @@ import type {
   StaffPerformanceResponse
 } from '../types/outlier'
 
-const sqlConfig = {
-  server: process.env.SQL_SERVER || '',
-  database: process.env.SQL_DATABASE || '',
-  user: process.env.SQL_USER || '',
-  password: process.env.SQL_PASSWORD || '',
-  options: {
-    encrypt: false,
-    trustServerCertificate: true,
-    enableArithAbort: true,
-    useUTC: false
-  },
-  parseJSON: true
-}
-
 export class OutlierRepository {
-  private pool: ConnectionPool | null = null
-
   /**
-   * Establish database connection
+   * Get database connection from shared pool
    */
-  async connect(): Promise<void> {
-    if (!this.pool || !this.pool.connected) {
-      this.pool = await sql.connect(sqlConfig)
-    }
+  async connect(): Promise<sql.ConnectionPool> {
+    return getConnection()
   }
 
   /**
-   * Close database connection
+   * Close database connection (no-op for shared pool)
+   * The shared pool is managed centrally and should not be closed per request
    */
   async close(): Promise<void> {
-    if (this.pool && this.pool.connected) {
-      await this.pool.close()
-      this.pool = null
-    }
+    // No-op: shared pool is managed centrally
   }
 
   /**
@@ -64,13 +45,13 @@ export class OutlierRepository {
     startDate: Date,
     endDate: Date
   ): Promise<{ outliers: OutlierTicket[]; summary: OutlierSummary }> {
-    await this.connect()
+    const pool = await this.connect()
 
     // Calculate full year date range (based on the requested start date)
     const yearStart = new Date(startDate.getFullYear(), 0, 1)  // Jan 1
     const yearEnd = new Date(startDate.getFullYear(), 11, 31, 23, 59, 59)  // Dec 31
 
-    const result = await this.pool!.request()
+    const result = await pool.request()
       .input('filterStartDate', sql.DateTime, startDate)
       .input('filterEndDate', sql.DateTime, endDate)
       .input('yearStartDate', sql.DateTime, yearStart)
@@ -181,13 +162,13 @@ export class OutlierRepository {
     startDate: Date,
     endDate: Date
   ): Promise<OutlierTicket[]> {
-    await this.connect()
+    const pool = await this.connect()
 
     // Calculate full year date range
     const yearStart = new Date(startDate.getFullYear(), 0, 1)
     const yearEnd = new Date(startDate.getFullYear(), 11, 31, 23, 59, 59)
 
-    const result = await this.pool!.request()
+    const result = await pool.request()
       .input('filterStartDate', sql.DateTime, startDate)
       .input('filterEndDate', sql.DateTime, endDate)
       .input('yearStartDate', sql.DateTime, yearStart)
@@ -279,14 +260,14 @@ export class OutlierRepository {
     startDate: Date,
     endDate: Date
   ): Promise<StaffPerformanceResponse> {
-    await this.connect()
+    const pool = await this.connect()
 
     // Calculate full year date range
     const yearStart = new Date(startDate.getFullYear(), 0, 1)
     const yearEnd = new Date(startDate.getFullYear(), 11, 31, 23, 59, 59)
 
     // Get staff stats with per-person outlier classification
-    const staffResult = await this.pool!.request()
+    const staffResult = await pool.request()
       .input('filterStartDate', sql.DateTime, startDate)
       .input('filterEndDate', sql.DateTime, endDate)
       .input('yearStartDate', sql.DateTime, yearStart)
@@ -364,7 +345,7 @@ export class OutlierRepository {
       `)
 
     // Get summary stats (using per-person classification, aggregated)
-    const summaryResult = await this.pool!.request()
+    const summaryResult = await pool.request()
       .input('filterStartDate', sql.DateTime, startDate)
       .input('filterEndDate', sql.DateTime, endDate)
       .input('yearStartDate', sql.DateTime, yearStart)

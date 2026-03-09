@@ -1,30 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
+import { getConnection } from '@/lib/sql'
 import { generateDashboardStats } from '@/data/mockData'
-
-const sqlConfig = {
-  server: process.env.SQL_SERVER || '',
-  database: process.env.SQL_DATABASE || '',
-  user: process.env.SQL_USER || '',
-  password: process.env.SQL_PASSWORD || '',
-  options: {
-    encrypt: false,
-    trustServerCertificate: true,
-    enableArithAbort: true,
-    useUTC: false
-  },
-  parseJSON: true
-}
-
-// Singleton connection pool
-let pool: sql.ConnectionPool | null = null
-
-async function getPool(): Promise<sql.ConnectionPool> {
-  if (!pool || !pool.connected) {
-    pool = await sql.connect(sqlConfig)
-  }
-  return pool
-}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -39,7 +16,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const pool = await getPool()
+    const pool = await getConnection()
 
     // Build date range
     const currentYear = year ? parseInt(year) : new Date().getFullYear()

@@ -144,9 +144,35 @@ See [types/auth.ts](types/auth.ts) and [app/components/auth/AuthProvider.tsx](ap
 
 ### Key Patterns
 
-- **Singleton Repository**: Shared connection pool
+- **Shared Connection Pool**: Centralized database connection management in `app/lib/sql.ts`
+  - Uses promise-based locking to prevent race conditions during concurrent requests
+  - Handles rapid refresh scenarios (F5/Ctrl+Shift+R) without ENOTOPEN errors
+  - Connection pool is reused across all API routes for optimal performance
 - **Text Normalization**: Unicode to ASCII conversion
 - **Concurrent-Safe**: Connection locking prevents race conditions
+
+### Database Connection Architecture (Updated 2026-03-09)
+
+The application uses a **shared singleton connection pool** pattern to handle concurrent API requests safely:
+
+```typescript
+// All API routes import from the same shared pool
+import { getConnection } from '@/lib/sql'
+
+const pool = await getConnection()
+const result = await pool.request().query(...)
+```
+
+**Key Features:**
+- Single connection pool instance shared across all API routes
+- Promise-based locking prevents multiple simultaneous connection attempts
+- Automatic connection verification ensures pool is ready before use
+- Handles rapid page loads and concurrent requests without errors
+
+**Files:**
+- `app/lib/sql.ts` - Shared connection pool implementation
+- `app/api/dashboard/*/route.ts` - API routes using shared pool
+- `repository/OutlierRepository.ts` - Repository using shared pool
 
 ### Scripts
 
