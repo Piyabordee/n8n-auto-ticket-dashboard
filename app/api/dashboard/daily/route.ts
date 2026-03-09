@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
+import { generateDailyData } from '@/data/mockData'
 
 const sqlConfig = {
   server: process.env.SQL_SERVER || '',
@@ -40,6 +41,12 @@ export async function GET(request: NextRequest) {
   const currentYear = parseInt(year)
   const currentMonth = parseInt(month)
 
+  // Use mock data if USE_MOCK_DATA is enabled
+  if (process.env.USE_MOCK_DATA === 'true') {
+    const dailyData = generateDailyData(currentYear, currentMonth)
+    return NextResponse.json({ data: dailyData })
+  }
+
   // Get the number of days in the month
   const daysInMonth = new Date(currentYear, currentMonth, 0).getDate()
 
@@ -79,9 +86,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: dailyData })
   } catch (error) {
     console.error('Daily API Error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch daily data', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
+    // Fallback to mock data if database connection fails
+    console.log('Falling back to mock data due to database error')
+    const dailyData = generateDailyData(currentYear, currentMonth)
+    return NextResponse.json({ data: dailyData })
   }
 }

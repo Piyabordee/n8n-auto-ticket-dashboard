@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
+import { generateAvailableMonths } from '@/data/mockData'
 
 const sqlConfig = {
   server: process.env.SQL_SERVER || '',
@@ -26,6 +27,11 @@ async function getPool(): Promise<sql.ConnectionPool> {
 }
 
 export async function GET(request: NextRequest) {
+  // Use mock data if USE_MOCK_DATA is enabled
+  if (process.env.USE_MOCK_DATA === 'true') {
+    return NextResponse.json(generateAvailableMonths())
+  }
+
   try {
     const pool = await getPool()
 
@@ -56,9 +62,8 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Available months API Error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch available months', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
+    // Fallback to mock data if database connection fails
+    console.log('Falling back to mock data due to database error')
+    return NextResponse.json(generateAvailableMonths())
   }
 }

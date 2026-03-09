@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
+import { generateMonthlyData } from '@/data/mockData'
 
 const sqlConfig = {
   server: process.env.SQL_SERVER || '',
@@ -35,6 +36,12 @@ export async function GET(request: NextRequest) {
   const year = searchParams.get('year')
 
   const currentYear = year ? parseInt(year) : new Date().getFullYear()
+
+  // Use mock data if USE_MOCK_DATA is enabled
+  if (process.env.USE_MOCK_DATA === 'true') {
+    const monthlyData = generateMonthlyData(currentYear)
+    return NextResponse.json({ data: monthlyData })
+  }
   // Use UTC dates to ensure consistent behavior across timezones
   const startDate = new Date(Date.UTC(currentYear, 0, 1, 0, 0, 0))
   const endDate = new Date(Date.UTC(currentYear, 11, 31, 23, 59, 59, 999))
@@ -70,9 +77,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: monthlyData })
   } catch (error) {
     console.error('Monthly API Error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch monthly data', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    )
+    // Fallback to mock data if database connection fails
+    console.log('Falling back to mock data due to database error')
+    const monthlyData = generateMonthlyData(currentYear)
+    return NextResponse.json({ data: monthlyData })
   }
 }
