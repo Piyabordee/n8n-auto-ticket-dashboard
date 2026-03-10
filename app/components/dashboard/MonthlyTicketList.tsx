@@ -146,10 +146,36 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">📋 รายการงานทั้งหมด ({tickets.length} งาน)</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">📋 รายการงานทั้งหมด ({tickets.length} งาน)</h3>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile Card View */}
+      <div className="md:hidden divide-y divide-gray-100">
+        {sortedTickets.map((ticket) => (
+          <div key={ticket.message_id} className="p-3 hover:bg-blue-50 transition-colors">
+            <div className="mb-2">
+              <ClickableSubject
+                subject={ticket.subject}
+                messageId={ticket.message_id}
+              />
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+              <span className="text-gray-600">{formatDate(ticket.created_date)}</span>
+              <span className="text-gray-700">• {ticket.assigned_to}</span>
+              <span>{getStatusBadge(ticket.status)}</span>
+              <span className="text-gray-600">{ticket.branch_name}</span>
+              {ticket.close_time_minute && (
+                <span className="font-semibold text-blue-600">
+                  {formatMinutes(ticket.close_time_minute)}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -223,6 +249,7 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   )
 }
