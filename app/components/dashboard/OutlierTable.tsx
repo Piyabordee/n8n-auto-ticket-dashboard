@@ -249,6 +249,5 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
         </table>
       </div>
     </div>
-    </div>
   )
 }

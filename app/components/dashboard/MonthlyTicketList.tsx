@@ -250,6 +250,5 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
         </table>
       </div>
     </div>
-    </div>
   )
 }
