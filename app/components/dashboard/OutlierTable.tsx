@@ -127,39 +127,65 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
       {/* Summary Header */}
       {summary && (
-        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <div className="grid grid-cols-4 gap-4 text-center">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-center">
             <div>
-              <div className="text-sm text-gray-600">Total Outliers</div>
-              <div className="text-xl font-bold text-gray-900">{summary.total}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Total Outliers</div>
+              <div className="text-lg sm:text-xl font-bold text-gray-900">{summary.total}</div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">Avg Time</div>
-              <div className="text-xl font-bold text-orange-600">
+              <div className="text-xs sm:text-sm text-gray-600">Avg Time</div>
+              <div className="text-lg sm:text-xl font-bold text-orange-600">
                 {formatMinutes(Math.round(summary.avgTime))}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">Max Time</div>
-              <div className="text-xl font-bold text-red-600">
+              <div className="text-xs sm:text-sm text-gray-600">Max Time</div>
+              <div className="text-lg sm:text-xl font-bold text-red-600">
                 {formatMinutes(summary.maxTime)}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600">Min Time</div>
-              <div className="text-xl font-bold text-blue-600">
+              <div className="text-xs sm:text-sm text-gray-600">Min Time</div>
+              <div className="text-lg sm:text-xl font-bold text-blue-600">
                 {formatMinutes(Math.round(summary.minTime))}
               </div>
             </div>
           </div>
-          <div className="mt-2 text-center text-xs text-gray-500">
+          <div className="mt-2 text-center text-xs text-gray-500 px-2">
             * ใช้เกณฑ์ต่อบุคคล (ค่ามัธยฐาน + 15×MAD ของแต่ละพนักงาน)
           </div>
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Mobile Card View */}
+      <div className="md:hidden divide-y divide-gray-200">
+        {sortedOutliers.map((outlier) => (
+          <div key={outlier.message_id} className="p-4 hover:bg-gray-50">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-semibold text-gray-900">{outlier.assigned_to}</span>
+              <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full">
+                {outlier.deviation_score.toFixed(1)}x
+              </span>
+            </div>
+            <div className="text-sm mb-2">
+              <ClickableSubject
+                subject={outlier.subject}
+                messageId={outlier.message_id}
+              />
+            </div>
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span>{formatDate(outlier.assigned_date)}</span>
+              <span className="font-bold text-red-600">
+                {formatMinutes(outlier.diff_minutes)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -222,6 +248,7 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   )
 }
