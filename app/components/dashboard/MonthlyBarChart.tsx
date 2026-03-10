@@ -71,9 +71,9 @@ export default function MonthlyBarChart({
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">ปริมาณงานรายเดือน</h3>
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">ปริมาณงานรายเดือน</h3>
+        <div className="flex flex-wrap items-center gap-2">
           {year && setYear && (
             <select
               value={year}
@@ -83,7 +83,7 @@ export default function MonthlyBarChart({
                 // Reset month when year changes (since different years have different data)
                 if (setMonth) setMonth(null)
               }}
-              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {years.map((y) => (
                 <option key={y} value={y}>
@@ -96,7 +96,7 @@ export default function MonthlyBarChart({
             <select
               value={month ?? 'all'}
               onChange={(e) => setMonth(e.target.value === 'all' ? null : parseInt(e.target.value))}
-              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={monthOptions.length <= 1}
             >
               {monthOptions.map((m) => (
@@ -108,7 +108,7 @@ export default function MonthlyBarChart({
           )}
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={250}>
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" tick={{ fontSize: 12 }} />
