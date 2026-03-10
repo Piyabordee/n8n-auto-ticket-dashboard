@@ -2,7 +2,7 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add statistical outlier detection (Mean + 2SD) to identify abnormal ticket resolution times.
+**Goal:** Add statistical outlier detection (Median + 15×MAD) to identify abnormal ticket resolution times.
 
 **Architecture:** Full-stack SQL approach using CTEs for statistical calculations.
 

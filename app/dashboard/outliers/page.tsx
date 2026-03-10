@@ -96,7 +96,7 @@ function OutliersContent() {
             <h1 className="text-2xl font-bold text-gray-900">
               Outlier Detection
               <span className="text-gray-500 text-lg font-normal ml-2">
-                (Per-Person Threshold)
+                (ค่ามัธยฐาน + 15×MAD)
               </span>
             </h1>
             <div className="w-24"></div>

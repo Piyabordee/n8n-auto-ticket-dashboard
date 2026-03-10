@@ -39,7 +39,7 @@ export class OutlierRepository {
 
   /**
    * Get all outliers with statistical classification
-   * Uses PER-PERSON Mean + 2SD threshold calculated from FULL YEAR baseline
+   * Uses PER-PERSON Median + 15×MAD threshold calculated from FULL YEAR baseline
    * Month filter only affects which results are displayed, not the baseline
    */
   async getOutliers(
@@ -181,7 +181,7 @@ export class OutlierRepository {
 
   /**
    * Get top 3 outliers for quick preview
-   * Uses PER-PERSON Mean + 2SD threshold calculated from FULL YEAR baseline
+   * Uses PER-PERSON Median + 15×MAD threshold calculated from FULL YEAR baseline
    */
   async getTopOutliers(
     startDate: Date,
@@ -305,7 +305,7 @@ export class OutlierRepository {
 
   /**
    * Get staff performance with outlier breakdown
-   * Uses PER-PERSON Mean + 2SD threshold calculated from FULL YEAR baseline
+   * Uses PER-PERSON Median + 15×MAD threshold calculated from FULL YEAR baseline
    */
   async getStaffPerformanceWithOutliers(
     startDate: Date,

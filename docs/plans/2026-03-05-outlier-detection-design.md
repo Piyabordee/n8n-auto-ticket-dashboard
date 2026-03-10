@@ -9,7 +9,7 @@
 
 ## Overview
 
-Add statistical outlier detection (Mean ± 2SD) to the Team KPI Dashboard to identify abnormal ticket resolution times. Feature includes both quick preview on main dashboard and a dedicated outliers page.
+Add statistical outlier detection (Median + 15×MAD) to the Team KPI Dashboard to identify abnormal ticket resolution times. Feature includes both quick preview on main dashboard and a dedicated outliers page.
 
 ---
 
@@ -63,7 +63,7 @@ interface StaffPerformanceResponse {
     avgTimeAll: number
     avgTimeNormal: number
     avgTimeOutlier: number
-    outlierThreshold: number  // Mean + 2SD
+    outlierThreshold: number  // Per-person Median + 15×MAD
   }
 }
 
@@ -139,7 +139,11 @@ interface TopOutliersResponse {
 
 ### Core Outlier Detection Query
 
+**Note:** Current implementation uses PER-PERSON Median + 15×MAD method (see OutlierRepository.ts)
+This section is kept for historical reference only.
+
 ```sql
+-- OLD: Global Mean + 2SD approach (replaced by per-person Median + 15×MAD)
 WITH base AS (
     SELECT
         assigned_to,

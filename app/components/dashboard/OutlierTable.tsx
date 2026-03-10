@@ -114,7 +114,7 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
           <div className="text-5xl mb-3">✓</div>
           <div className="text-gray-700 font-semibold text-lg">ไม่พบ Outliers</div>
           <div className="text-gray-500 mt-2">
-            ทุก Ticket อยู่ในช่วงปกติ (Per-Person Mean + 2SD)
+            ทุก Ticket อยู่ในช่วงปกติ (ค่ามัธยฐาน + 15×MAD)
           </div>
         </div>
       </div>
@@ -153,7 +153,7 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
             </div>
           </div>
           <div className="mt-2 text-center text-xs text-gray-500">
-            * Using Per-Person Threshold (Mean + 2SD for each staff member)
+            * ใช้เกณฑ์ต่อบุคคล (ค่ามัธยฐาน + 15×MAD ของแต่ละพนักงาน)
           </div>
         </div>
       )}

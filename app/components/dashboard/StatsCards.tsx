@@ -99,7 +99,7 @@ export default function StatsCards({
               <span className="text-red-600"> / </span>
               <span className="text-red-600">{avgTimeOutlier > 0 ? formatMinutes(Math.round(avgTimeOutlier)) : '-'}</span>
             </div>
-            <div className="text-xs text-gray-500 mt-1">Per-Person Threshold</div>
+            <div className="text-xs text-gray-500 mt-1">ค่ามัธยฐาน + 15×MAD</div>
           </>
         ) : (
           <>
