@@ -85,21 +85,21 @@ function OutliersContent() {
     <>
       {/* Header with Filters */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <button
               onClick={handleBackToDashboard}
-              className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+              className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 self-start"
             >
               ← กลับหน้าหลัก
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 text-center sm:text-left">
               Outlier Detection
-              <span className="text-gray-500 text-lg font-normal ml-2">
+              <span className="text-gray-500 text-base sm:text-lg font-normal ml-0 sm:ml-2 block sm:inline">
                 (ค่ามัธยฐาน + 15×MAD)
               </span>
             </h1>
-            <div className="w-24"></div>
+            <div className="hidden sm:block w-24"></div>
           </div>
           {/* Staff Filter Badge */}
           {staffFilter && (
@@ -118,27 +118,27 @@ function OutliersContent() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Filters */}
-        <div className="mb-6 flex flex-wrap gap-4 items-center bg-white p-4 rounded-lg shadow-sm">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">ปี (Year)</label>
+        <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center bg-white p-3 sm:p-4 rounded-lg shadow-sm">
+          <div className="flex-1 sm:flex-none">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">ปี (Year)</label>
             <select
               value={year}
               onChange={(e) => handleYearChange(parseInt(e.target.value))}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value={2025}>2025</option>
               <option value={2026}>2026</option>
               <option value={2027}>2027</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">เดือน (Month)</label>
+          <div className="flex-1 sm:flex-none">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">เดือน (Month)</label>
             <select
               value={month ?? ''}
               onChange={(e) => handleMonthChange(e.target.value ? parseInt(e.target.value) : null)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value="">ทั้งปี (All Year)</option>
               <option value="1">มกราคม (January)</option>
