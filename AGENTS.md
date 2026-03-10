@@ -3,7 +3,7 @@
 > **Version**: 1.7.0
 > **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
 > **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
-> **Last Updated**: 2026-03-09 - Outlier detection changed to Median + 15×MAD method
+> **Last Updated**: 2026-03-10 - Mobile responsiveness implementation completed
 
 ---
 
@@ -83,7 +83,33 @@ A form capturing Category, Sub-category, Branch, Problem details, and an Image U
 
 **Repository**: repository/OutlierRepository.ts
 
-### Feature 5: Text Normalization
+### Feature 5: Mobile Responsive Design
+**Mobile-first responsive UI using Tailwind CSS breakpoints**
+
+**Breakpoints Used**:
+- `< 640px` (default): Mobile phones - 1 column grids, card views for tables
+- `sm: 640px+`: Small tablets, large phones - 2 columns
+- `md: 768px+`: Tablets - Desktop table views enabled
+- `lg: 1024px+`: Small desktops, laptops - 4-5 columns
+- `xl: 1280px+`: Desktops
+
+**Responsive Patterns**:
+- **Cards**: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4/5 gap-3`
+- **Tables**: Mobile card view (`md:hidden`) + Desktop table (`hidden md:block`)
+- **Modals**: `p-2 sm:p-4`, `max-w-full sm:max-w-6xl`, `max-h-[95vh] sm:max-h-[90vh]`
+- **Charts**: `height={250}` (mobile) / `300` (desktop)
+- **Typography**: `text-xs sm:text-sm` labels, `text-2xl sm:text-3xl` numbers
+- **Spacing**: `px-3 sm:px-4`, `py-4 sm:py-6`, `gap-2 sm:gap-4`
+
+**Modified Components**:
+- StatsCards, HeaderFilter, MonthlyBarChart, InlineDailyChart
+- TopOutliersList, StaffPerformanceTable, TicketListModal
+- DailyBarChart, OutlierTable, MonthlyTicketList, TicketDetailModal
+- Main page and outliers page
+
+**Documentation**: See `docs/mobile-responsive.md` for detailed patterns
+
+### Feature 6: Text Normalization
 Utility to normalize stylized Unicode text to regular ASCII.
 
 **File**: app/lib/normalizeText.ts
@@ -257,6 +283,15 @@ LIFF integration removed and replaced with placeholder auth:
 - profile → user
 - @line/liff package removed
 - types/liff.ts removed, replaced with types/auth.ts
+
+### Mobile Responsiveness (2026-03-10):
+Full mobile responsiveness implemented across all dashboard components:
+- Mobile-first approach using Tailwind CSS responsive utilities
+- Table components now have card views for mobile (`md:hidden`)
+- Modals scale appropriately: full width on mobile, max-width on desktop
+- Charts: 250px height on mobile, 300px on desktop
+- Typography scales: `text-xs sm:text-sm`, `text-base sm:text-lg`, etc.
+- Documentation in `docs/mobile-responsive.md`
 
 ---
 

@@ -30,7 +30,12 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 - **Per-Person Outlier Detection**: Each staff member has their own statistical threshold
 - **Text Normalization**: Handles stylized Unicode text (Thai characters) with ASCII conversion
 - **Connection Pooling**: Optimized SQL Server connection management for concurrent requests
-- **Responsive Design**: Mobile-first UI using Tailwind CSS and shadcn/ui components
+- **Mobile-First Responsive Design**: Full mobile responsiveness with Tailwind CSS breakpoints
+  - Cards stack vertically on mobile (1 col), expand to 4-5 columns on desktop
+  - Tables use card-based layout on mobile, traditional table view on desktop
+  - Modals scale to fit mobile screens (95vh) and desktop (90vh)
+  - Charts adjust height (250px mobile, 300px desktop)
+  - Typography scales appropriately (text-xs sm:text-sm for labels)
 - **Auth-Ready Architecture**: Mock authentication structure prepared for NextAuth.js, Clerk, Auth0, or Supabase
 
 ## Tech Stack
