@@ -68,24 +68,24 @@ export default function TicketDetailModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-full sm:max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">รายละเอียดงานทั้งหมด</h2>
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center justify-between gap-2">
+          <h2 className="text-base sm:text-xl font-semibold text-gray-900 truncate">รายละเอียดงานทั้งหมด</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-lg"
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg flex-shrink-0"
             aria-label="Close"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6">
           {loading && (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -103,12 +103,12 @@ export default function TicketDetailModal({
               {/* Basic Section - Always Visible */}
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <span>📋</span> {ticket.subject || '(ไม่ระบุหัวข้อ)'}
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <span>📋</span> <span className="truncate">{ticket.subject || '(ไม่ระบุหัวข้อ)'}</span>
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <span>📊</span>
                     <span className="font-medium">สถานะ:</span>
@@ -178,9 +178,9 @@ export default function TicketDetailModal({
                 {expanded && (
                   <div className="mt-4 space-y-4 text-sm">
                     {/* Basic Info */}
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-semibold mb-2">🔸 ข้อมูลพื้นฐาน</h4>
-                      <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                      <h4 className="font-semibold mb-2 text-sm">🔸 ข้อมูลพื้นฐาน</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
                         <div><span className="font-medium">ID:</span> {ticket.id || '-'}</div>
                         <div><span className="font-medium">Message ID:</span> {ticket.message_id}</div>
                         <div><span className="font-medium">Intent:</span> {ticket.intent || '-'}</div>
@@ -189,9 +189,9 @@ export default function TicketDetailModal({
                     </div>
 
                     {/* Reporter Info */}
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-semibold mb-2">🔸 ข้อมูลการแจ้ง</h4>
-                      <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                      <h4 className="font-semibold mb-2 text-sm">🔸 ข้อมูลการแจ้ง</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
                         <div><span className="font-medium">From User:</span> {ticket.fromuser || '-'}</div>
                         <div><span className="font-medium">User ID:</span> {ticket.userid || '-'}</div>
                         <div><span className="font-medium">Chat Name:</span> {ticket.chatname || 'ไม่ระบุ'}</div>
@@ -201,35 +201,35 @@ export default function TicketDetailModal({
                     </div>
 
                     {/* Text Fields */}
-                    <div className="bg-gray-50 p-4 rounded-lg space-y-3">
-                      <h4 className="font-semibold">🔸 รายละเอียดข้อความ</h4>
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg space-y-3">
+                      <h4 className="font-semibold text-sm">🔸 รายละเอียดข้อความ</h4>
 
                       {ticket.clean_text && (
                         <div>
-                          <div className="font-medium mb-1">clean_text:</div>
-                          <div className="bg-white p-2 rounded text-gray-700 whitespace-pre-wrap">{ticket.clean_text}</div>
+                          <div className="font-medium mb-1 text-xs sm:text-sm">clean_text:</div>
+                          <div className="bg-white p-2 rounded text-gray-700 whitespace-pre-wrap text-xs sm:text-sm">{ticket.clean_text}</div>
                         </div>
                       )}
 
                       {ticket.raw_text && (
                         <div>
-                          <div className="font-medium mb-1">raw_text:</div>
-                          <div className="bg-white p-2 rounded text-gray-700 whitespace-pre-wrap">{ticket.raw_text}</div>
+                          <div className="font-medium mb-1 text-xs sm:text-sm">raw_text:</div>
+                          <div className="bg-white p-2 rounded text-gray-700 whitespace-pre-wrap text-xs sm:text-sm">{ticket.raw_text}</div>
                         </div>
                       )}
 
                       {ticket.email_body && (
                         <div>
-                          <div className="font-medium mb-1">email_body:</div>
-                          <div className="bg-white p-2 rounded text-gray-700 whitespace-pre-wrap">{ticket.email_body}</div>
+                          <div className="font-medium mb-1 text-xs sm:text-sm">email_body:</div>
+                          <div className="bg-white p-2 rounded text-gray-700 whitespace-pre-wrap text-xs sm:text-sm">{ticket.email_body}</div>
                         </div>
                       )}
                     </div>
 
                     {/* System Info */}
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-semibold mb-2">🔸 ข้อมูลกลุ่มและระบบ</h4>
-                      <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                      <h4 className="font-semibold mb-2 text-sm">🔸 ข้อมูลกลุ่มและระบบ</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
                         <div><span className="font-medium">Group ID:</span> {ticket.groupid || '-'}</div>
                         <div><span className="font-medium">Assigned Date:</span> {formatDate(ticket.assigned_date)}</div>
                         <div><span className="font-medium">Updated Date:</span> {formatDate(ticket.updated_date)}</div>
@@ -237,9 +237,9 @@ export default function TicketDetailModal({
                     </div>
 
                     {/* Close Info */}
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-semibold mb-2">🔸 ข้อมูลการปิดงาน</h4>
-                      <div className="space-y-1">
+                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                      <h4 className="font-semibold mb-2 text-sm">🔸 ข้อมูลการปิดงาน</h4>
+                      <div className="space-y-1 text-xs sm:text-sm">
                         <div><span className="font-medium">Close Cause:</span> {ticket.close_cause || '-'}</div>
                         <div><span className="font-medium">Close Reason:</span> {ticket.close_reason || '-'}</div>
                         <div><span className="font-medium">Close Time Minute:</span> {ticket.close_time_minute || '-'} นาที</div>
