@@ -74,12 +74,12 @@ export default function TopOutliersList({ outliers = [], onViewAll, loading = fa
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">Top Outliers (นานที่สุด)</h3>
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex flex-row items-center justify-between gap-2">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">Top Outliers (นานที่สุด)</h3>
         {outliers.length > 0 && onViewAll && (
           <button
             onClick={onViewAll}
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap"
           >
             ดูทั้งหมด →
           </button>
@@ -88,10 +88,10 @@ export default function TopOutliersList({ outliers = [], onViewAll, loading = fa
 
       <div className="divide-y divide-gray-100">
         {outliers.map((outlier, index) => (
-          <div key={outlier.message_id} className="p-4 hover:bg-gray-50">
-            <div className="flex items-start gap-4">
+          <div key={outlier.message_id} className="p-3 sm:p-4 hover:bg-gray-50">
+            <div className="flex items-start gap-3 sm:gap-4">
               {/* Rank Badge */}
-              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+              <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm ${
                 index === 0 ? 'bg-red-100 text-red-700' :
                 index === 1 ? 'bg-orange-100 text-orange-700' :
                 'bg-yellow-100 text-yellow-700'
@@ -101,8 +101,8 @@ export default function TopOutliersList({ outliers = [], onViewAll, loading = fa
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-gray-900">
+                <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-1">
+                  <span className="text-xs sm:text-sm font-medium text-gray-900">
                     {outlier.assigned_to}
                   </span>
                   <span className="text-xs text-gray-500">•</span>
@@ -110,14 +110,14 @@ export default function TopOutliersList({ outliers = [], onViewAll, loading = fa
                     {formatDate(outlier.assigned_date)}
                   </span>
                 </div>
-                <div className="text-sm truncate mb-1">
+                <div className="text-xs sm:text-sm truncate mb-1">
                   <ClickableSubject
                     subject={outlier.subject}
                     messageId={outlier.message_id}
                   />
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-lg font-bold text-red-600">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <span className="text-base sm:text-lg font-bold text-red-600">
                     {formatMinutes(outlier.diff_minutes)}
                   </span>
                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
