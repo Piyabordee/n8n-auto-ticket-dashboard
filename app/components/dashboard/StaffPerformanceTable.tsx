@@ -65,11 +65,78 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">ผลงานทีม (Staff Performance)</h3>
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">ผลงานทีม (Staff Performance)</h3>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile Card View */}
+      <div className="md:hidden px-4 py-4 space-y-4">
+        {(staff || []).map((person) => (
+          <div key={person.name} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRankBadge(person.rank)}`}>
+                  {getRankIcon(person.rank)}
+                </span>
+                {onStaffClick ? (
+                  <button
+                    onClick={() => onStaffClick(person.name)}
+                    className="text-sm font-semibold text-blue-600 hover:text-blue-800"
+                  >
+                    {person.name}
+                  </button>
+                ) : (
+                  <span className="text-sm font-semibold text-gray-900">{person.name}</span>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <div className="text-gray-500">รับงาน</div>
+                <div className="font-semibold text-gray-900">{person.totalAssigned}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">ยังไม่ปิด</div>
+                <div className="font-semibold text-red-600">{person.totalPending}</div>
+              </div>
+              {hasOutlierData && (
+                <div>
+                  <div className="text-gray-500">Outliers</div>
+                  <div className="font-semibold">
+                    <button
+                      onClick={() => person.outlierCount && person.outlierCount > 0 && onOutlierClick?.(person.name)}
+                      disabled={!person.outlierCount || person.outlierCount === 0}
+                      className={`text-xs font-medium ${getOutlierBadgeClass(person.outlierCount || 0)} ${
+                        person.outlierCount && person.outlierCount > 0 && onOutlierClick ? 'cursor-pointer' : ''
+                      }`}
+                    >
+                      {person.outlierCount || 0}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="mt-2 text-xs">
+              <span className="text-gray-500">เวลาเฉลี่ย:</span>{' '}
+              <span className="font-semibold text-gray-900">
+                {hasOutlierData && person.avgTimeNormal !== undefined ? (
+                  <>
+                    {formatMinutes(Math.round(person.avgTimeNormal))}
+                    {person.outlierCount && person.outlierCount > 0 && (
+                      <span className="text-red-600"> ({formatMinutes(Math.round(person.avgTimeOutlier || 0))})</span>
+                    )}
+                  </>
+                ) : (
+                  person.avgTimeAll > 0 ? formatMinutes(Math.round(person.avgTimeAll)) : '-'
+                )}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View - hidden on mobile */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
