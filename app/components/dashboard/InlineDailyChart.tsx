@@ -61,15 +61,15 @@ export default function InlineDailyChart({ year, month, monthName, onDayClick }:
 
   return (
     <div className={`bg-white rounded-lg shadow-sm p-6 mb-6 ${onDayClick ? 'cursor-pointer' : ''}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">ปริมาณงานรายวัน - {monthName} {year + 543}</h3>
-        <div className="text-sm text-gray-500">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900">ปริมาณงานรายวัน - {monthName} {year + 543}</h3>
+        <div className="text-xs sm:text-sm text-gray-500">
           ทั้งหมด: <span className="font-semibold text-gray-900">{total}</span> •
           ปิดแล้ว: <span className="font-semibold text-green-600">{closed}</span> •
           รอดำเนินการ: <span className="font-semibold text-red-600">{total - closed}</span>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={250}>
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
