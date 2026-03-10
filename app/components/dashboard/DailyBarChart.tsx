@@ -109,19 +109,19 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
   }, [data])
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-full sm:max-w-7xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-header-yellow shrink-0">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center justify-between bg-header-yellow shrink-0">
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-xl font-semibold text-gray-900">
               รายละเอียดประจำเดือน - {monthName} {year + 543}
             </h2>
-            <p className="text-sm text-gray-700">กราฟรายวัน ผลงานทีม และรายการงานทั้งหมด</p>
+            <p className="text-xs sm:text-sm text-gray-700">กราฟรายวัน ผลงานทีม และรายการงานทั้งหมด</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-600 hover:text-gray-900 text-2xl font-bold leading-none"
+            className="text-gray-600 hover:text-gray-900 text-xl sm:text-2xl font-bold leading-none flex-shrink-0"
           >
             ×
           </button>
@@ -134,9 +134,9 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
           ) : (
             <>
               {/* Daily Chart Section */}
-              <div className={`p-6 border-b border-gray-200 ${onDayClick ? 'cursor-pointer' : ''}`}>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 กราฟรายวัน</h3>
-                <ResponsiveContainer width="100%" height={300}>
+              <div className={`p-4 sm:p-6 border-b border-gray-200 ${onDayClick ? 'cursor-pointer' : ''}`}>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">📊 กราฟรายวัน</h3>
+                <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
@@ -167,30 +167,30 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
                 </ResponsiveContainer>
 
                 {/* Daily Summary */}
-                <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-                  <div className="bg-blue-50 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-blue-600">
+                <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-4 text-center">
+                  <div className="bg-blue-50 rounded-lg p-2 sm:p-3">
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600">
                       {data.reduce((sum, d) => sum + d.total, 0)}
                     </div>
-                    <div className="text-sm text-gray-600">ทั้งหมด</div>
+                    <div className="text-xs sm:text-sm text-gray-600">ทั้งหมด</div>
                   </div>
-                  <div className="bg-green-50 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-green-600">
+                  <div className="bg-green-50 rounded-lg p-2 sm:p-3">
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">
                       {data.reduce((sum, d) => sum + d.closed, 0)}
                     </div>
-                    <div className="text-sm text-gray-600">ปิดแล้ว</div>
+                    <div className="text-xs sm:text-sm text-gray-600">ปิดแล้ว</div>
                   </div>
-                  <div className="bg-orange-50 rounded-lg p-3">
-                    <div className="text-2xl font-bold text-orange-600">
+                  <div className="bg-orange-50 rounded-lg p-2 sm:p-3">
+                    <div className="text-xl sm:text-2xl font-bold text-orange-600">
                       {data.reduce((sum, d) => sum + d.total - d.closed, 0)}
                     </div>
-                    <div className="text-sm text-gray-600">รอดำเนินการ</div>
+                    <div className="text-xs sm:text-sm text-gray-600">รอดำเนินการ</div>
                   </div>
                 </div>
               </div>
 
               {/* Staff Performance Section */}
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-4 sm:p-6 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">👥 ผลงานทีม (Staff Performance)</h3>
 
                 {staffData.length > 0 ? (
@@ -238,7 +238,7 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
               </div>
 
               {/* Monthly Tickets Section */}
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">📋 รายการงานทั้งหมด</h3>
                   <button
