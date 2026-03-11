@@ -14,6 +14,7 @@ interface Ticket {
   created_date: string | null
   assigned_date: string | null
   close_time_minute: number | null
+  is_outlier?: number
 }
 
 interface MonthlyTicketListProps {
@@ -165,7 +166,7 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
               <span>{getStatusBadge(ticket.status)}</span>
               <span className="text-gray-600">{ticket.branch_name}</span>
               {ticket.close_time_minute && (
-                <span className="font-semibold text-blue-600">
+                <span className={`font-semibold ${ticket.is_outlier ? 'text-red-600' : 'text-green-600'}`}>
                   {formatMinutes(ticket.close_time_minute)}
                 </span>
               )}
@@ -237,7 +238,7 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
                 </td>
                 <td className="px-3 py-2 text-center text-gray-900">
                   {ticket.close_time_minute ? (
-                    <span className="font-semibold text-blue-600">
+                    <span className={`font-semibold ${ticket.is_outlier ? 'text-red-600' : 'text-green-600'}`}>
                       {formatMinutes(ticket.close_time_minute)}
                     </span>
                   ) : (
