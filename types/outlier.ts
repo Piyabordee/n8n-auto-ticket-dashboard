@@ -56,6 +56,10 @@ export interface StaffStats {
   avgTimeNormal: number
   avgTimeOutlier: number
   outlierCount: number
+  // Personal outlier calculation fields
+  personalMedian?: number
+  personalMAD?: number
+  personalThreshold?: number
 }
 
 export interface OutlierSummaryStats {
