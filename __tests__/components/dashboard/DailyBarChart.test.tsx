@@ -130,4 +130,83 @@ describe('DailyBarChart', () => {
       expect(staffName.tagName).toBe('SPAN')
     })
   })
+
+  describe('stat number click handling', () => {
+    it('should call onStatClick with correct filter type when assigned number is clicked', () => {
+      const mockStatClick = jest.fn()
+      render(
+        <DailyBarChart
+          data={mockDailyData}
+          monthName="ก.พ."
+          year={2026}
+          monthIndex={2}
+          staffData={mockStaffData}
+          onClose={jest.fn()}
+          onStatClick={mockStatClick}
+        />
+      )
+
+      const assignedNumber = screen.getByText('50')
+      fireEvent.click(assignedNumber)
+
+      expect(mockStatClick).toHaveBeenCalledWith('สมชาย ใจดี', 'all')
+    })
+
+    it('should call onStatClick with pending filter type when pending number is clicked', () => {
+      const mockStatClick = jest.fn()
+      render(
+        <DailyBarChart
+          data={mockDailyData}
+          monthName="ก.พ."
+          year={2026}
+          monthIndex={2}
+          staffData={mockStaffData}
+          onClose={jest.fn()}
+          onStatClick={mockStatClick}
+        />
+      )
+
+      const pendingNumber = screen.getByText('5')
+      fireEvent.click(pendingNumber)
+
+      expect(mockStatClick).toHaveBeenCalledWith('สมชาย ใจดี', 'pending')
+    })
+
+    it('should call onStatClick with closed filter type when closed number is clicked', () => {
+      const mockStatClick = jest.fn()
+      render(
+        <DailyBarChart
+          data={mockDailyData}
+          monthName="ก.พ."
+          year={2026}
+          monthIndex={2}
+          staffData={mockStaffData}
+          onClose={jest.fn()}
+          onStatClick={mockStatClick}
+        />
+      )
+
+      const closedNumbers = screen.getAllByText('45')
+      const closedButton = closedNumbers.find(el => el.className.includes('text-green-600'))
+      fireEvent.click(closedButton!)
+
+      expect(mockStatClick).toHaveBeenCalledWith('สมชาย ใจดี', 'closed')
+    })
+
+    it('should not make numbers clickable when onStatClick is not provided', () => {
+      render(
+        <DailyBarChart
+          data={mockDailyData}
+          monthName="ก.พ."
+          year={2026}
+          monthIndex={2}
+          staffData={mockStaffData}
+          onClose={jest.fn()}
+        />
+      )
+
+      const assignedNumber = screen.getByText('50')
+      expect(assignedNumber.tagName).toBe('SPAN')
+    })
+  })
 })
