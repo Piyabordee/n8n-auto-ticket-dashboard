@@ -10,11 +10,12 @@ import DailyBarChart from './components/dashboard/DailyBarChart'
 import InlineDailyChart from './components/dashboard/InlineDailyChart'
 import TopOutliersList from './components/dashboard/TopOutliersList'
 import TicketListModal from './components/dashboard/TicketListModal'
+import OutlierExplanationModal from './components/dashboard/OutlierExplanationModal'
 import GlobalSearch from './components/dashboard/GlobalSearch'
 import { useModal } from './components/modals/ModalProvider'
 import type { OutlierTicket } from '../types/outlier'
 
-type FilterType = 'all' | 'pending' | 'closed' | 'outliers'
+type FilterType = 'all' | 'pending' | 'closed' | 'outliers' | 'outlier-explanation'
 
 interface DashboardStats {
   total: number
@@ -123,6 +124,9 @@ export default function TeamDashboard() {
   const [monthlySelectedStaffName, setMonthlySelectedStaffName] = useState<string>('')
   const [monthlyFilterType, setMonthlyFilterType] = useState<FilterType>('all')
 
+  // Outlier explanation modal state
+  const [outlierExplanationOpen, setOutlierExplanationOpen] = useState(false)
+
   // Day click state
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
@@ -219,10 +223,14 @@ export default function TeamDashboard() {
     fetchTopOutliers()
   }, [year, month])
 
-  // Handle stat card click - open ticket list modal
+  // Handle stat card click - open ticket list modal or outlier explanation
   const handleStatCardClick = (filterType: FilterType) => {
-    setTicketFilterType(filterType)
-    setTicketModalOpen(true)
+    if (filterType === 'outlier-explanation') {
+      setOutlierExplanationOpen(true)
+    } else {
+      setTicketFilterType(filterType)
+      setTicketModalOpen(true)
+    }
   }
 
   // Handle staff name click - open modal with all tickets for that staff
@@ -466,6 +474,13 @@ export default function TeamDashboard() {
         filterType={monthlyFilterType}
         title={`งาน${getFilterTypeLabel(monthlyFilterType)}ของ ${monthlySelectedStaffName} - ${selectedMonthName} ${year + 543}`}
         staffName={monthlySelectedStaffName}
+      />
+
+      {/* Outlier Explanation Modal */}
+      <OutlierExplanationModal
+        isOpen={outlierExplanationOpen}
+        onClose={() => setOutlierExplanationOpen(false)}
+        year={year}
       />
     </div>
   )
