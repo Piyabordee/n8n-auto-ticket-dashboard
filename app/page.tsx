@@ -111,6 +111,7 @@ export default function TeamDashboard() {
   // Monthly modal staff tickets state
   const [monthlyStaffTicketModalOpen, setMonthlyStaffTicketModalOpen] = useState(false)
   const [monthlySelectedStaffName, setMonthlySelectedStaffName] = useState<string>('')
+  const [monthlyFilterType, setMonthlyFilterType] = useState<FilterType>('all')
 
   // Day click state
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
