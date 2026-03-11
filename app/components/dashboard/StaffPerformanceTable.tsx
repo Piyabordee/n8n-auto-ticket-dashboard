@@ -17,9 +17,10 @@ interface StaffPerformanceTableProps {
   showOutlierColumns?: boolean
   onOutlierClick?: (staffName: string) => void
   onStaffClick?: (staffName: string) => void
+  onStatClick?: (staffName: string, filterType: 'all' | 'pending' | 'closed') => void
 }
 
-export default function StaffPerformanceTable({ staff, showOutlierColumns = false, onOutlierClick, onStaffClick }: StaffPerformanceTableProps) {
+export default function StaffPerformanceTable({ staff, showOutlierColumns = false, onOutlierClick, onStaffClick, onStatClick }: StaffPerformanceTableProps) {
   const getRankBadge = (rank: number) => {
     if (rank === 1) return 'bg-yellow-100 text-yellow-800'
     if (rank === 2) return 'bg-gray-100 text-gray-600'
