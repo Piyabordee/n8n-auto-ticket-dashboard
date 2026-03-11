@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status') || 'all'
   const staff = searchParams.get('staff')
   const day = searchParams.get('day')
+  const search = searchParams.get('search')?.trim() || ''
 
   // Validate year parameter
   const currentYear = year ? parseInt(year) : new Date().getFullYear()
@@ -129,6 +130,20 @@ export async function GET(request: NextRequest) {
       const dayNum = parseInt(day)
       query += ` AND DAY(created_date) = @day`
       requestQuery.input('day', sql.Int, dayNum)
+    }
+
+    // Add search filter - searches across multiple fields
+    if (search) {
+      // Search in subject, assigned_to, category, sub_category, branch_name, message_id
+      query += ` AND (
+        subject LIKE @search OR
+        assigned_to LIKE @search OR
+        category LIKE @search OR
+        sub_category LIKE @search OR
+        branch_name LIKE @search OR
+        message_id LIKE @search
+      )`
+      requestQuery.input('search', sql.NVarChar, `%${search}%`)
     }
 
     query += ` ORDER BY created_date DESC`
