@@ -94,6 +94,54 @@ describe('StatsCards', () => {
       expect(indicators).toHaveLength(2) // Total and Pending cards
     })
 
+    it('should show 3 click indicators when outlier data is provided', () => {
+      const mockClick = jest.fn()
+      const propsWithOutliers = {
+        ...defaultProps,
+        avgTimeNormal: 60,
+        avgTimeOutlier: 300,
+        outlierCount: 5,
+      }
+      render(<StatsCards {...propsWithOutliers} onCardClick={mockClick} />)
+
+      // Check for click indicators (👆 emoji)
+      const indicators = screen.getAllByText('👆')
+      expect(indicators).toHaveLength(3) // Total, Pending, and Avg Time cards
+    })
+
+    it('should call onCardClick with outlier-explanation when avg time card is clicked (with outlier data)', () => {
+      const handleClick = jest.fn()
+      const propsWithOutliers = {
+        ...defaultProps,
+        avgTimeNormal: 60,
+        avgTimeOutlier: 300,
+        outlierCount: 5,
+      }
+      render(<StatsCards {...propsWithOutliers} onCardClick={handleClick} />)
+
+      // Find the avg time card text
+      const avgTimeText = screen.getByText('เวลาเฉลี่ย (ปกติ / Outlier)')
+      const avgTimeCard = avgTimeText.closest('div.bg-white')
+
+      fireEvent.click(avgTimeCard!)
+
+      expect(handleClick).toHaveBeenCalledWith('outlier-explanation')
+    })
+
+    it('should not call onCardClick with outlier-explanation when avg time card has no outlier data', () => {
+      const handleClick = jest.fn()
+      render(<StatsCards {...defaultProps} onCardClick={handleClick} />)
+
+      // Find the avg time card (without outlier data)
+      const avgTimeText = screen.getByText('เวลาเฉลี่ย')
+      const avgTimeCard = avgTimeText.closest('div.bg-white')
+
+      fireEvent.click(avgTimeCard!)
+
+      // Should not trigger click for outlier-explanation (no outlier data)
+      expect(handleClick).not.toHaveBeenCalledWith('outlier-explanation')
+    })
+
     it('should call onCardClick with correct filter when total card is clicked', () => {
       const mockClick = jest.fn()
       render(<StatsCards {...defaultProps} onCardClick={mockClick} />)
