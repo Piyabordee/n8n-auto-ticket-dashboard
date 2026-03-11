@@ -10,6 +10,7 @@ import DailyBarChart from './components/dashboard/DailyBarChart'
 import InlineDailyChart from './components/dashboard/InlineDailyChart'
 import TopOutliersList from './components/dashboard/TopOutliersList'
 import TicketListModal from './components/dashboard/TicketListModal'
+import GlobalSearch from './components/dashboard/GlobalSearch'
 import { useModal } from './components/modals/ModalProvider'
 import type { OutlierTicket } from '../types/outlier'
 
@@ -302,6 +303,11 @@ export default function TeamDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        {/* Global Search */}
+        <div className="mb-4">
+          <GlobalSearch year={year} month={month} />
+        </div>
+
         {/* Stats Cards */}
         <StatsCards
           total={stats.total}
