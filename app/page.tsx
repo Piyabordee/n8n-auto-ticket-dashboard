@@ -108,6 +108,10 @@ export default function TeamDashboard() {
   const [staffTicketModalOpen, setStaffTicketModalOpen] = useState(false)
   const [selectedStaffName, setSelectedStaffName] = useState<string>('')
 
+  // Monthly modal staff tickets state
+  const [monthlyStaffTicketModalOpen, setMonthlyStaffTicketModalOpen] = useState(false)
+  const [monthlySelectedStaffName, setMonthlySelectedStaffName] = useState<string>('')
+
   // Day click state
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
@@ -216,6 +220,12 @@ export default function TeamDashboard() {
     setStaffTicketModalOpen(true)
   }
 
+  // Handle staff name click from monthly modal - open modal with all tickets for that staff in the selected month
+  const handleStaffClickFromModal = (staffName: string) => {
+    setMonthlySelectedStaffName(staffName)
+    setMonthlyStaffTicketModalOpen(true)
+  }
+
   // Handle month click - open modal with daily + staff data
   const handleMonthClick = async (monthIndex: number, monthName: string) => {
     setSelectedMonth(monthIndex + 1)
@@ -289,6 +299,12 @@ export default function TeamDashboard() {
   const handleCloseStaffTicketModal = () => {
     setStaffTicketModalOpen(false)
     setSelectedStaffName('')
+  }
+
+  // Close monthly staff ticket modal
+  const handleCloseMonthlyStaffTicketModal = () => {
+    setMonthlyStaffTicketModalOpen(false)
+    setMonthlySelectedStaffName('')
   }
 
   if (initialLoading) {
@@ -383,6 +399,7 @@ export default function TeamDashboard() {
           onClose={handleCloseModal}
           loading={loadingModal}
           onDayClick={handleDayClickForModal}
+          onStaffClick={handleStaffClickFromModal}
         />
       )}
 
@@ -406,6 +423,17 @@ export default function TeamDashboard() {
         filterType="all"
         title="งานของพนักงาน"
         staffName={selectedStaffName}
+      />
+
+      {/* Monthly Staff Tickets Modal */}
+      <TicketListModal
+        isOpen={monthlyStaffTicketModalOpen}
+        onClose={handleCloseMonthlyStaffTicketModal}
+        year={year}
+        month={selectedMonth}
+        filterType="all"
+        title={`งานของ ${monthlySelectedStaffName} - ${selectedMonthName} ${year + 543}`}
+        staffName={monthlySelectedStaffName}
       />
     </div>
   )
