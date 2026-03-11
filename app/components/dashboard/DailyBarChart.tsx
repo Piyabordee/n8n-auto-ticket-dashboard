@@ -15,6 +15,7 @@ interface StaffData {
   name: string
   totalAssigned: number
   totalClosed: number
+  totalPending: number
   avgTimeAll: number
 }
 
@@ -40,9 +41,10 @@ interface DailyBarChartProps {
   onClose: () => void
   loading?: boolean
   onDayClick?: (day: string) => void
+  onStaffClick?: (staffName: string) => void
 }
 
-export default function DailyBarChart({ data, monthName, year, monthIndex, staffData, onClose, loading, onDayClick }: DailyBarChartProps) {
+export default function DailyBarChart({ data, monthName, year, monthIndex, staffData, onClose, loading, onDayClick, onStaffClick }: DailyBarChartProps) {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [ticketsLoading, setTicketsLoading] = useState(true)
   const [showTickets, setShowTickets] = useState(true)
@@ -202,6 +204,7 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">อันดับ</th>
                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อพนักงาน</th>
                             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">รับงาน</th>
+                            <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">ยังไม่ปิด</th>
                             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">ปิดแล้ว</th>
                             <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">เวลาเฉลี่ย</th>
                           </tr>
@@ -214,11 +217,24 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
                                   {getRankIcon(person.rank)}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {person.name}
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                                {onStaffClick ? (
+                                  <button
+                                    onClick={() => onStaffClick(person.name)}
+                                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                                    title={`ดูงานทั้งหมดของ ${person.name}`}
+                                  >
+                                    {person.name}
+                                  </button>
+                                ) : (
+                                  <span className="text-gray-900">{person.name}</span>
+                                )}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
                                 {person.totalAssigned}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
+                                <span className="text-red-600 font-semibold">{person.totalPending}</span>
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
                                 <span className="text-green-600 font-semibold">{person.totalClosed}</span>
