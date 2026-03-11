@@ -42,9 +42,10 @@ interface DailyBarChartProps {
   loading?: boolean
   onDayClick?: (day: string) => void
   onStaffClick?: (staffName: string) => void
+  onStatClick?: (staffName: string, filterType: 'all' | 'pending' | 'closed') => void
 }
 
-export default function DailyBarChart({ data, monthName, year, monthIndex, staffData, onClose, loading, onDayClick, onStaffClick }: DailyBarChartProps) {
+export default function DailyBarChart({ data, monthName, year, monthIndex, staffData, onClose, loading, onDayClick, onStaffClick, onStatClick }: DailyBarChartProps) {
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [ticketsLoading, setTicketsLoading] = useState(true)
   const [showTickets, setShowTickets] = useState(true)
