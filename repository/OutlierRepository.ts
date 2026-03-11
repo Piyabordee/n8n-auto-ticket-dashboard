@@ -414,8 +414,12 @@ export class OutlierRepository {
           AVG(CASE WHEN diff_minutes IS NOT NULL THEN diff_minutes END) as avgTimeAll,
           AVG(CASE WHEN is_outlier = 0 AND diff_minutes IS NOT NULL THEN diff_minutes END) as avgTimeNormal,
           AVG(CASE WHEN is_outlier = 1 AND diff_minutes IS NOT NULL THEN diff_minutes END) as avgTimeOutlier,
-          SUM(is_outlier) as outlierCount
-        FROM classified
+          SUM(is_outlier) as outlierCount,
+          -- Add personal stats fields
+          MAX(c.personal_median) as personal_median,
+          MAX(c.personal_mad) as personal_mad,
+          MAX(c.personal_threshold) as personal_threshold
+        FROM classified c
         GROUP BY CAST(assigned_to AS NVARCHAR(MAX))
         ORDER BY totalAssigned DESC
       `)
@@ -520,7 +524,11 @@ export class OutlierRepository {
       avgTimeAll: row.avgTimeAll ? Math.round(row.avgTimeAll * 10) / 10 : 0,
       avgTimeNormal: row.avgTimeNormal ? Math.round(row.avgTimeNormal * 10) / 10 : 0,
       avgTimeOutlier: row.avgTimeOutlier ? Math.round(row.avgTimeOutlier * 10) / 10 : 0,
-      outlierCount: row.outlierCount || 0
+      outlierCount: row.outlierCount || 0,
+      // Personal outlier calculation fields
+      personalMedian: row.personal_median || undefined,
+      personalMAD: row.personal_mad || undefined,
+      personalThreshold: row.personal_threshold || undefined
     }))
 
     const summary: OutlierSummaryStats = {
