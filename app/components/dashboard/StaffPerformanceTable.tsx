@@ -94,11 +94,35 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div>
                 <div className="text-gray-500">รับงาน</div>
-                <div className="font-semibold text-gray-900">{person.totalAssigned}</div>
+                <div className="font-semibold">
+                  {onStatClick ? (
+                    <button
+                      onClick={() => onStatClick(person.name, 'all')}
+                      className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                      title={`ดูงานทั้งหมดของ ${person.name}`}
+                    >
+                      {person.totalAssigned}
+                    </button>
+                  ) : (
+                    <span className="text-gray-900">{person.totalAssigned}</span>
+                  )}
+                </div>
               </div>
               <div>
                 <div className="text-gray-500">ยังไม่ปิด</div>
-                <div className="font-semibold text-red-600">{person.totalPending}</div>
+                <div className="font-semibold">
+                  {onStatClick ? (
+                    <button
+                      onClick={() => onStatClick(person.name, 'pending')}
+                      className="text-red-600 hover:text-red-800 hover:underline cursor-pointer"
+                      title={`ดูงานที่ยังไม่ปิดของ ${person.name}`}
+                    >
+                      {person.totalPending}
+                    </button>
+                  ) : (
+                    <span className="text-red-600">{person.totalPending}</span>
+                  )}
+                </div>
               </div>
               {hasOutlierData && (
                 <div>
