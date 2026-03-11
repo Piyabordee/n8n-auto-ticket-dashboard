@@ -233,7 +233,6 @@ export default function TeamDashboard() {
 
   // Handle stat click from main staff table - open modal with filtered tickets
   const handleStatClick = (staffName: string, filterType: 'all' | 'pending' | 'closed') => {
-    console.log('handleStatClick called:', { staffName, filterType })
     setSelectedStaffName(staffName)
     setTicketFilterType(filterType)
     setTicketModalOpen(true)
@@ -440,7 +439,8 @@ export default function TeamDashboard() {
         month={month}
         day={selectedDay}
         filterType={ticketFilterType}
-        title={FILTER_TITLES[ticketFilterType]}
+        title={selectedStaffName ? `งาน${getFilterTypeLabel(ticketFilterType)}ของ ${selectedStaffName}` : FILTER_TITLES[ticketFilterType]}
+        staffName={selectedStaffName}
       />
 
       {/* Staff Tickets Modal */}
