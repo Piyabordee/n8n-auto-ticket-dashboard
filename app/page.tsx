@@ -228,6 +228,7 @@ export default function TeamDashboard() {
   // Handle staff name click - open modal with all tickets for that staff
   const handleStaffClick = (staffName: string) => {
     setSelectedStaffName(staffName)
+    setTicketFilterType('all')  // Reset to 'all' to show all tickets
     setStaffTicketModalOpen(true)
   }
 
@@ -241,6 +242,7 @@ export default function TeamDashboard() {
   // Handle staff name click from monthly modal - open modal with all tickets for that staff in the selected month
   const handleStaffClickFromModal = (staffName: string) => {
     setMonthlySelectedStaffName(staffName)
+    setMonthlyFilterType('all')  // Reset to 'all' to show all tickets
     setMonthlyStaffTicketModalOpen(true)
   }
 
@@ -318,6 +320,7 @@ export default function TeamDashboard() {
   const handleCloseTicketModal = () => {
     setTicketModalOpen(false)
     setSelectedDay(null)
+    setTicketFilterType('all')  // Reset filter type
   }
 
   // Close staff ticket modal
