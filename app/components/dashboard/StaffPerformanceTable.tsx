@@ -169,6 +169,7 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อพนักงาน</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">รับงาน</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ยังไม่ปิด</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ปิดแล้ว</th>
               {hasOutlierData && (
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Outliers</th>
               )}
@@ -196,11 +197,44 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
                     <span className="text-gray-900">{person.name}</span>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                  {person.totalAssigned}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  {onStatClick ? (
+                    <button
+                      onClick={() => onStatClick(person.name, 'all')}
+                      className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
+                      title={`ดูงานทั้งหมดของ ${person.name}`}
+                    >
+                      {person.totalAssigned}
+                    </button>
+                  ) : (
+                    <span className="text-gray-900">{person.totalAssigned}</span>
+                  )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                  <span className="text-red-600 font-semibold">{person.totalPending}</span>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  {onStatClick ? (
+                    <button
+                      onClick={() => onStatClick(person.name, 'pending')}
+                      className="text-red-600 hover:text-red-800 hover:underline cursor-pointer font-semibold"
+                      title={`ดูงานที่ยังไม่ปิดของ ${person.name}`}
+                    >
+                      {person.totalPending}
+                    </button>
+                  ) : (
+                    <span className="text-red-600 font-semibold">{person.totalPending}</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                  {onStatClick ? (
+                    <button
+                      onClick={() => onStatClick(person.name, 'closed')}
+                      className="text-green-600 hover:text-green-800 hover:underline cursor-pointer font-semibold"
+                      title={`ดูงานที่ปิดแล้วของ ${person.name}`}
+                    >
+                      {person.totalClosed}
+                    </button>
+                  ) : (
+                    <span className="text-green-600 font-semibold">{person.totalClosed}</span>
+                  )}
                 </td>
                 {hasOutlierData && (
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
