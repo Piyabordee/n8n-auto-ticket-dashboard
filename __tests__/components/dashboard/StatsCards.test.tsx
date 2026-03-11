@@ -34,7 +34,7 @@ describe('StatsCards', () => {
       const { container } = render(<StatsCards {...defaultProps} />)
 
       const grid = container.querySelector('.grid')
-      expect(grid).toHaveClass('grid-cols-4')
+      expect(grid).toHaveClass('lg:grid-cols-4')
     })
   })
 
@@ -50,7 +50,7 @@ describe('StatsCards', () => {
       const { container } = render(<StatsCards {...propsWithOutliers} />)
 
       const grid = container.querySelector('.grid')
-      expect(grid).toHaveClass('grid-cols-5')
+      expect(grid).toHaveClass('lg:grid-cols-5')
       expect(screen.getByText('Outliers')).toBeInTheDocument()
     })
 
@@ -94,7 +94,7 @@ describe('StatsCards', () => {
       expect(indicators).toHaveLength(2) // Total and Pending cards
     })
 
-    it('should show 3 click indicators when outlier data is provided', () => {
+    it('should show 4 click indicators when outlier data is provided', () => {
       const mockClick = jest.fn()
       const propsWithOutliers = {
         ...defaultProps,
@@ -106,7 +106,7 @@ describe('StatsCards', () => {
 
       // Check for click indicators (👆 emoji)
       const indicators = screen.getAllByText('👆')
-      expect(indicators).toHaveLength(3) // Total, Pending, and Avg Time cards
+      expect(indicators).toHaveLength(4) // Total, Pending, Avg Time, and Outliers cards
     })
 
     it('should call onCardClick with outlier-explanation when avg time card is clicked (with outlier data)', () => {
