@@ -60,17 +60,6 @@ export default function StatsCards({
 
   return (
     <div className={`grid gap-3 mb-6 ${hasOutlierData ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
-      {/* Total Tickets */}
-      <div
-        onClick={() => onCardClick?.('all')}
-        className={`bg-white rounded-lg shadow-sm hover:shadow-lg p-4 border-l-4 border-blue-500 relative ${onCardClick ? 'cursor-pointer transition-shadow duration-200' : ''}`}
-      >
-        {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
-        <div className="text-xs sm:text-sm text-gray-600 mb-1">จำนวนงานทั้งหมด</div>
-        <div className="text-2xl sm:text-3xl font-bold text-gray-900">{total}</div>
-        <div className="text-xs text-gray-500 mt-1">Tickets</div>
-      </div>
-
       {/* Pending Tickets */}
       <div
         onClick={() => onCardClick?.('pending')}
@@ -79,6 +68,17 @@ export default function StatsCards({
         {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
         <div className="text-xs sm:text-sm text-gray-600 mb-1">ยังไม่ปิด</div>
         <div className="text-2xl sm:text-3xl font-bold text-red-600">{pending}</div>
+        <div className="text-xs text-gray-500 mt-1">Tickets</div>
+      </div>
+
+      {/* Total Tickets */}
+      <div
+        onClick={() => onCardClick?.('all')}
+        className={`bg-white rounded-lg shadow-sm hover:shadow-lg p-4 border-l-4 border-blue-500 relative ${onCardClick ? 'cursor-pointer transition-shadow duration-200' : ''}`}
+      >
+        {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
+        <div className="text-xs sm:text-sm text-gray-600 mb-1">จำนวนงานทั้งหมด</div>
+        <div className="text-2xl sm:text-3xl font-bold text-gray-900">{total}</div>
         <div className="text-xs text-gray-500 mt-1">Tickets</div>
       </div>
 
