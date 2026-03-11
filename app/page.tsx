@@ -221,6 +221,13 @@ export default function TeamDashboard() {
     setStaffTicketModalOpen(true)
   }
 
+  // Handle stat click from main staff table - open modal with filtered tickets
+  const handleStatClick = (staffName: string, filterType: 'all' | 'pending' | 'closed') => {
+    setSelectedStaffName(staffName)
+    setTicketFilterType(filterType)
+    setTicketModalOpen(true)
+  }
+
   // Handle staff name click from monthly modal - open modal with all tickets for that staff in the selected month
   const handleStaffClickFromModal = (staffName: string) => {
     setMonthlySelectedStaffName(staffName)
