@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import SearchResultsModal from './SearchResultsModal'
 
 interface GlobalSearchProps {
   year: number
@@ -21,6 +22,7 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [showResults, setShowResults] = useState(false)
+  const [showModal, setShowModal] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -73,8 +75,7 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
     if (e.key === 'Enter' && query.trim()) {
       e.preventDefault()
       setShowResults(false)
-      // Navigate to a search results page or open modal with all results
-      router.push(`/?year=${year}${month ? `&month=${month}` : ''}&search=${encodeURIComponent(query)}`)
+      setShowModal(true)
     }
   }
 
@@ -195,6 +196,15 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
           </div>
         </div>
       )}
+
+      {/* Search Results Modal */}
+      <SearchResultsModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        year={year}
+        month={month}
+        searchQuery={query}
+      />
     </div>
   )
 }
