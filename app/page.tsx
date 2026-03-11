@@ -74,6 +74,16 @@ const FILTER_TITLES: Record<FilterType, string> = {
   outliers: 'รายการงาน Outliers'
 }
 
+const getFilterTypeLabel = (filterType: FilterType): string => {
+  switch (filterType) {
+    case 'all': return 'ทั้งหมด'
+    case 'pending': return 'ที่ยังไม่ปิด'
+    case 'closed': return 'ที่ปิดแล้ว'
+    case 'outliers': return 'Outliers'
+    default: return ''
+  }
+}
+
 export default function TeamDashboard() {
   const router = useRouter()
   // Filter states - default to year that has data
@@ -417,6 +427,7 @@ export default function TeamDashboard() {
           loading={loadingModal}
           onDayClick={handleDayClickForModal}
           onStaffClick={handleStaffClickFromModal}
+          onStatClick={handleStatClickFromModal}
         />
       )}
 
@@ -437,8 +448,8 @@ export default function TeamDashboard() {
         onClose={handleCloseStaffTicketModal}
         year={year}
         month={month}
-        filterType="all"
-        title="งานของพนักงาน"
+        filterType={ticketFilterType}
+        title={`งาน${getFilterTypeLabel(ticketFilterType)}ของพนักงาน`}
         staffName={selectedStaffName}
       />
 
@@ -448,8 +459,8 @@ export default function TeamDashboard() {
         onClose={handleCloseMonthlyStaffTicketModal}
         year={year}
         month={selectedMonth}
-        filterType="all"
-        title={`งานของ ${monthlySelectedStaffName} - ${selectedMonthName} ${year + 543}`}
+        filterType={monthlyFilterType}
+        title={`งาน${getFilterTypeLabel(monthlyFilterType)}ของ ${monthlySelectedStaffName} - ${selectedMonthName} ${year + 543}`}
         staffName={monthlySelectedStaffName}
       />
     </div>
