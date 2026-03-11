@@ -231,14 +231,44 @@ export default function DailyBarChart({ data, monthName, year, monthIndex, staff
                                   <span className="text-gray-900">{person.name}</span>
                                 )}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
-                                {person.totalAssigned}
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
+                                {onStatClick ? (
+                                  <button
+                                    onClick={() => onStatClick(person.name, 'all')}
+                                    className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
+                                    title={`ดูงานทั้งหมดของ ${person.name}`}
+                                  >
+                                    {person.totalAssigned}
+                                  </button>
+                                ) : (
+                                  <span className="text-gray-900">{person.totalAssigned}</span>
+                                )}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
-                                <span className="text-red-600 font-semibold">{person.totalPending}</span>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
+                                {onStatClick ? (
+                                  <button
+                                    onClick={() => onStatClick(person.name, 'pending')}
+                                    className="text-red-600 hover:text-red-800 hover:underline cursor-pointer font-semibold"
+                                    title={`ดูงานที่ยังไม่ปิดของ ${person.name}`}
+                                  >
+                                    {person.totalPending}
+                                  </button>
+                                ) : (
+                                  <span className="text-red-600 font-semibold">{person.totalPending}</span>
+                                )}
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
-                                <span className="text-green-600 font-semibold">{person.totalClosed}</span>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
+                                {onStatClick ? (
+                                  <button
+                                    onClick={() => onStatClick(person.name, 'closed')}
+                                    className="text-green-600 hover:text-green-800 hover:underline cursor-pointer font-semibold"
+                                    title={`ดูงานที่ปิดแล้วของ ${person.name}`}
+                                  >
+                                    {person.totalClosed}
+                                  </button>
+                                ) : (
+                                  <span className="text-green-600 font-semibold">{person.totalClosed}</span>
+                                )}
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-center">
                                 {person.avgTimeAll > 0 ? formatMinutes(Math.round(person.avgTimeAll)) : '-'}
