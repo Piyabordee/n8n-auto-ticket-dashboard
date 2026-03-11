@@ -15,7 +15,8 @@ import GlobalSearch from './components/dashboard/GlobalSearch'
 import { useModal } from './components/modals/ModalProvider'
 import type { OutlierTicket } from '../types/outlier'
 
-type FilterType = 'all' | 'pending' | 'closed' | 'outliers' | 'outlier-explanation'
+type TicketFilterType = 'all' | 'pending' | 'closed' | 'outliers'
+type FilterType = TicketFilterType | 'outlier-explanation'
 
 interface DashboardStats {
   total: number
@@ -72,7 +73,8 @@ const FILTER_TITLES: Record<FilterType, string> = {
   all: 'รายการงานทั้งหมด',
   pending: 'รายการงานที่ยังไม่ปิด',
   closed: 'รายการงานที่ปิดแล้ว',
-  outliers: 'รายการงาน Outliers'
+  outliers: 'รายการงาน Outliers',
+  'outlier-explanation': 'คำอธิบายวิธีคำนวณ Outlier'
 }
 
 const getFilterTypeLabel = (filterType: FilterType): string => {
@@ -81,6 +83,7 @@ const getFilterTypeLabel = (filterType: FilterType): string => {
     case 'pending': return 'ที่ยังไม่ปิด'
     case 'closed': return 'ที่ปิดแล้ว'
     case 'outliers': return 'Outliers'
+    case 'outlier-explanation': return 'คำอธิบาย'
     default: return ''
   }
 }
@@ -113,7 +116,7 @@ export default function TeamDashboard() {
 
   // Ticket list modal state
   const [ticketModalOpen, setTicketModalOpen] = useState(false)
-  const [ticketFilterType, setTicketFilterType] = useState<FilterType>('all')
+  const [ticketFilterType, setTicketFilterType] = useState<TicketFilterType>('all')
 
   // Staff tickets modal state
   const [staffTicketModalOpen, setStaffTicketModalOpen] = useState(false)
@@ -122,7 +125,7 @@ export default function TeamDashboard() {
   // Monthly modal staff tickets state
   const [monthlyStaffTicketModalOpen, setMonthlyStaffTicketModalOpen] = useState(false)
   const [monthlySelectedStaffName, setMonthlySelectedStaffName] = useState<string>('')
-  const [monthlyFilterType, setMonthlyFilterType] = useState<FilterType>('all')
+  const [monthlyFilterType, setMonthlyFilterType] = useState<TicketFilterType>('all')
 
   // Outlier explanation modal state
   const [outlierExplanationOpen, setOutlierExplanationOpen] = useState(false)
