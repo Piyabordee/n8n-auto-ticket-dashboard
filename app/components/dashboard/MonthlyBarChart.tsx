@@ -69,11 +69,21 @@ export default function MonthlyBarChart({
   // Use provided years or fallback to current year
   const years = availableYears || (year ? [year] : [])
 
+  // Calculate totals from data
+  const total = data.reduce((sum, d) => sum + d.total, 0)
+  const closed = data.reduce((sum, d) => sum + d.closed, 0)
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900">ปริมาณงานรายเดือน</h3>
         <div className="flex flex-wrap items-center gap-2">
+          <div className="text-xs sm:text-sm text-gray-500">
+            ทั้งหมด: <span className="font-semibold text-gray-900">{total}</span> •
+            ปิดแล้ว: <span className="font-semibold text-green-600">{closed}</span> •
+            รอดำเนินการ: <span className="font-semibold text-red-600">{total - closed}</span>
+          </div>
+          {/* Filter Dropdowns */}
           {year && setYear && (
             <select
               value={year}

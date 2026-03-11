@@ -111,8 +111,8 @@ export default function TeamDashboard() {
   // Day click state
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
-  // Loading state
-  const [loading, setLoading] = useState(true)
+  // Loading states
+  const [initialLoading, setInitialLoading] = useState(true)
   const [outliersLoading, setOutliersLoading] = useState(false)
 
   // Modal hooks
@@ -125,7 +125,10 @@ export default function TeamDashboard() {
   // Fetch all dashboard data
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true)
+      // Only show loading screen on initial load
+      if (initialLoading) {
+        setInitialLoading(true)
+      }
       try {
         // Build query params
         const monthParam = month ? `&month=${month}` : ''
@@ -154,7 +157,7 @@ export default function TeamDashboard() {
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
       } finally {
-        setLoading(false)
+        setInitialLoading(false)
       }
     }
 
@@ -288,7 +291,7 @@ export default function TeamDashboard() {
     setSelectedStaffName('')
   }
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-gray-500">กำลังโหลดข้อมูล...</div>
@@ -331,6 +334,10 @@ export default function TeamDashboard() {
                 month={month}
                 monthName={THAI_MONTHS[month - 1]}
                 onDayClick={handleDayClick}
+                setYear={setYear}
+                setMonth={setMonth}
+                availableYears={availableYears}
+                availableMonths={availableMonths}
               />
             ) : (
               <MonthlyBarChart
