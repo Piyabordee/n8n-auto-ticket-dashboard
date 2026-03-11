@@ -14,10 +14,15 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 
 ### Dashboard (/)
 - Real-time Stats Cards: Track total tickets, closed tickets, pending items, close rates, and average resolution time
+  - **Clickable Avg Time**: Opens Outlier Explanation Modal with per-person statistics
 - Statistical Outlier Detection: Per-person Median + 15×MAD methodology (robust against outliers)
+  - **Outlier Explanation Modal**: ELI5, technical, and per-person stats sections
 - Interactive Visualizations: Monthly and daily bar charts with drill-down capabilities
+  - **Clickable Bars**: Filter by All/Pending when clicking daily chart bars
 - Staff Performance Rankings: Comprehensive team performance metrics with outlier breakdown
+  - **Click Outlier Count**: View all outliers for specific staff member
 - Filtering: Year and month-based data filtering for trend analysis
+- **Global Search**: Search tickets by subject, staff, branch, or category with autocomplete
 
 ### Ticket Creation (/create)
 - Web-based ticket submission
@@ -28,6 +33,9 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 
 ### Technical Highlights
 - **Per-Person Outlier Detection**: Each staff member has their own statistical threshold
+- **Outlier Explanation Modal**: Interactive modal with ELI5, technical, and per-person statistics
+- **Global Search**: Debounced autocomplete search across all ticket fields
+- **Stat Click Filtering**: Click any stat to view filtered ticket list in modal
 - **Text Normalization**: Handles stylized Unicode text (Thai characters) with ASCII conversion
 - **Connection Pooling**: Optimized SQL Server connection management for concurrent requests
 - **Mobile-First Responsive Design**: Full mobile responsiveness with Tailwind CSS breakpoints
@@ -96,10 +104,11 @@ n8n-auto-ticket-dashboard/
 | /api/dashboard/stats | GET | year, month? | Statistics |
 | /api/dashboard/monthly | GET | year | Monthly volume |
 | /api/dashboard/daily | GET | year, month | Daily breakdown |
-| /api/dashboard/staff | GET | year, month? | Staff rankings |
+| /api/dashboard/staff | GET | year, month? | Staff rankings with personalMedian, personalMAD, personalThreshold |
 | /api/dashboard/outliers/top3 | GET | year, month? | Top 3 outliers |
 | /api/dashboard/outliers/all | GET | year, month? | All outliers |
-| /api/dashboard/tickets | GET | year, month?, filterType, staffName? | Filtered list |
+| /api/dashboard/tickets | GET | year, month?, filterType, staffName?, status?, search? | Filtered list with global search support |
+| /api/dashboard/ticket/[message_id] | GET | year, month? | Single ticket details |
 
 ## Database Schema
 
@@ -122,6 +131,10 @@ n8n-auto-ticket-dashboard/
 - Threshold: personal_median + (15 × personal_mad)
 - MAD (Median Absolute Deviation) is robust against outliers
 - Requires min 2 tickets per person for MAD calculation
+- **Outlier Explanation Modal**: Click "Avg Time" card to see:
+  - ELI5 explanation in simple terms
+  - Technical methodology details
+  - Per-person statistics (Median, MAD, Threshold, Outlier counts)
 
 ## Authentication
 
@@ -203,9 +216,9 @@ The project includes comprehensive testing with **100% pass rate** for productio
 
 | Test Suite | Tests | Status |
 |------------|-------|--------|
-| Unit Tests | 117/117 | ✅ PASSED |
+| Unit Tests | 148/148 | ✅ PASSED |
 | E2E Tests (Chromium) | 13/13 | ✅ PASSED |
-| **Total** | **130/130** | **✅ 100% PASS** |
+| **Total** | **161/161** | **✅ 100% PASS** |
 
 **Unit Test Coverage:**
 - normalizeText: 23/23 tests (Unicode normalization, squared letters, fullwidth characters, combining marks)
@@ -216,6 +229,10 @@ The project includes comprehensive testing with **100% pass rate** for productio
 - CategorySelect: 15/15 tests (category selection, sub-category filtering)
 - BranchSelect: 6/6 tests (branch selection, hierarchical data)
 - OutlierRepository: 15/15 tests (SQL queries, normalization, connection pooling)
+- **OutlierExplanationModal**: 14/14 tests (ELI5/Technical sections, staff data table, responsive)
+- **GlobalSearch**: 8/8 tests (debounced search, autocomplete, modal, click outside)
+- **DailyBarChart**: 4/4 tests (click handlers, stat filtering)
+- **ModalProvider**: 2/2 tests (modal state management)
 
 **E2E Test Coverage (Chromium):**
 - Dashboard: 5 tests (Thai labels, year 2569, month filter, staff data, responsive)
@@ -241,7 +258,12 @@ __tests__/
 │   │   └── AuthProvider.test.tsx
 │   ├── dashboard/
 │   │   ├── StatsCards.test.tsx
-│   │   └── StaffPerformanceTable.test.tsx
+│   │   ├── StaffPerformanceTable.test.tsx
+│   │   ├── DailyBarChart.test.tsx
+│   │   ├── OutlierExplanationModal.test.tsx
+│   │   └── GlobalSearch.test.tsx
+│   ├── modals/
+│   │   └── ModalProvider.test.tsx
 │   ├── CategorySelect.test.tsx
 │   ├── BranchSelect.test.tsx
 │   └── ImageUpload.test.tsx
@@ -314,7 +336,7 @@ The project includes custom test utilities in `__tests__/utils/test-utils.tsx`:
 
 ### Production Readiness Checklist
 
-- ✅ All 117 unit tests passing
+- ✅ All 148 unit tests passing
 - ✅ All 13 E2E tests passing (Chromium)
 - ✅ TypeScript compilation successful
 - ✅ No ESLint errors
@@ -323,6 +345,9 @@ The project includes custom test utilities in `__tests__/utils/test-utils.tsx`:
 - ✅ API endpoints tested via E2E (covers integration testing)
 - ✅ Database connection pooling tested
 - ✅ Responsive design verified (mobile/tablet)
+- ✅ Global search with debouncing tested
+- ✅ Outlier explanation modal with per-person stats tested
+- ✅ Stat click filtering across charts and tables tested
 
 ### Writing New Tests
 

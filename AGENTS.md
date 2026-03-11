@@ -1,9 +1,9 @@
 # IT Helpdesk Dashboard - Project Context
 
-> **Version**: 1.7.0
+> **Version**: 1.8.0
 > **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
 > **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
-> **Last Updated**: 2026-03-10 - Mobile responsiveness implementation completed
+> **Last Updated**: 2026-03-11 - Outlier Explanation Modal, Global Search, Stat Click Filtering
 
 ---
 
@@ -114,6 +114,60 @@ Utility to normalize stylized Unicode text to regular ASCII.
 
 **File**: app/lib/normalizeText.ts
 
+### Feature 7: Outlier Explanation Modal
+**Modal explaining the outlier detection methodology with ELI5, technical, and per-person stats sections**
+
+**Component**: `app/components/dashboard/OutlierExplanationModal.tsx`
+
+**Sections**:
+- **ELI5 Section**: Simple explanation of what outliers are with examples
+- **Technical Section**: Median + 15×MAD calculation method explanation
+- **Staff Data Table**: Per-person statistics showing:
+  - personalMedian: Each staff member's median resolution time
+  - personalMAD: Median Absolute Deviation for each person
+  - personalThreshold: Median + (15 × MAD) - the outlier threshold
+  - outlierCount: Number of outliers for each staff member
+
+**Trigger**: Click on "Avg Time" card in StatsCards
+
+**Props**:
+- isOpen, onClose, year
+
+### Feature 8: Global Search
+**Global ticket search with debounced autocomplete and full results modal**
+
+**Component**: `app/components/dashboard/GlobalSearch.tsx`
+
+**Features**:
+- **Debounced Search**: 300ms debounce for efficient API calls
+- **Autocomplete Dropdown**: Shows top 10 results as you type
+- **Full Results Modal**: Press Enter to see all results in modal
+- **Search Scope**: Searches across subject, assigned_to, branch, and category
+- **Click Outside**: Automatically closes dropdown when clicking outside
+
+**API Extension**: `/api/dashboard/tickets` now supports:
+- `status=all`: Include all statuses
+- `search=<query>`: Search query string
+
+**Props**:
+- year, month
+
+### Feature 9: Stat Click Filtering
+**Clickable stats in charts and tables to open filtered ticket modals**
+
+**Affected Components**:
+- **DailyBarChart**: Click on "All" or "Pending" bars to open filtered modal
+- **StaffPerformanceTable**: Click on outlier count or staff stats to open filtered modal
+- **MonthlyBarChart**: Click on month bars (already implemented)
+- **StatsCards**: Click on cards (already implemented)
+
+**Filter Types Added**:
+- `outlier`: Filter by outlier tickets only
+- `pending`: Filter by pending tickets only
+- `all`: Filter by all tickets
+
+**Modal Title Updates**: Titles now show the filter type (e.g., "งาน Outlier", "งานยังไม่ปิด", "งานทั้งหมด")
+
 ---
 
 ## 4. API Endpoints
@@ -157,10 +211,18 @@ All outliers details.
 
 #### GET /api/dashboard/tickets
 Filtered tickets for modals.
-- Query: year (required), month (optional), filterType (required), staffName (optional)
+- Query: year (required), month (optional), filterType (required), staffName (optional), status (optional), search (optional)
 - Returns: tickets array
+- **New Parameters**:
+  - `status=all`: Include all statuses (not just active)
+  - `search=<query>`: Search across subject, assigned_to, branch, category
 
-#### GET /api/dashboard/available-months
+#### GET /api/dashboard/ticket/[message_id]
+Single ticket detail with full information.
+- Query: year (required), month (optional)
+- Returns: ticket object with all details including category, sub_category, branch, etc.
+
+#### GET /api/dashboard/monthly-tickets
 Available years and months.
 - Returns: years array, months array
 
@@ -199,14 +261,29 @@ Used in: /api/dashboard/staff, /api/tickets
 
 ## 7. Component Props
 
+### StatsCards
+- total, closed, pending, avgTimeNormal?, avgTimeOutlier?, outlierCount?, outlierThreshold?, onCardClick?
+- **New**: onAvgTimeClick handler for opening OutlierExplanationModal
+
+### OutlierExplanationModal
+- isOpen, onClose, year
+
+### GlobalSearch
+- year, month
+
+### SearchResultsModal
+- isOpen, onClose, year, month, searchQuery
+
 ### StaffPerformanceTable
 - staff?, showOutlierColumns?, onOutlierClick?, onStaffClick?
+- **New**: onStatClick handler for clicking outlier count
+
+### DailyBarChart
+- data, onStatClick
+- **New**: Clickable bars with stat filtering
 
 ### HeaderFilter
 - year, setYear, month, setMonth, availableYears?, availableMonths?
-
-### StatsCards
-- total, closed, pending, avgTimeNormal?, avgTimeOutlier?, outlierCount?, outlierThreshold?, onCardClick?
 
 ### TicketListModal
 - isOpen, onClose, year, month?, filterType, title, staffName?
@@ -292,6 +369,31 @@ Full mobile responsiveness implemented across all dashboard components:
 - Charts: 250px height on mobile, 300px on desktop
 - Typography scales: `text-xs sm:text-sm`, `text-base sm:text-lg`, etc.
 - Documentation in `docs/mobile-responsive.md`
+
+### Outlier Explanation Modal (2026-03-11):
+Added OutlierExplanationModal component with:
+- ELI5 section explaining outliers in simple terms
+- Technical section explaining Median + 15×MAD methodology
+- Staff data table showing per-person Median, MAD, Threshold, and Outlier counts
+- Triggered by clicking on "Avg Time" card
+
+### Global Search (2026-03-11):
+Added GlobalSearch component with:
+- Debounced autocomplete search (300ms)
+- Top 10 results dropdown
+- Full results modal on Enter key
+- Searches across subject, assigned_to, branch, category
+
+### Stat Click Filtering (2026-03-11):
+Added click handlers for stats:
+- DailyBarChart: Click bars to filter by All/Pending
+- StaffPerformanceTable: Click outlier count to filter outliers
+- Modal titles now show filter type (งาน Outlier, งานยังไม่ปิด, งานทั้งหมด)
+
+### Updated API (2026-03-11):
+- `/api/dashboard/tickets`: Added `status=all` and `search=<query>` parameters
+- `/api/dashboard/ticket/[message_id]`: New endpoint for single ticket details
+- `/api/dashboard/staff`: Added personalMedian, personalMAD, personalThreshold to response
 
 ---
 
