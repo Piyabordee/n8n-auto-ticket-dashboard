@@ -234,6 +234,13 @@ export default function TeamDashboard() {
     setMonthlyStaffTicketModalOpen(true)
   }
 
+  // Handle stat click from monthly modal - open modal with filtered tickets
+  const handleStatClickFromModal = (staffName: string, filterType: 'all' | 'pending' | 'closed') => {
+    setMonthlySelectedStaffName(staffName)
+    setMonthlyFilterType(filterType)
+    setMonthlyStaffTicketModalOpen(true)
+  }
+
   // Handle month click - open modal with daily + staff data
   const handleMonthClick = async (monthIndex: number, monthName: string) => {
     setSelectedMonth(monthIndex + 1)
@@ -313,6 +320,7 @@ export default function TeamDashboard() {
   const handleCloseMonthlyStaffTicketModal = () => {
     setMonthlyStaffTicketModalOpen(false)
     setMonthlySelectedStaffName('')
+    setMonthlyFilterType('all')
   }
 
   if (initialLoading) {
