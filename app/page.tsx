@@ -401,6 +401,7 @@ export default function TeamDashboard() {
           showOutlierColumns={true}
           onOutlierClick={handleViewStaffOutliers}
           onStaffClick={handleStaffClick}
+          onStatClick={handleStatClick}
         />
       </div>
 
