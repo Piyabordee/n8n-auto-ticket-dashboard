@@ -57,6 +57,7 @@ export default function TicketListModal({
         if (filterType === 'outliers') {
           const monthParam = month ? `&month=${month}` : ''
           const url = `/api/dashboard/outliers?year=${year}${monthParam}`
+          console.log('Fetching outliers:', url)
           const res = await fetch(url)
           const data = await res.json()
 
@@ -80,8 +81,10 @@ export default function TicketListModal({
           const dayParam = day ? `&day=${day}` : ''
           const staffParam = staffName ? `&staff=${encodeURIComponent(staffName)}` : ''
           const url = `/api/dashboard/tickets?year=${year}${monthParam}${dayParam}&status=${filterType}${staffParam}`
+          console.log('Fetching tickets:', { filterType, staffName, url })
           const res = await fetch(url)
           const data = await res.json()
+          console.log('Received tickets:', data.tickets?.length || 0)
           setTickets(data.tickets || [])
         }
       } catch (error) {
