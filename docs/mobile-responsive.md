@@ -80,6 +80,29 @@
 - **Vertical padding**: `py-4 sm:py-6`
 - **Gap**: `gap-2 sm:gap-4` or `gap-4 sm:gap-6`
 
+### Global Search (GlobalSearch)
+
+- **Icon sizes**: `h-4 w-4 sm:h-5 sm:w-5`
+- **Input padding**: `pl-9 sm:pl-11 pr-8 sm:pr-10`
+- **Input height**: `py-2 sm:py-2.5`
+- **Result typography**: `text-xs sm:text-sm` for titles and metadata
+- **Modal**: Uses `SearchResultsModal` with full responsive modal styles
+
+**Features:**
+- Debounced search (300ms) to reduce API calls
+- Dropdown shows top 10 results
+- Press Enter to view all results in modal
+- Click outside to close dropdown
+- Clear button when text is entered
+
+**Search Fields:**
+- subject
+- assigned_to
+- category
+- sub_category
+- branch_name
+- message_id
+
 ## Testing
 
 Always test at these widths:
@@ -112,6 +135,8 @@ Always test at these widths:
 - `app/components/dashboard/OutlierTable.tsx`
 - `app/components/dashboard/MonthlyTicketList.tsx`
 - `app/components/dashboard/TicketDetailModal.tsx`
+- `app/components/dashboard/GlobalSearch.tsx`
+- `app/components/dashboard/SearchResultsModal.tsx`
 
 ### Pages
 - `app/page.tsx`
