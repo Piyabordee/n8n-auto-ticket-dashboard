@@ -1,6 +1,6 @@
 'use client'
 
-type FilterType = 'all' | 'pending' | 'closed' | 'outliers'
+type FilterType = 'all' | 'pending' | 'closed' | 'outliers' | 'outlier-explanation'
 
 interface StatsCardsProps {
   total: number
@@ -89,8 +89,16 @@ export default function StatsCards({
         <div className="text-xs text-gray-500 mt-1">Closed / Total</div>
       </div>
 
-      {/* Avg Resolution Time - Normal vs Outlier breakdown - not clickable */}
-      <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500 relative">
+      {/* Avg Resolution Time - Normal vs Outlier breakdown - clickable for explanation */}
+      <div
+        onClick={() => hasOutlierData && onCardClick?.('outlier-explanation')}
+        className={`bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500 relative ${
+          hasOutlierData && onCardClick ? 'cursor-pointer hover:shadow-lg transition-shadow duration-200' : ''
+        }`}
+      >
+        {hasOutlierData && onCardClick && (
+          <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>
+        )}
         {hasOutlierData ? (
           <>
             <div className="text-xs sm:text-sm text-gray-600 mb-1">เวลาเฉลี่ย (ปกติ / Outlier)</div>
