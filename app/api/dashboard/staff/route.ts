@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getOutlierRepository } from '@/repository/OutlierRepository'
 import type { StaffPerformanceResponse } from '@/types/outlier'
 import { generateStaffPerformance } from '@/data/mockData'
+import { ensureOutlierInitialized } from '@/lib/apiInitializer'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -27,6 +28,9 @@ export async function GET(request: NextRequest) {
       )
     }
   }
+
+  // Ensure outlier detection is initialized
+  await ensureOutlierInitialized()
 
   // Build date range
   const startMonth = month ? parseInt(month) : 1
