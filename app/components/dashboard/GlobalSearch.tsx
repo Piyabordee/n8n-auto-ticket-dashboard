@@ -114,7 +114,7 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg
-            className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400"
+            className="h-4 w-4 sm:h-5 sm:w-5 text-neutral-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -133,12 +133,12 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder="ค้นหางาน... (หัวข้อ, พนักงาน, สาขา, ประเภท)"
-          className="w-full pl-9 sm:pl-11 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          className="w-full pl-9 sm:pl-11 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
         />
         {query && (
           <button
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-2.5 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
+            className="absolute inset-y-0 right-0 pr-2.5 sm:pr-3 flex items-center text-neutral-400 hover:text-neutral-600"
           >
             <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -150,31 +150,31 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
       {/* Loading indicator */}
       {loading && (
         <div className="absolute right-8 sm:right-10 top-1/2 -translate-y-1/2">
-          <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+          <div className="animate-spin h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full"></div>
         </div>
       )}
 
       {/* Search Results Dropdown */}
       {showResults && results.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
-          <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
-            <p className="text-xs text-gray-600">
-              พบ {results.length} ผลลัพธ์ <span className="text-gray-400">(กด Enter เพื่อดูทั้งหมด)</span>
+        <div className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-elevated border border-neutral-200 max-h-96 overflow-y-auto">
+          <div className="px-3 py-2 bg-neutral-50 border-b border-neutral-200">
+            <p className="text-xs text-neutral-600">
+              พบ {results.length} ผลลัพธ์ <span className="text-neutral-400">(กด Enter เพื่อดูทั้งหมด)</span>
             </p>
           </div>
           {results.map((ticket) => (
             <button
               key={ticket.message_id}
               onClick={() => handleResultClick(ticket.message_id)}
-              className="w-full px-3 py-2 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+              className="w-full px-3 py-2 text-left hover:bg-primary-50 transition-colors border-b border-neutral-100 last:border-b-0"
             >
-              <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">
+              <div className="text-xs sm:text-sm font-medium text-neutral-900 truncate">
                 {ticket.subject}
               </div>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs text-gray-600">{ticket.assigned_to}</span>
-                <span className="text-xs text-gray-400">•</span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-neutral-600">{ticket.assigned_to}</span>
+                <span className="text-xs text-neutral-400">•</span>
+                <span className="text-xs text-neutral-500">
                   {ticket.created_date ? new Date(ticket.created_date).toLocaleDateString('th-TH', {
                     day: '2-digit',
                     month: 'short',
@@ -189,9 +189,11 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
 
       {/* No results message */}
       {showResults && query && !loading && results.length === 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-4">
-          <div className="text-center text-gray-500">
-            <div className="text-2xl mb-1">🔍</div>
+        <div className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-elevated border border-neutral-200 px-3 py-4">
+          <div className="text-center text-neutral-500">
+            <svg className="w-6 h-6 mx-auto mb-2 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <p className="text-sm">ไม่พบผลลัพธ์สำหรับ "{query}"</p>
           </div>
         </div>

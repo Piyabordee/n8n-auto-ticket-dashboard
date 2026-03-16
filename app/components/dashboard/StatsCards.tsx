@@ -51,71 +51,59 @@ export default function StatsCards({
   // Determine if we have outlier data
   const hasOutlierData = avgTimeNormal !== undefined && avgTimeOutlier !== undefined
 
-  // Helper for clickable card styles
-  const getCardClassName = (baseColor: string) => {
-    return onCardClick
-      ? `bg-white rounded-lg shadow-sm hover:shadow-lg p-4 border-l-4 border-${baseColor}-500 relative cursor-pointer transition-shadow duration-200`
-      : `bg-white rounded-lg shadow-sm p-4 border-l-4 border-${baseColor}-500 relative`
-  }
-
   return (
     <div className={`grid gap-3 mb-6 ${hasOutlierData ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
       {/* Pending Tickets */}
       <div
         onClick={() => onCardClick?.('pending')}
-        className={`bg-white rounded-lg shadow-sm hover:shadow-lg p-4 border-l-4 border-red-500 relative ${onCardClick ? 'cursor-pointer transition-shadow duration-200' : ''}`}
+        className={`card border-l-error p-4 relative ${onCardClick ? 'cursor-pointer hover:shadow-elevated transition-all duration-300' : ''}`}
       >
-        {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
-        <div className="text-xs sm:text-sm text-gray-600 mb-1">ยังไม่ปิด</div>
-        <div className="text-2xl sm:text-3xl font-bold text-red-600">{pending}</div>
-        <div className="text-xs text-gray-500 mt-1">Tickets</div>
+        <div className="text-xs sm:text-sm text-neutral-600 mb-1">ยังไม่ปิด</div>
+        <div className="text-2xl sm:text-3xl font-bold text-error">{pending}</div>
+        <div className="text-xs text-neutral-500 mt-1">Tickets</div>
       </div>
 
       {/* Total Tickets */}
       <div
         onClick={() => onCardClick?.('all')}
-        className={`bg-white rounded-lg shadow-sm hover:shadow-lg p-4 border-l-4 border-blue-500 relative ${onCardClick ? 'cursor-pointer transition-shadow duration-200' : ''}`}
+        className={`card border-l-primary p-4 relative ${onCardClick ? 'cursor-pointer hover:shadow-elevated transition-all duration-300' : ''}`}
       >
-        {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
-        <div className="text-xs sm:text-sm text-gray-600 mb-1">จำนวนงานทั้งหมด</div>
-        <div className="text-2xl sm:text-3xl font-bold text-gray-900">{total}</div>
-        <div className="text-xs text-gray-500 mt-1">Tickets</div>
+        <div className="text-xs sm:text-sm text-neutral-600 mb-1">จำนวนงานทั้งหมด</div>
+        <div className="text-2xl sm:text-3xl font-bold text-neutral-900">{total}</div>
+        <div className="text-xs text-neutral-500 mt-1">Tickets</div>
       </div>
 
       {/* Close Rate - not clickable */}
-      <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-purple-500 relative">
-        <div className="text-xs sm:text-sm text-gray-600 mb-1">อัตราการปิดงาน</div>
-        <div className="text-2xl sm:text-3xl font-bold text-purple-600">{closeRate}%</div>
-        <div className="text-xs text-gray-500 mt-1">Closed / Total</div>
+      <div className="card border-l-amber p-4 relative">
+        <div className="text-xs sm:text-sm text-neutral-600 mb-1">อัตราการปิดงาน</div>
+        <div className="text-2xl sm:text-3xl font-bold text-amber-600">{closeRate}%</div>
+        <div className="text-xs text-neutral-500 mt-1">Closed / Total</div>
       </div>
 
       {/* Avg Resolution Time - Normal vs Outlier breakdown - clickable for explanation */}
       <div
         onClick={() => hasOutlierData && onCardClick?.('outlier-explanation')}
-        className={`bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500 relative ${
-          hasOutlierData && onCardClick ? 'cursor-pointer hover:shadow-lg transition-shadow duration-200' : ''
+        className={`card border-l-warning p-4 relative ${
+          hasOutlierData && onCardClick ? 'cursor-pointer hover:shadow-elevated transition-all duration-300' : ''
         }`}
       >
-        {hasOutlierData && onCardClick && (
-          <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>
-        )}
         {hasOutlierData ? (
           <>
-            <div className="text-xs sm:text-sm text-gray-600 mb-1">เวลาเฉลี่ย (ปกติ / Outlier)</div>
-            <div className="text-lg sm:text-xl font-bold text-orange-600">
+            <div className="text-xs sm:text-sm text-neutral-600 mb-1">เวลาเฉลี่ย (ปกติ / Outlier)</div>
+            <div className="text-lg sm:text-xl font-bold text-warning">
               {avgTimeNormal > 0 ? formatMinutes(Math.round(avgTimeNormal)) : '-'}
-              <span className="text-red-600"> / </span>
-              <span className="text-red-600">{avgTimeOutlier > 0 ? formatMinutes(Math.round(avgTimeOutlier)) : '-'}</span>
+              <span className="text-error"> / </span>
+              <span className="text-error">{avgTimeOutlier > 0 ? formatMinutes(Math.round(avgTimeOutlier)) : '-'}</span>
             </div>
-            <div className="text-xs text-gray-500 mt-1">ค่ามัธยฐาน + 15×MAD</div>
+            <div className="text-xs text-neutral-500 mt-1">ค่ามัธยฐาน + 15×MAD</div>
           </>
         ) : (
           <>
-            <div className="text-xs sm:text-sm text-gray-600 mb-1">เวลาเฉลี่ย</div>
-            <div className="text-2xl sm:text-3xl font-bold text-orange-600">
+            <div className="text-xs sm:text-sm text-neutral-600 mb-1">เวลาเฉลี่ย</div>
+            <div className="text-2xl sm:text-3xl font-bold text-warning">
               {avgTime > 0 ? formatMinutes(Math.round(avgTime)) : '-'}
             </div>
-            <div className="text-xs text-gray-500 mt-1">ต่อ Ticket</div>
+            <div className="text-xs text-neutral-500 mt-1">ต่อ Ticket</div>
           </>
         )}
       </div>
@@ -124,24 +112,23 @@ export default function StatsCards({
       {hasOutlierData && (
         <div
           onClick={() => onCardClick?.('outliers')}
-          className={`bg-white rounded-lg shadow-sm hover:shadow-lg p-4 border-l-4 ${
-            (outlierCount || 0) === 0 ? 'border-gray-300' :
-            (outlierCount || 0) <= 3 ? 'border-yellow-400' :
-            (outlierCount || 0) <= 7 ? 'border-orange-400' :
-            'border-red-500'
-          } ${onCardClick ? 'cursor-pointer transition-shadow duration-200 relative' : ''}`}
+          className={`card hover:shadow-elevated p-4 border-l-4 transition-all duration-300 ${
+            (outlierCount || 0) === 0 ? 'border-l-neutral-300' :
+            (outlierCount || 0) <= 3 ? 'border-l-warning-400' :
+            (outlierCount || 0) <= 7 ? 'border-l-error-400' :
+            'border-l-error'
+          } ${onCardClick ? 'cursor-pointer relative' : ''}`}
         >
-          {onCardClick && <div className="absolute top-2 right-2 text-xs opacity-50">👆</div>}
-          <div className="text-xs sm:text-sm text-gray-600 mb-1">Outliers</div>
+          <div className="text-xs sm:text-sm text-neutral-600 mb-1">Outliers</div>
           <div className={`text-2xl sm:text-3xl font-bold ${
-            (outlierCount || 0) === 0 ? 'text-gray-500' :
-            (outlierCount || 0) <= 3 ? 'text-yellow-600' :
-            (outlierCount || 0) <= 7 ? 'text-orange-600' :
-            'text-red-600'
+            (outlierCount || 0) === 0 ? 'text-neutral-500' :
+            (outlierCount || 0) <= 3 ? 'text-warning' :
+            (outlierCount || 0) <= 7 ? 'text-error-500' :
+            'text-error'
           }`}>
             {outlierCount || 0}
           </div>
-          <div className="text-xs text-gray-500 mt-1">Tickets</div>
+          <div className="text-xs text-neutral-500 mt-1">Tickets</div>
         </div>
       )}
     </div>

@@ -63,16 +63,21 @@ export default function OutlierExplanationModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-full sm:max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
+      <div className="bg-white rounded-xl shadow-elevated max-w-full sm:max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-            📊 คำอธิบายวิธีคำนวณ Outlier (Median + 15×MAD)
-          </h2>
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-neutral-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <h2 className="text-lg sm:text-xl font-semibold text-neutral-900">
+              คำอธิบายวิธีคำนวณ Outlier (Median + 15×MAD)
+            </h2>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg"
+            className="text-neutral-400 hover:text-neutral-600 transition-colors p-1.5 sm:p-2 hover:bg-neutral-100 rounded-lg"
             aria-label="Close"
           >
             <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,22 +107,25 @@ export default function OutlierExplanationModal({
 
 function ELI5Section() {
   return (
-    <section className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-      <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-        📖 Outlier คืออะไร? (ELI5)
+    <section className="bg-info-50 border border-info-200 rounded-lg p-4">
+      <h3 className="text-lg font-semibold text-neutral-900 mb-3 flex items-center gap-2">
+        <svg className="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+        Outlier คืออะไร? (ELI5)
       </h3>
-      <div className="space-y-3 text-sm sm:text-base text-gray-700">
+      <div className="space-y-3 text-sm sm:text-base text-neutral-700">
         <p>
           Outlier คือ <strong>"งานที่ใช้เวลานานผิดปกติ"</strong> เมื่อเทียบกับเวลาที่ตัวเองปกติทำ
         </p>
-        <div className="bg-white rounded p-3 border border-blue-100">
+        <div className="bg-white rounded p-3 border border-info-100">
           <p className="font-medium mb-2">ตัวอย่าง:</p>
           <ul className="space-y-1 list-disc list-inside">
             <li>คุณ A ปกติปิดงาน 1-2 ชม. → งาน 3 วัน = Outlier</li>
             <li>คุณ B ปกติปิดงาน 2-3 วัน → งาน 1 สัปดาห์ = Outlier</li>
           </ul>
         </div>
-        <p className="italic text-gray-600">
+        <p className="italic text-neutral-600">
           ทุกคนมีเกณฑ์ของตัวเอง เพราะงานแต่ละประเภทต่างกัน!
         </p>
       </div>
@@ -127,20 +135,24 @@ function ELI5Section() {
 
 function TechnicalSection() {
   return (
-    <section className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-      <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-        🔧 วิธีคำนวณ (Technical)
+    <section className="bg-warning-50 border border-warning-200 rounded-lg p-4">
+      <h3 className="text-lg font-semibold text-neutral-900 mb-3 flex items-center gap-2">
+        <svg className="w-5 h-5 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        วิธีคำนวณ (Technical)
       </h3>
-      <div className="space-y-3 text-sm sm:text-base text-gray-700">
+      <div className="space-y-3 text-sm sm:text-base text-neutral-700">
         <div>
           <p className="font-medium mb-1">Step 1: หาค่ามัธยฐาน (Median) ของเวลาปิดงานทั้งปี</p>
           <p className="font-medium mb-1">Step 2: หาค่า MAD (Median Absolute Deviation)</p>
           <p className="font-medium">Step 3: Threshold = Median + (15 × MAD)</p>
         </div>
 
-        <div className="bg-white rounded p-3 border border-orange-100">
+        <div className="bg-white rounded p-3 border border-warning-100">
           <p className="font-medium mb-1">สูตร MAD:</p>
-          <code className="block bg-gray-100 px-3 py-2 rounded text-sm font-mono">
+          <code className="block bg-neutral-100 px-3 py-2 rounded text-sm font-mono">
             MAD = Median(|Xi - Median|)
           </code>
         </div>
@@ -160,41 +172,44 @@ function TechnicalSection() {
 
 function StaffDataTable({ staffStats }: { staffStats: StaffStats[] }) {
   return (
-    <section className="bg-green-50 border border-green-200 rounded-lg p-4">
-      <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-        👥 ข้อมูลเฉพาะบุคคล (Per-Person Stats)
+    <section className="bg-success-50 border border-success-200 rounded-lg p-4">
+      <h3 className="text-lg font-semibold text-neutral-900 mb-3 flex items-center gap-2">
+        <svg className="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        ข้อมูลเฉพาะบุคคล (Per-Person Stats)
       </h3>
 
       {staffStats.length === 0 ? (
-        <p className="text-gray-600 text-center py-4">ไม่มีข้อมูลพนักงาน</p>
+        <p className="text-neutral-600 text-center py-4">ไม่มีข้อมูลพนักงาน</p>
       ) : (
         <>
           {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full bg-white rounded-lg overflow-hidden">
-              <thead className="bg-green-100">
+              <thead className="bg-success-100">
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-semibold text-gray-900">Staff</th>
-                  <th className="px-4 py-2 text-right text-sm font-semibold text-gray-900">Median</th>
-                  <th className="px-4 py-2 text-right text-sm font-semibold text-gray-900">MAD</th>
-                  <th className="px-4 py-2 text-right text-sm font-semibold text-gray-900">Threshold</th>
-                  <th className="px-4 py-2 text-right text-sm font-semibold text-gray-900">Outliers</th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-neutral-900">Staff</th>
+                  <th className="px-4 py-2 text-right text-sm font-semibold text-neutral-900">Median</th>
+                  <th className="px-4 py-2 text-right text-sm font-semibold text-neutral-900">MAD</th>
+                  <th className="px-4 py-2 text-right text-sm font-semibold text-neutral-900">Threshold</th>
+                  <th className="px-4 py-2 text-right text-sm font-semibold text-neutral-900">Outliers</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-neutral-200">
                 {staffStats.map((staff) => (
-                  <tr key={staff.name} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm text-gray-900">{staff.name}</td>
-                    <td className="px-4 py-2 text-sm text-right text-gray-700">
+                  <tr key={staff.name} className="hover:bg-neutral-50">
+                    <td className="px-4 py-2 text-sm text-neutral-900">{staff.name}</td>
+                    <td className="px-4 py-2 text-sm text-right text-neutral-700">
                       {formatMinutes(staff.personalMedian)}
                     </td>
-                    <td className="px-4 py-2 text-sm text-right text-gray-700">
+                    <td className="px-4 py-2 text-sm text-right text-neutral-700">
                       {formatMinutes(staff.personalMAD)}
                     </td>
-                    <td className="px-4 py-2 text-sm text-right font-medium text-orange-600">
+                    <td className="px-4 py-2 text-sm text-right font-medium text-warning">
                       {formatMinutes(staff.personalThreshold)}
                     </td>
-                    <td className="px-4 py-2 text-sm text-right font-semibold text-red-600">
+                    <td className="px-4 py-2 text-sm text-right font-semibold text-error">
                       {staff.outlierCount}
                     </td>
                   </tr>
@@ -206,25 +221,25 @@ function StaffDataTable({ staffStats }: { staffStats: StaffStats[] }) {
           {/* Mobile Card View */}
           <div className="md:hidden space-y-3">
             {staffStats.map((staff) => (
-              <div key={staff.name} className="bg-white rounded-lg p-3 border border-green-100">
+              <div key={staff.name} className="bg-white rounded-lg p-3 border border-success-100">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-gray-900">{staff.name}</span>
-                  <span className="text-sm font-semibold text-red-600">
+                  <span className="font-medium text-neutral-900">{staff.name}</span>
+                  <span className="text-sm font-semibold text-error">
                     Outliers: {staff.outlierCount}
                   </span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div>
-                    <span className="text-gray-500">Median</span>
-                    <p className="text-gray-900">{formatMinutes(staff.personalMedian)}</p>
+                    <span className="text-neutral-500">Median</span>
+                    <p className="text-neutral-900">{formatMinutes(staff.personalMedian)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">MAD</span>
-                    <p className="text-gray-900">{formatMinutes(staff.personalMAD)}</p>
+                    <span className="text-neutral-500">MAD</span>
+                    <p className="text-neutral-900">{formatMinutes(staff.personalMAD)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Threshold</span>
-                    <p className="text-orange-600 font-medium">
+                    <span className="text-neutral-500">Threshold</span>
+                    <p className="text-warning font-medium">
                       {formatMinutes(staff.personalThreshold)}
                     </p>
                   </div>
@@ -241,10 +256,13 @@ function StaffDataTable({ staffStats }: { staffStats: StaffStats[] }) {
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="text-center py-8">
-      <p className="text-red-600 mb-4">❌ {message}</p>
+      <svg className="w-12 h-12 mx-auto mb-4 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <p className="text-error mb-4">{message}</p>
       <button
         onClick={onRetry}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors"
       >
         ลองใหม่
       </button>
@@ -253,5 +271,12 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
 }
 
 function LoadingState() {
-  return <p className="text-center py-8 text-gray-600">⏳ กำลังโหลดข้อมูล...</p>
+  return (
+    <div className="text-center py-8">
+      <svg className="w-12 h-12 mx-auto mb-4 text-neutral-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      <p className="text-neutral-600">กำลังโหลดข้อมูล...</p>
+    </div>
+  )
 }

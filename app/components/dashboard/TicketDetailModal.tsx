@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react'
 import type { TicketDetail, TicketDetailModalProps } from '@/types/ticket'
 
 const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  assigned: 'bg-blue-100 text-blue-800',
-  closed: 'bg-green-100 text-green-800',
-  unsent: 'bg-gray-100 text-gray-800'
+  pending: 'bg-warning-100 text-warning-700',
+  assigned: 'bg-info-100 text-info-700',
+  closed: 'bg-success-100 text-success-700',
+  unsent: 'bg-neutral-100 text-neutral-700'
 }
 
 const statusLabels: Record<string, string> = {
@@ -68,14 +68,14 @@ export default function TicketDetailModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-full sm:max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-2 sm:p-4">
+      <div className="bg-white rounded-xl shadow-elevated max-w-full sm:max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center justify-between gap-2">
-          <h2 className="text-base sm:text-xl font-semibold text-gray-900 truncate">รายละเอียดงานทั้งหมด</h2>
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-neutral-200 flex items-center justify-between gap-2">
+          <h2 className="text-base sm:text-xl font-semibold text-neutral-900 truncate">รายละเอียดงานทั้งหมด</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg flex-shrink-0"
+            className="text-neutral-400 hover:text-neutral-600 transition-colors p-1.5 sm:p-2 hover:bg-neutral-100 rounded-lg flex-shrink-0"
             aria-label="Close"
           >
             <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

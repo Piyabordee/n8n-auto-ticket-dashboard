@@ -100,20 +100,20 @@ export default function TicketListModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-full sm:max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
+      <div className="bg-white rounded-xl shadow-elevated max-w-full sm:max-w-6xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center justify-between gap-2">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-neutral-200 flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h2 className="text-base sm:text-xl font-semibold text-gray-900 truncate">{title}</h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+            <h2 className="text-base sm:text-xl font-semibold text-neutral-900 truncate">{title}</h2>
+            <p className="text-xs sm:text-sm text-neutral-500 mt-1">
               {day ? `${day} ` : ''}{FILTER_LABELS[filterType]} - {tickets.length} งาน
               {staffName && <span className="ml-1 sm:ml-2">• พนักงาน: {staffName}</span>}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg flex-shrink-0"
+            className="text-neutral-400 hover:text-neutral-600 transition-colors p-1.5 sm:p-2 hover:bg-neutral-100 rounded-lg flex-shrink-0"
             aria-label="Close"
           >
             <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

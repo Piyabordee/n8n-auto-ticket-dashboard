@@ -22,24 +22,24 @@ interface StaffPerformanceTableProps {
 
 export default function StaffPerformanceTable({ staff, showOutlierColumns = false, onOutlierClick, onStaffClick, onStatClick }: StaffPerformanceTableProps) {
   const getRankBadge = (rank: number) => {
-    if (rank === 1) return 'bg-yellow-100 text-yellow-800'
-    if (rank === 2) return 'bg-gray-100 text-gray-600'
-    if (rank === 3) return 'bg-orange-100 text-orange-800'
-    return 'bg-gray-50 text-gray-600'
+    if (rank === 1) return 'bg-amber-100 text-amber-800'
+    if (rank === 2) return 'bg-neutral-100 text-neutral-600'
+    if (rank === 3) return 'bg-warning-100 text-warning-800'
+    return 'bg-neutral-50 text-neutral-600'
   }
 
   const getRankIcon = (rank: number) => {
-    if (rank === 1) return '🥇'
-    if (rank === 2) return '🥈'
-    if (rank === 3) return '🥉'
-    return `#${rank}`
+    if (rank === 1) return '1'
+    if (rank === 2) return '2'
+    if (rank === 3) return '3'
+    return `${rank}`
   }
 
   const getOutlierBadgeClass = (count: number) => {
-    if (count === 0) return 'bg-gray-100 text-gray-600'
-    if (count <= 2) return 'bg-yellow-100 text-yellow-700'
-    if (count <= 5) return 'bg-orange-100 text-orange-700'
-    return 'bg-red-100 text-red-700'
+    if (count === 0) return 'bg-neutral-100 text-neutral-600'
+    if (count <= 2) return 'bg-warning-100 text-warning-700'
+    if (count <= 5) return 'bg-error-100 text-error-600'
+    return 'bg-error-100 text-error-700'
   }
 
   const formatMinutes = (minutes: number) => {
@@ -65,15 +65,15 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
   const hasOutlierData = showOutlierColumns && staff && staff.some(s => s.outlierCount !== undefined)
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900">ผลงานทีม (Staff Performance)</h3>
+    <div className="card overflow-hidden">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-neutral-200">
+        <h3 className="text-base sm:text-lg font-semibold text-neutral-900">ผลงานทีม (Staff Performance)</h3>
       </div>
 
       {/* Mobile Card View */}
       <div className="md:hidden px-4 py-4 space-y-4">
         {(staff || []).map((person) => (
-          <div key={person.name} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div key={person.name} className="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRankBadge(person.rank)}`}>
@@ -82,45 +82,45 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
                 {onStaffClick ? (
                   <button
                     onClick={() => onStaffClick(person.name)}
-                    className="text-sm font-semibold text-blue-600 hover:text-blue-800"
+                    className="text-sm font-semibold text-primary hover:text-primary-700"
                   >
                     {person.name}
                   </button>
                 ) : (
-                  <span className="text-sm font-semibold text-gray-900">{person.name}</span>
+                  <span className="text-sm font-semibold text-neutral-900">{person.name}</span>
                 )}
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 text-xs">
               <div>
-                <div className="text-gray-500">รับงาน</div>
+                <div className="text-neutral-500">รับงาน</div>
                 <div className="font-semibold">
                   {onStatClick ? (
                     <button
                       onClick={() => onStatClick(person.name, 'all')}
-                      className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                      className="text-primary hover:text-primary-700 hover:underline cursor-pointer"
                       title={`ดูงานทั้งหมดของ ${person.name}`}
                     >
                       {person.totalAssigned}
                     </button>
                   ) : (
-                    <span className="text-gray-900">{person.totalAssigned}</span>
+                    <span className="text-neutral-900">{person.totalAssigned}</span>
                   )}
                 </div>
               </div>
               <div>
-                <div className="text-gray-500">ยังไม่ปิด</div>
+                <div className="text-neutral-500">ยังไม่ปิด</div>
                 <div className="font-semibold">
                   {onStatClick ? (
                     <button
                       onClick={() => onStatClick(person.name, 'pending')}
-                      className="text-red-600 hover:text-red-800 hover:underline cursor-pointer"
+                      className="text-error hover:text-error-700 hover:underline cursor-pointer"
                       title={`ดูงานที่ยังไม่ปิดของ ${person.name}`}
                     >
                       {person.totalPending}
                     </button>
                   ) : (
-                    <span className="text-red-600">{person.totalPending}</span>
+                    <span className="text-error">{person.totalPending}</span>
                   )}
                 </div>
               </div>
@@ -142,13 +142,13 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
               )}
             </div>
             <div className="mt-2 text-xs">
-              <span className="text-gray-500">เวลาเฉลี่ย:</span>{' '}
-              <span className="font-semibold text-gray-900">
+              <span className="text-neutral-500">เวลาเฉลี่ย:</span>{' '}
+              <span className="font-semibold text-neutral-900">
                 {hasOutlierData && person.avgTimeNormal !== undefined ? (
                   <>
                     {formatMinutes(Math.round(person.avgTimeNormal))}
                     {person.outlierCount && person.outlierCount > 0 && (
-                      <span className="text-red-600"> ({formatMinutes(Math.round(person.avgTimeOutlier || 0))})</span>
+                      <span className="text-error"> ({formatMinutes(Math.round(person.avgTimeOutlier || 0))})</span>
                     )}
                   </>
                 ) : (
@@ -163,22 +163,22 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
       {/* Desktop Table View - hidden on mobile */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-neutral-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">อันดับ</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อพนักงาน</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">รับงาน</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ยังไม่ปิด</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ปิดแล้ว</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">อันดับ</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">ชื่อพนักงาน</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">รับงาน</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">ยังไม่ปิด</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">ปิดแล้ว</th>
               {hasOutlierData && (
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Outliers</th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">Outliers</th>
               )}
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">เวลาเฉลี่ย</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">เวลาเฉลี่ย</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-neutral-200">
             {(staff || []).map((person) => (
-              <tr key={person.name} className="hover:bg-gray-50">
+              <tr key={person.name} className="hover:bg-neutral-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRankBadge(person.rank)}`}>
                     {getRankIcon(person.rank)}
@@ -188,52 +188,52 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
                   {onStaffClick ? (
                     <button
                       onClick={() => onStaffClick(person.name)}
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      className="text-primary hover:text-primary-700 hover:underline"
                       title={`ดูงานทั้งหมดของ ${person.name}`}
                     >
                       {person.name}
                     </button>
                   ) : (
-                    <span className="text-gray-900">{person.name}</span>
+                    <span className="text-neutral-900">{person.name}</span>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                   {onStatClick ? (
                     <button
                       onClick={() => onStatClick(person.name, 'all')}
-                      className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer font-medium"
+                      className="text-primary hover:text-primary-700 hover:underline cursor-pointer font-medium"
                       title={`ดูงานทั้งหมดของ ${person.name}`}
                     >
                       {person.totalAssigned}
                     </button>
                   ) : (
-                    <span className="text-gray-900">{person.totalAssigned}</span>
+                    <span className="text-neutral-900">{person.totalAssigned}</span>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                   {onStatClick ? (
                     <button
                       onClick={() => onStatClick(person.name, 'pending')}
-                      className="text-red-600 hover:text-red-800 hover:underline cursor-pointer font-semibold"
+                      className="text-error hover:text-error-700 hover:underline cursor-pointer font-semibold"
                       title={`ดูงานที่ยังไม่ปิดของ ${person.name}`}
                     >
                       {person.totalPending}
                     </button>
                   ) : (
-                    <span className="text-red-600 font-semibold">{person.totalPending}</span>
+                    <span className="text-error font-semibold">{person.totalPending}</span>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                   {onStatClick ? (
                     <button
                       onClick={() => onStatClick(person.name, 'closed')}
-                      className="text-green-600 hover:text-green-800 hover:underline cursor-pointer font-semibold"
+                      className="text-success hover:text-success-700 hover:underline cursor-pointer font-semibold"
                       title={`ดูงานที่ปิดแล้วของ ${person.name}`}
                     >
                       {person.totalClosed}
                     </button>
                   ) : (
-                    <span className="text-green-600 font-semibold">{person.totalClosed}</span>
+                    <span className="text-success font-semibold">{person.totalClosed}</span>
                   )}
                 </td>
                 {hasOutlierData && (
@@ -242,7 +242,7 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
                       <button
                         onClick={() => person.outlierCount && person.outlierCount > 0 && onOutlierClick?.(person.name)}
                         disabled={!person.outlierCount || person.outlierCount === 0}
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium transition-all ${
+                        className={`badge transition-all ${
                           getOutlierBadgeClass(person.outlierCount)
                         } ${
                           person.outlierCount > 0 && onOutlierClick
@@ -257,12 +257,12 @@ export default function StaffPerformanceTable({ staff, showOutlierColumns = fals
                     )}
                   </td>
                 )}
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 text-center">
                   {hasOutlierData && person.avgTimeNormal !== undefined && person.avgTimeOutlier !== undefined ? (
                     <div className="flex flex-col items-center">
-                      <span className="text-gray-900">{formatMinutes(Math.round(person.avgTimeNormal))}</span>
+                      <span className="text-neutral-900">{formatMinutes(Math.round(person.avgTimeNormal))}</span>
                       {person.outlierCount && person.outlierCount > 0 && (
-                        <span className="text-red-600 text-xs">({formatMinutes(Math.round(person.avgTimeOutlier))})</span>
+                        <span className="text-error text-xs">({formatMinutes(Math.round(person.avgTimeOutlier))})</span>
                       )}
                     </div>
                   ) : (

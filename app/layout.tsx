@@ -8,6 +8,11 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata = {
   title: 'IT Helpdesk Admin',
   description: 'Admin dashboard for IT tickets',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 }
 
 export default function RootLayout({

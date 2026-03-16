@@ -82,6 +82,8 @@ credentials*.json
 *.pfx
 *.cert
 *.crt
+img/*
+public/logo.png
 
 # ============ Runtime data ============
 pids/

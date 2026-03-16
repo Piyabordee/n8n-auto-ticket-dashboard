@@ -19,7 +19,7 @@ interface TicketCardProps {
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
   assigned: 'bg-blue-100 text-blue-800',
-  closed: 'bg-green-100 text-green-800',
+  closed: 'bg-primary-100 text-primary-700',
   unsent: 'bg-gray-100 text-gray-800'
 }
 

@@ -1,3 +1,57 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Warm neutral background */
+  body {
+    @apply bg-neutral-50 text-neutral-900 antialiased;
+  }
+
+  /* Improved focus states */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+  }
+
+  /* Better text selection */
+  ::selection {
+    @apply bg-primary-200 text-primary-900;
+  }
+}
+
+@layer components {
+  /* Card base - refined shadow and border */
+  .card {
+    @apply bg-white rounded-xl shadow-card border border-neutral-100;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-elevated transition-shadow duration-300;
+  }
+
+  /* Accent border variations */
+  .border-l-primary { @apply border-l-4 border-l-primary-500; }
+  .border-l-error { @apply border-l-4 border-l-error-500; }
+  .border-l-warning { @apply border-l-4 border-l-warning-500; }
+  .border-l-success { @apply border-l-4 border-l-success-500; }
+  .border-l-amber { @apply border-l-4 border-l-amber-500; }
+  .border-l-info { @apply border-l-4 border-l-info-500; }
+
+  /* Text colors by semantic meaning */
+  .text-primary { @apply text-primary-600; }
+  .text-error { @apply text-error-600; }
+  .text-warning { @apply text-warning-600; }
+  .text-success { @apply text-success-600; }
+  .text-info { @apply text-info-600; }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary { @apply badge bg-primary-100 text-primary-700; }
+  .badge-error { @apply badge bg-error-100 text-error-700; }
+  .badge-warning { @apply badge bg-warning-100 text-warning-700; }
+  .badge-success { @apply badge bg-success-100 text-success-700; }
+  .badge-neutral { @apply badge bg-neutral-100 text-neutral-700; }
+}

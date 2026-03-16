@@ -349,14 +349,14 @@ export default function TeamDashboard() {
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">กำลังโหลดข้อมูล...</div>
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <div className="text-neutral-500">กำลังโหลดข้อมูล...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-neutral-50">
       {/* Header */}
       <HeaderFilter />
 

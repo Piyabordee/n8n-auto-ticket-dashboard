@@ -95,10 +95,10 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, string> = {
-      'closed': 'bg-green-100 text-green-800',
-      'pending': 'bg-yellow-100 text-yellow-800',
-      'assigned': 'bg-blue-100 text-blue-800',
-      'unsent': 'bg-gray-100 text-gray-600',
+      'closed': 'bg-success-100 text-success-700',
+      'pending': 'bg-warning-100 text-warning-700',
+      'assigned': 'bg-info-100 text-info-700',
+      'unsent': 'bg-neutral-100 text-neutral-600',
     }
     const statusLabelMap: Record<string, string> = {
       'closed': 'ปิดแล้ว',
@@ -106,9 +106,9 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
       'assigned': 'มอบหมายแล้ว',
       'unsent': 'ยังไม่ส่ง',
     }
-    const className = statusMap[status] || 'bg-gray-100 text-gray-600'
+    const className = statusMap[status] || 'bg-neutral-100 text-neutral-600'
     const label = statusLabelMap[status] || status
-    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${className}`}>{label}</span>
+    return <span className={`badge ${className}`}>{label}</span>
   }
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
@@ -118,12 +118,12 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="card p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
+          <div className="h-6 bg-neutral-200 rounded w-48 mb-4"></div>
           <div className="space-y-3">
             {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="h-16 bg-gray-100 rounded"></div>
+              <div key={i} className="h-16 bg-neutral-100 rounded"></div>
             ))}
           </div>
         </div>
@@ -133,9 +133,11 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
 
   if (tickets.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="text-center py-8 text-gray-500">
-          <div className="text-4xl mb-2">📋</div>
+      <div className="card p-6">
+        <div className="text-center py-8 text-neutral-500">
+          <svg className="w-12 h-12 mx-auto mb-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
           <div>ไม่มีข้อมูลงานในเดือนนี้</div>
         </div>
       </div>
@@ -145,15 +147,20 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
   const sortedTickets = getSortedTickets()
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900">📋 รายการงานทั้งหมด ({tickets.length} งาน)</h3>
+    <div className="card overflow-hidden">
+      <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-200 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <h3 className="text-base sm:text-lg font-semibold text-neutral-900">รายการงานทั้งหมด ({tickets.length} งาน)</h3>
+        </div>
       </div>
 
       {/* Mobile Card View */}
-      <div className="md:hidden divide-y divide-gray-100">
+      <div className="md:hidden divide-y divide-neutral-100">
         {sortedTickets.map((ticket) => (
-          <div key={ticket.message_id} className="p-3 hover:bg-blue-50 transition-colors">
+          <div key={ticket.message_id} className="p-3 hover:bg-primary-50 transition-colors">
             <div className="mb-2">
               <ClickableSubject
                 subject={ticket.subject}
@@ -161,12 +168,12 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
               />
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
-              <span className="text-gray-600">{formatDate(ticket.created_date)}</span>
-              <span className="text-gray-700">• {ticket.assigned_to}</span>
+              <span className="text-neutral-600">{formatDate(ticket.created_date)}</span>
+              <span className="text-neutral-700">• {ticket.assigned_to}</span>
               <span>{getStatusBadge(ticket.status)}</span>
-              <span className="text-gray-600">{ticket.branch_name}</span>
+              <span className="text-neutral-600">{ticket.branch_name}</span>
               {ticket.close_time_minute && (
-                <span className={`font-semibold ${ticket.is_outlier ? 'text-red-600' : 'text-green-600'}`}>
+                <span className={`font-semibold ${ticket.is_outlier ? 'text-error' : 'text-success'}`}>
                   {formatMinutes(ticket.close_time_minute)}
                 </span>
               )}
@@ -178,47 +185,47 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-neutral-50">
             <tr>
               <th
-                className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
                 onClick={() => handleSort('created_date')}
               >
                 วันที่สร้าง <SortIcon column="created_date" />
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                 หัวข้อ
               </th>
               <th
-                className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
                 onClick={() => handleSort('assigned_to')}
               >
                 รับงานโดย <SortIcon column="assigned_to" />
               </th>
               <th
-                className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
                 onClick={() => handleSort('status')}
               >
                 สถานะ <SortIcon column="status" />
               </th>
               <th
-                className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
                 onClick={() => handleSort('branch_name')}
               >
                 สาขา <SortIcon column="branch_name" />
               </th>
               <th
-                className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                className="px-3 py-2 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
                 onClick={() => handleSort('close_time_minute')}
               >
                 เวลาที่ใช้ <SortIcon column="close_time_minute" />
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-100">
+          <tbody className="bg-white divide-y divide-neutral-100">
             {sortedTickets.map((ticket) => (
-              <tr key={ticket.message_id} className="hover:bg-blue-50 transition-colors">
-                <td className="px-3 py-2 whitespace-nowrap text-gray-600">
+              <tr key={ticket.message_id} className="hover:bg-primary-50 transition-colors">
+                <td className="px-3 py-2 whitespace-nowrap text-neutral-600">
                   {formatDate(ticket.created_date)}
                 </td>
                 <td className="px-3 py-2 max-w-xs">
@@ -227,22 +234,22 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
                     messageId={ticket.message_id}
                   />
                 </td>
-                <td className="px-3 py-2 whitespace-nowrap text-gray-700">
+                <td className="px-3 py-2 whitespace-nowrap text-neutral-700">
                   {ticket.assigned_to}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {getStatusBadge(ticket.status)}
                 </td>
-                <td className="px-3 py-2 text-gray-600">
+                <td className="px-3 py-2 text-neutral-600">
                   {ticket.branch_name}
                 </td>
-                <td className="px-3 py-2 text-center text-gray-900">
+                <td className="px-3 py-2 text-center text-neutral-900">
                   {ticket.close_time_minute ? (
-                    <span className={`font-semibold ${ticket.is_outlier ? 'text-red-600' : 'text-green-600'}`}>
+                    <span className={`font-semibold ${ticket.is_outlier ? 'text-error' : 'text-success'}`}>
                       {formatMinutes(ticket.close_time_minute)}
                     </span>
                   ) : (
-                    <span className="text-gray-400">-</span>
+                    <span className="text-neutral-400">-</span>
                   )}
                 </td>
               </tr>

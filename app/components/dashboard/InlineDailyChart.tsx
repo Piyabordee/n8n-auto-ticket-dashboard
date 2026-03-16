@@ -103,7 +103,7 @@ export default function InlineDailyChart({
         <div className="flex flex-wrap items-center gap-2">
           <div className="text-xs sm:text-sm text-gray-500">
             ทั้งหมด: <span className="font-semibold text-gray-900">{total}</span> •
-            ปิดแล้ว: <span className="font-semibold text-green-600">{closed}</span> •
+            ปิดแล้ว: <span className="font-semibold text-primary">{closed}</span> •
             รอดำเนินการ: <span className="font-semibold text-red-600">{total - closed}</span>
           </div>
           {/* Filter Dropdowns */}
