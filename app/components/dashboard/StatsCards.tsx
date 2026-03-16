@@ -89,10 +89,11 @@ export default function StatsCards({
       >
         {hasOutlierData ? (
           <>
-            <div className="text-xs sm:text-sm text-neutral-600 mb-1">เวลาเฉลี่ย (ปกติ / Outlier)</div>
-            <div className="text-lg sm:text-xl font-bold text-warning">
-              {avgTimeNormal > 0 ? formatMinutes(Math.round(avgTimeNormal)) : '-'}
-              <span className="text-error"> / </span>
+            <div className="text-xs sm:text-sm text-neutral-600 mb-1">
+              เวลาเฉลี่ย (<span className="text-green-600 font-medium">ปกติ</span> / <span className="text-error font-medium">Outlier</span>)
+            </div>
+            <div className="text-base sm:text-lg font-bold flex flex-col gap-0.5">
+              <span className="text-green-600">{avgTimeNormal > 0 ? formatMinutes(Math.round(avgTimeNormal)) : '-'}</span>
               <span className="text-error">{avgTimeOutlier > 0 ? formatMinutes(Math.round(avgTimeOutlier)) : '-'}</span>
             </div>
             <div className="text-xs text-neutral-500 mt-1">ค่ามัธยฐาน + 15×MAD</div>
