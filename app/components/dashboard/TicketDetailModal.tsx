@@ -154,6 +154,18 @@ export default function TicketDetailModal({
                       <span>{ticket.close_time_minute} นาที</span>
                     </div>
                   )}
+
+                  <div className="flex items-center gap-2">
+                    <span>🔴</span>
+                    <span className="font-medium">ปัญหา/อาการ:</span>
+                    <span>{ticket.close_cause || '-'}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span>📝</span>
+                    <span className="font-medium">การแก้ไขปัญหา:</span>
+                    <span>{ticket.close_reason || '-'}</span>
+                  </div>
                 </div>
               </div>
 
@@ -233,16 +245,6 @@ export default function TicketDetailModal({
                         <div><span className="font-medium">Group ID:</span> {ticket.groupid || '-'}</div>
                         <div><span className="font-medium">Assigned Date:</span> {formatDate(ticket.assigned_date)}</div>
                         <div><span className="font-medium">Updated Date:</span> {formatDate(ticket.updated_date)}</div>
-                      </div>
-                    </div>
-
-                    {/* Close Info */}
-                    <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-                      <h4 className="font-semibold mb-2 text-sm">🔸 ข้อมูลการปิดงาน</h4>
-                      <div className="space-y-1 text-xs sm:text-sm">
-                        <div><span className="font-medium">Close Cause:</span> {ticket.close_cause || '-'}</div>
-                        <div><span className="font-medium">Close Reason:</span> {ticket.close_reason || '-'}</div>
-                        <div><span className="font-medium">Close Time Minute:</span> {ticket.close_time_minute || '-'} นาที</div>
                       </div>
                     </div>
                   </div>
