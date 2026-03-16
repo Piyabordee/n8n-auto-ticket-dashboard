@@ -72,7 +72,8 @@ export default function TicketListModal({
             branch_name: '-',
             created_date: o.created_date,
             assigned_date: o.assigned_date,
-            close_time_minute: o.diff_minutes
+            close_time_minute: o.diff_minutes,
+            is_outlier: 1 // Mark as outlier for red styling
           }))
           setTickets(outlierTickets)
         } else {
