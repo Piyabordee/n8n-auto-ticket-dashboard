@@ -102,3 +102,27 @@ export interface StaffOutlierRow {
   avgTimeOutlier: number
   outlierCount: number
 }
+
+// ============================================================================
+// Outlier Initialization Types
+// ============================================================================
+
+export interface OutlierRecalculationSummary {
+  total: number
+  updated: number
+  outliers: number
+  normal: number
+  null: number
+  errors: number
+}
+
+export interface OutlierInitializationResult {
+  initialized: boolean
+  recalculated: boolean
+  summary?: OutlierRecalculationSummary
+}
+
+export interface OutlierInitializationStatus {
+  isInitialized: boolean
+  isRecalculating: boolean
+}
