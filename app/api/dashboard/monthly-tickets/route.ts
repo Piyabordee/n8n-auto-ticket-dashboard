@@ -1,28 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
+import { getConnection } from '../../../lib/sql'
+import { ensureOutlierInitialized } from '../../../lib/apiInitializer'
 
-const sqlConfig = {
-  server: process.env.SQL_SERVER || '',
-  database: process.env.SQL_DATABASE || '',
-  user: process.env.SQL_USER || '',
-  password: process.env.SQL_PASSWORD || '',
-  options: {
-    encrypt: false,
-    trustServerCertificate: true,
-    enableArithAbort: true,
-    useUTC: false
-  },
-  parseJSON: true
-}
-
-// Singleton connection pool
-let pool: sql.ConnectionPool | null = null
-
-async function getPool(): Promise<sql.ConnectionPool> {
-  if (!pool || !pool.connected) {
-    pool = await sql.connect(sqlConfig)
-  }
-  return pool
+// Use shared connection from lib/sql
+async function getPool() {
+  return getConnection()
 }
 
 export async function GET(request: NextRequest) {
@@ -54,6 +37,9 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Ensure outlier detection is initialized
+  await ensureOutlierInitialized()
+
   try {
     const pool = await getPool()
 
@@ -75,7 +61,8 @@ export async function GET(request: NextRequest) {
           branch_name,
           created_date,
           assigned_date,
-          close_time_minute
+          close_time_minute,
+          is_outlier
         FROM [Dev_Born].[dbo].[ticket]
         WHERE
           created_date >= @startDate
@@ -93,7 +80,8 @@ export async function GET(request: NextRequest) {
       branch_name: row.branch_name || '-',
       created_date: row.created_date ? row.created_date.toISOString() : null,
       assigned_date: row.assigned_date ? row.assigned_date.toISOString() : null,
-      close_time_minute: row.close_time_minute || null
+      close_time_minute: row.close_time_minute || null,
+      is_outlier: row.is_outlier ? 1 : 0
     }))
 
     return NextResponse.json({ tickets })

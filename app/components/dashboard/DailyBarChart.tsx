@@ -30,6 +30,7 @@ interface Ticket {
   created_date: string | null
   assigned_date: string | null
   close_time_minute: number | null
+  is_outlier?: number
 }
 
 interface DailyBarChartProps {
