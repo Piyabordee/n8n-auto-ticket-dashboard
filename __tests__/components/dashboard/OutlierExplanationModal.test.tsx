@@ -33,7 +33,8 @@ describe('OutlierExplanationModal', () => {
       <OutlierExplanationModal isOpen={true} onClose={() => {}} year={2026} />
     )
 
-    expect(screen.getByLabelText('Close')).toBeInTheDocument()
+    // Component uses Thai aria-label for accessibility
+    expect(screen.getByLabelText('ปิดหน้าต่าง')).toBeInTheDocument()
   })
 
   it('should call onClose when close button is clicked', () => {
@@ -42,7 +43,8 @@ describe('OutlierExplanationModal', () => {
       <OutlierExplanationModal isOpen={true} onClose={onClose} year={2026} />
     )
 
-    const closeButton = screen.getByLabelText('Close')
+    // Component uses Thai aria-label for accessibility
+    const closeButton = screen.getByLabelText('ปิดหน้าต่าง')
     fireEvent.click(closeButton)
 
     expect(onClose).toHaveBeenCalledTimes(1)

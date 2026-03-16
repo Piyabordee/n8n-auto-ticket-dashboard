@@ -20,6 +20,9 @@ interface StatsCardsProps {
 }
 
 // Count-up animation hook for smooth number transitions
+// Disable animation in test environment for predictable test values
+const IS_TEST = process.env.NODE_ENV === 'test' || typeof window !== 'undefined' && (window as any).JEST_WORKER_ID !== undefined
+
 function useCountUp(endValue: number, duration: number = 800, isEnabled: boolean = true) {
   const [count, setCount] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -27,7 +30,8 @@ function useCountUp(endValue: number, duration: number = 800, isEnabled: boolean
   const startTimeRef = useRef<number>()
 
   useEffect(() => {
-    if (!isEnabled || endValue === 0) {
+    // In test environment, skip animation and set value immediately
+    if (IS_TEST || !isEnabled || endValue === 0) {
       setCount(endValue)
       return
     }

@@ -64,7 +64,10 @@ describe('StatsCards', () => {
 
       render(<StatsCards {...propsWithOutliers} />)
 
-      expect(screen.getByText('เวลาเฉลี่ย (ปกติ / Outlier)')).toBeInTheDocument()
+      // Use flexible matcher for span-split text
+      expect(screen.getByText((_content: string, element: HTMLElement | null) => {
+        return element?.textContent === 'เวลาเฉลี่ย (ปกติ / Outlier)'
+      })).toBeInTheDocument()
       expect(screen.getByText('30 นาที')).toBeInTheDocument() // normal
       expect(screen.getByText('2 ชม.')).toBeInTheDocument() // outlier (120 min = 2 hours)
     })
@@ -108,7 +111,10 @@ describe('StatsCards', () => {
 
       const pendingCard = screen.getByText('ยังไม่ปิด').closest('div.card')
       const totalCard = screen.getByText('จำนวนงานทั้งหมด').closest('div.card')
-      const avgTimeCard = screen.getByText('เวลาเฉลี่ย (ปกติ / Outlier)').closest('div.card')
+      // Use flexible matcher for span-split text
+      const avgTimeCard = screen.getByText((_content: string, element: HTMLElement | null) => {
+        return element?.textContent === 'เวลาเฉลี่ย (ปกติ / Outlier)'
+      }).closest('div.card')
       const outlierCard = screen.getByText('Outliers').closest('div.card')
 
       expect(pendingCard).toHaveClass('cursor-pointer')
@@ -127,8 +133,10 @@ describe('StatsCards', () => {
       }
       render(<StatsCards {...propsWithOutliers} onCardClick={handleClick} />)
 
-      // Find the avg time card text
-      const avgTimeText = screen.getByText('เวลาเฉลี่ย (ปกติ / Outlier)')
+      // Find the avg time card text (use flexible matcher for span-split text)
+      const avgTimeText = screen.getByText((_content: string, element: HTMLElement | null) => {
+        return element?.textContent === 'เวลาเฉลี่ย (ปกติ / Outlier)'
+      })
       const avgTimeCard = avgTimeText.closest('div.card')
 
       fireEvent.click(avgTimeCard!)
