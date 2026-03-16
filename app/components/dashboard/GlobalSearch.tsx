@@ -108,6 +108,9 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
     setShowResults(false)
   }
 
+  const listBoxId = 'search-results-listbox'
+  const inputId = 'search-input'
+
   return (
     <div ref={searchRef} className="relative w-full">
       {/* Search Input */}
@@ -118,6 +121,7 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path
               strokeLinecap="round"
@@ -128,19 +132,28 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
           </svg>
         </div>
         <input
+          id={inputId}
           type="text"
           value={query}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           placeholder="ค้นหางาน... (หัวข้อ, พนักงาน, สาขา, ประเภท)"
           className="w-full pl-9 sm:pl-11 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+          role="combobox"
+          aria-label="ค้นหางาน"
+          aria-expanded={showResults && results.length > 0}
+          aria-haspopup="listbox"
+          aria-controls={showResults ? listBoxId : undefined}
+          aria-autocomplete="list"
         />
         {query && (
           <button
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-2.5 sm:pr-3 flex items-center text-neutral-400 hover:text-neutral-600"
+            className="absolute inset-y-0 right-0 pr-2.5 sm:pr-3 flex items-center text-neutral-400 hover:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+            aria-label="ล้างการค้นหา"
+            type="button"
           >
-            <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -156,17 +169,25 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
 
       {/* Search Results Dropdown */}
       {showResults && results.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-elevated border border-neutral-200 max-h-96 overflow-y-auto">
-          <div className="px-3 py-2 bg-neutral-50 border-b border-neutral-200">
+        <div
+          id={listBoxId}
+          className="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-elevated border border-neutral-200 max-h-96 overflow-y-auto"
+          role="listbox"
+          aria-label="ผลลัพธ์การค้นหา"
+        >
+          <div className="px-3 py-2 bg-neutral-50 border-b border-neutral-200" aria-live="polite">
             <p className="text-xs text-neutral-600">
               พบ {results.length} ผลลัพธ์ <span className="text-neutral-400">(กด Enter เพื่อดูทั้งหมด)</span>
             </p>
           </div>
-          {results.map((ticket) => (
+          {results.map((ticket, index) => (
             <button
               key={ticket.message_id}
               onClick={() => handleResultClick(ticket.message_id)}
-              className="w-full px-3 py-2 text-left hover:bg-primary-50 transition-colors border-b border-neutral-100 last:border-b-0"
+              className="w-full px-3 py-2 text-left hover:bg-primary-50 transition-colors border-b border-neutral-100 last:border-b-0 focus:outline-none focus:bg-primary-50"
+              role="option"
+              aria-selected="false"
+              tabIndex={-1}
             >
               <div className="text-xs sm:text-sm font-medium text-neutral-900 truncate">
                 {ticket.subject}

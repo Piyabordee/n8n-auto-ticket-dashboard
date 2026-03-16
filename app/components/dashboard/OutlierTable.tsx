@@ -89,7 +89,17 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) return null
-    return <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+    return (
+      <span className="ml-1 inline-block" aria-hidden="true">
+        {sortDirection === 'asc' ? '↑' : '↓'}
+      </span>
+    )
+  }
+
+  // Get ARIA sort state for column headers
+  const getAriaSort = (column: SortColumn): 'ascending' | 'descending' | 'none' => {
+    if (sortColumn !== column) return 'none'
+    return sortDirection === 'asc' ? 'ascending' : 'descending'
   }
 
   if (loading) {
@@ -194,31 +204,47 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
           <thead className="bg-neutral-50">
             <tr>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
+                className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 onClick={() => handleSort('assigned_to')}
+                scope="col"
+                aria-sort={getAriaSort('assigned_to')}
               >
-                พนักงาน <SortIcon column="assigned_to" />
+                <span className="flex items-center">
+                  พนักงาน <SortIcon column="assigned_to" />
+                </span>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider" scope="col">
                 หัวข้อ
               </th>
               <th
-                className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
+                className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 onClick={() => handleSort('assigned_date')}
+                scope="col"
+                aria-sort={getAriaSort('assigned_date')}
               >
-                วันที่ส่ง <SortIcon column="assigned_date" />
+                <span className="flex items-center">
+                  วันที่ส่ง <SortIcon column="assigned_date" />
+                </span>
               </th>
               <th
-                className="px-6 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
+                className="px-6 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 onClick={() => handleSort('diff_minutes')}
+                scope="col"
+                aria-sort={getAriaSort('diff_minutes')}
               >
-                เวลาที่ใช้ <SortIcon column="diff_minutes" />
+                <span className="flex items-center justify-center">
+                  เวลาที่ใช้ <SortIcon column="diff_minutes" />
+                </span>
               </th>
               <th
-                className="px-6 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
+                className="px-6 py-3 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 onClick={() => handleSort('deviation_score')}
+                scope="col"
+                aria-sort={getAriaSort('deviation_score')}
               >
-                Deviation <SortIcon column="deviation_score" />
+                <span className="flex items-center justify-center">
+                  Deviation <SortIcon column="deviation_score" />
+                </span>
               </th>
             </tr>
           </thead>

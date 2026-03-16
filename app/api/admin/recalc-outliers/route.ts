@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { triggerManualRecalculation, getInitializationStatus } from '../../lib/outlierInitialization'
+import { triggerManualRecalculation, getInitializationStatus } from '@/lib/outlierInitialization'
 
 /**
  * POST /api/admin/recalc-outliers

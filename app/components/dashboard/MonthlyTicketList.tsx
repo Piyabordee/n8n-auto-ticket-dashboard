@@ -113,7 +113,17 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) return null
-    return <span className="ml-1 text-gray-400">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+    return (
+      <span className="ml-1 inline-block" aria-hidden="true">
+        {sortDirection === 'asc' ? '↑' : '↓'}
+      </span>
+    )
+  }
+
+  // Get ARIA sort state for column headers
+  const getAriaSort = (column: SortColumn): 'ascending' | 'descending' | 'none' => {
+    if (sortColumn !== column) return 'none'
+    return sortDirection === 'asc' ? 'ascending' : 'descending'
   }
 
   if (loading) {
@@ -188,37 +198,57 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
           <thead className="bg-neutral-50">
             <tr>
               <th
-                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
+                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 onClick={() => handleSort('created_date')}
+                scope="col"
+                aria-sort={getAriaSort('created_date')}
               >
-                วันที่สร้าง <SortIcon column="created_date" />
+                <span className="flex items-center">
+                  วันที่สร้าง <SortIcon column="created_date" />
+                </span>
               </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+              <th className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider" scope="col">
                 หัวข้อ
               </th>
               <th
-                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
+                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 onClick={() => handleSort('assigned_to')}
+                scope="col"
+                aria-sort={getAriaSort('assigned_to')}
               >
-                รับงานโดย <SortIcon column="assigned_to" />
+                <span className="flex items-center">
+                  รับงานโดย <SortIcon column="assigned_to" />
+                </span>
               </th>
               <th
-                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
+                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 onClick={() => handleSort('status')}
+                scope="col"
+                aria-sort={getAriaSort('status')}
               >
-                สถานะ <SortIcon column="status" />
+                <span className="flex items-center">
+                  สถานะ <SortIcon column="status" />
+                </span>
               </th>
               <th
-                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
+                className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 onClick={() => handleSort('branch_name')}
+                scope="col"
+                aria-sort={getAriaSort('branch_name')}
               >
-                สาขา <SortIcon column="branch_name" />
+                <span className="flex items-center">
+                  สาขา <SortIcon column="branch_name" />
+                </span>
               </th>
               <th
-                className="px-3 py-2 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100"
+                className="px-3 py-2 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 onClick={() => handleSort('close_time_minute')}
+                scope="col"
+                aria-sort={getAriaSort('close_time_minute')}
               >
-                เวลาที่ใช้ <SortIcon column="close_time_minute" />
+                <span className="flex items-center justify-center">
+                  เวลาที่ใช้ <SortIcon column="close_time_minute" />
+                </span>
               </th>
             </tr>
           </thead>
