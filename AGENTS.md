@@ -1,9 +1,9 @@
 # IT Helpdesk Dashboard - Project Context
 
-> **Version**: 1.8.0
+> **Version**: 1.9.0
 > **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
 > **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
-> **Last Updated**: 2026-03-11 - Outlier Explanation Modal, Global Search, Stat Click Filtering
+> **Last Updated**: 2026-03-16 - Outlier Storage (Persistent Classification)
 
 ---
 
@@ -168,6 +168,37 @@ Utility to normalize stylized Unicode text to regular ASCII.
 
 **Modal Title Updates**: Titles now show the filter type (e.g., "งาน Outlier", "งานยังไม่ปิด", "งานทั้งหมด")
 
+### Feature 10: Outlier Storage (Version 1.9.0)
+**Persistent outlier classification stored in database**
+
+**Key Changes**:
+- `is_outlier BIT` column added to ticket table
+- Outlier classification calculated once on server startup
+- No version tracking - always recalculates on startup (simple)
+- Simple `WHERE is_outlier = 1` queries instead of complex CTEs
+
+**How It Works**:
+1. Server starts → Initializes schema if needed
+2. ALWAYS recalculates ALL outliers using current algorithm
+3. Stores results in `is_outlier` column
+4. All queries use stored values (10-20x faster)
+
+**To Change Detection Algorithm**:
+1. Update calculation logic in `OutlierRepository.recalculateAllOutliers()`
+2. Restart server → Auto-recalculation runs
+3. Or call `POST /api/admin/recalc-outliers`
+
+**Performance**:
+- Before: ~500-1000ms per request (complex CTEs)
+- After: ~50-100ms per request (simple WHERE clause)
+- Startup cost: ~30-60 seconds for 10,000 tickets (every startup)
+
+**Files**:
+- `app/lib/sql.ts` - Schema initialization
+- `app/lib/outlierInitialization.ts` - Startup recalculation service
+- `repository/OutlierRepository.ts` - Batch calculation methods
+- `app/api/admin/recalc-outliers/route.ts` - Manual recalc endpoint
+
 ---
 
 ## 4. API Endpoints
@@ -226,6 +257,16 @@ Single ticket detail with full information.
 Available years and months.
 - Returns: years array, months array
 
+### 4.3 Admin APIs
+
+#### POST /api/admin/recalc-outliers
+Manually trigger outlier recalculation.
+- Returns: { success: true, recalculated: number, duration_ms: number }
+
+#### GET /api/admin/recalc-outliers
+Get current initialization status.
+- Returns: { initialized: boolean, lastRecalcDate: string, totalOutliers: number }
+
 ---
 
 ## 5. Database Schema
@@ -241,6 +282,7 @@ Available years and months.
 | created_date | datetime | Created |
 | assigned_date | datetime | Assigned |
 | close_time_minute | int | Minutes to close (NULL if pending) |
+| is_outlier | bit | Outlier classification (1=outlier, 0/NULL=normal) |
 
 **Important**:
 - Pending tickets: close_time_minute = NULL
@@ -394,6 +436,16 @@ Added click handlers for stats:
 - `/api/dashboard/tickets`: Added `status=all` and `search=<query>` parameters
 - `/api/dashboard/ticket/[message_id]`: New endpoint for single ticket details
 - `/api/dashboard/staff`: Added personalMedian, personalMAD, personalThreshold to response
+
+### Outlier Storage (2026-03-16):
+Persistent outlier classification implemented:
+- Added `is_outlier BIT` column to ticket table
+- Startup recalculation service in `app/lib/outlierInitialization.ts`
+- Batch calculation methods in `repository/OutlierRepository.ts`
+- Admin endpoint `POST /api/admin/recalc-outliers` for manual recalculation
+- 10-20x query performance improvement (500-1000ms → 50-100ms)
+- Schema initialization in `app/lib/sql.ts`
+- Documentation in `docs/outlier-storage.md`
 
 ---
 
