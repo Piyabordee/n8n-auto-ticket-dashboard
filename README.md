@@ -38,6 +38,19 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 - **Stat Click Filtering**: Click any stat to view filtered ticket list in modal
 - **Text Normalization**: Handles stylized Unicode text (Thai characters) with ASCII conversion
 - **Connection Pooling**: Optimized SQL Server connection management for concurrent requests
+- **Ticket Detail Enhancement**: Shows close cause and reason in ticket detail modal
+- **Lazy API Initializer**: Ensures outlier detection is ready before serving requests
+- **Outlier Flag Display**: Proper `is_outlier` flag propagation for consistent red styling across all views
+- **WCAG-Compliant Accessibility**: Full keyboard navigation, ARIA labels, and reduced motion support
+  - Keyboard shortcuts (Enter/Space) for all interactive elements
+  - Descriptive ARIA labels with Thai language support
+  - Focus-visible styling for keyboard navigation
+  - Respects `prefers-reduced-motion` for users with motion sensitivities
+- **Smooth Animations**: Count-up numbers and entrance animations with custom easing curves
+  - `useCountUp` hook with `requestAnimationFrame` for 60fps performance
+  - Staggered entrance animations with `animate-on-mount` classes
+  - Press feedback with micro-interactions (scale effects)
+  - Custom easing curves (ease-out-expo, ease-out-quart, ease-out-quint)
 - **Mobile-First Responsive Design**: Full mobile responsiveness with Tailwind CSS breakpoints
   - Cards stack vertically on mobile (1 col), expand to 4-5 columns on desktop
   - Tables use card-based layout on mobile, traditional table view on desktop
@@ -108,6 +121,7 @@ n8n-auto-ticket-dashboard/
 | /api/dashboard/outliers/top3 | GET | year, month? | Top 3 outliers |
 | /api/dashboard/outliers/all | GET | year, month? | All outliers |
 | /api/dashboard/tickets | GET | year, month?, filterType, staffName?, status?, search? | Filtered list with global search support |
+| /api/dashboard/monthly-tickets | GET | - | Available years and months with is_outlier flag |
 | /api/dashboard/ticket/[message_id] | GET | year, month? | Single ticket details |
 
 ## Database Schema
@@ -229,10 +243,11 @@ The project includes comprehensive testing with **100% pass rate** for productio
 - CategorySelect: 15/15 tests (category selection, sub-category filtering)
 - BranchSelect: 6/6 tests (branch selection, hierarchical data)
 - OutlierRepository: 15/15 tests (SQL queries, normalization, connection pooling)
-- **OutlierExplanationModal**: 14/14 tests (ELI5/Technical sections, staff data table, responsive)
+- **OutlierExplanationModal**: 14/14 tests (ELI5/Technical sections, staff data table, responsive, accessibility)
 - **GlobalSearch**: 8/8 tests (debounced search, autocomplete, modal, click outside)
 - **DailyBarChart**: 4/4 tests (click handlers, stat filtering)
 - **ModalProvider**: 2/2 tests (modal state management)
+- **Accessibility**: 148/148 total tests include ARIA labels, keyboard navigation, reduced motion support
 
 **E2E Test Coverage (Chromium):**
 - Dashboard: 5 tests (Thai labels, year 2569, month filter, staff data, responsive)
@@ -348,6 +363,11 @@ The project includes custom test utilities in `__tests__/utils/test-utils.tsx`:
 - ✅ Global search with debouncing tested
 - ✅ Outlier explanation modal with per-person stats tested
 - ✅ Stat click filtering across charts and tables tested
+- ✅ Ticket detail modal shows close cause and reason
+- ✅ Lazy API initializer for outlier detection readiness
+- ✅ Outlier flag display working across all modals
+- ✅ WCAG-compliant accessibility (keyboard navigation, ARIA labels, reduced motion)
+- ✅ Smooth animations with count-up effects and entrance transitions
 
 ### Writing New Tests
 

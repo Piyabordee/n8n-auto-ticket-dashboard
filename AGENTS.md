@@ -1,9 +1,9 @@
 # IT Helpdesk Dashboard - Project Context
 
-> **Version**: 1.9.0
+> **Version**: 1.10.0
 > **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
 > **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
-> **Last Updated**: 2026-03-16 - Outlier Storage (Persistent Classification)
+> **Last Updated**: 2026-03-16 - Accessibility & Animations Enhancement
 
 ---
 
@@ -199,6 +199,96 @@ Utility to normalize stylized Unicode text to regular ASCII.
 - `repository/OutlierRepository.ts` - Batch calculation methods
 - `app/api/admin/recalc-outliers/route.ts` - Manual recalc endpoint
 
+### Feature 11: Accessibility & Animations (Version 1.10.0)
+**WCAG-compliant accessibility improvements with smooth animations**
+
+**Accessibility Enhancements**:
+- **ARIA Labels**: Descriptive labels for screen readers on all interactive elements
+- **Keyboard Navigation**: Full keyboard support with Enter/Space handlers
+- **Focus Management**: Visible focus rings with `ring-2 ring-primary-500 ring-offset-2`
+- **Reduced Motion**: Respects `prefers-reduced-motion` media query
+- **Semantic HTML**: Proper `role="button"`, `tabIndex={0}`, `aria-label` attributes
+
+**Animation System**:
+- **Count-Up Animations**: Smooth number transitions with `useCountUp` hook
+  - Uses `requestAnimationFrame` for 60fps performance
+  - Disabled in test environment for predictable values
+  - Ease-out-expo easing for natural deceleration
+- **Entrance Animations**: Staggered slide-up-fade on mount
+  - `animate-on-mount`, `animate-slide-up-fade` classes
+  - Staggered delays (0-4) for choreographed entrances
+  - Disabled when `prefers-reduced-motion` is set
+- **Press Feedback**: Micro-interaction scale effect on click
+  - `scale-[0.98]` on press, `hover:scale-[1.02]` on hover
+  - Smooth 200ms transitions with `--ease-out-quart`
+
+**Custom Easing Curves**:
+```css
+--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);  /* Confident deceleration */
+--ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1); /* Smooth, refined */
+--ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1); /* Slightly snappier */
+```
+
+**Files Modified**:
+- `app/components/dashboard/StatsCards.tsx` - Count-up animations, keyboard handlers, ARIA labels
+- `app/components/dashboard/DailyBarChart.tsx` - Accessibility labels
+- `app/components/dashboard/StaffPerformanceTable.tsx` - Accessibility improvements
+- `app/components/dashboard/OutlierExplanationModal.tsx` - Accessibility labels
+- `app/globals.css` - Animation keyframes, reduced motion, easing curves
+
+**InteractiveCard Component**:
+- Reusable accessible card with keyboard support
+- Proper `role="button"`, `tabIndex={0}`, `aria-label`
+- Press state handling with mouse events
+- Focus-visible styling for keyboard navigation
+
+### Feature 12: Ticket Detail Enhancement (Version 1.10.0)
+**Enhanced ticket detail modal with close cause and reason display**
+
+**Enhancements**:
+- **Close Cause Display**: Shows "ปัญหา/อาการ" (close_cause) in basic section
+- **Close Reason Display**: Shows "การแก้ไขปัญหา" (close_reason) in basic section
+- Both fields display "-" when empty
+
+**Component**: `app/components/dashboard/TicketDetailModal.tsx`
+
+**Props**: isOpen, onClose, messageId
+
+### Feature 13: Lazy API Initializer (Version 1.10.0)
+**Lazy initialization system for outlier detection to ensure API readiness**
+
+**How It Works**:
+- Ensures outlier detection is initialized before serving API requests
+- Uses lazy initialization - only runs once
+- Safe to call multiple times - will only initialize once
+- Falls back gracefully if initialization fails
+
+**File**: `app/lib/apiInitializer.ts`
+
+**Function**:
+```typescript
+ensureOutlierInitialized(): Promise<void>
+```
+
+**Used In**:
+- `/api/dashboard/staff` - Ensures initialization before staff performance queries
+- All other outlier-dependent APIs
+
+### Feature 14: Outlier Flag Display (Version 1.10.0)
+**Proper is_outlier flag propagation for consistent red styling**
+
+**Enhancements**:
+- **TicketListModal**: Now adds `is_outlier: 1` flag when converting outlier tickets
+- **Monthly Tickets API**: Added `is_outlier` field to SELECT query and response mapping
+- **DailyBarChart**: Added `is_outlier` to Ticket interface
+
+**Files Modified**:
+- `app/components/dashboard/TicketListModal.tsx`
+- `app/api/dashboard/monthly-tickets/route.ts`
+- `app/components/dashboard/DailyBarChart.tsx`
+
+**Fix**: Outliers in "รายละเอียดประจำเดือน" modal now show in red color correctly
+
 ---
 
 ## 4. API Endpoints
@@ -256,6 +346,7 @@ Single ticket detail with full information.
 #### GET /api/dashboard/monthly-tickets
 Available years and months.
 - Returns: years array, months array
+- **New**: Each ticket now includes `is_outlier` field for proper red styling
 
 ### 4.3 Admin APIs
 
@@ -329,6 +420,11 @@ Used in: /api/dashboard/staff, /api/tickets
 
 ### TicketListModal
 - isOpen, onClose, year, month?, filterType, title, staffName?
+- **New**: Adds `is_outlier: 1` flag to converted outlier tickets for red styling
+
+### TicketDetailModal
+- isOpen, onClose, messageId
+- Shows close_cause and close_reason fields in basic section
 
 ---
 
@@ -446,6 +542,38 @@ Persistent outlier classification implemented:
 - 10-20x query performance improvement (500-1000ms → 50-100ms)
 - Schema initialization in `app/lib/sql.ts`
 - Documentation in `docs/outlier-storage.md`
+
+### Accessibility & Animations (2026-03-16):
+WCAG-compliant accessibility and smooth animations implemented:
+- Count-up animations with `useCountUp` hook using `requestAnimationFrame`
+- Keyboard navigation support (Enter/Space) for all interactive cards
+- ARIA labels for screen readers with Thai language support
+- Focus-visible styling with proper ring offsets
+- Reduced motion support respecting user preferences
+- Entrance animations with staggered delays
+- Press feedback with micro-interactions
+- Custom easing curves (expo, quart, quint) for natural motion
+- `InteractiveCard` component for reusable accessible patterns
+
+### Ticket Detail Enhancement (2026-03-16):
+Added close cause and reason display in TicketDetailModal:
+- Shows "ปัญหา/อาการ" (close_cause) field
+- Shows "การแก้ไขปัญหา" (close_reason) field
+- Both display "-" when empty
+
+### Lazy API Initializer (2026-03-16):
+Implemented lazy initialization for outlier detection:
+- `app/lib/apiInitializer.ts` with `ensureOutlierInitialized()` function
+- Only initializes once, safe to call multiple times
+- Falls back gracefully if initialization fails
+- Used in staff API and other outlier-dependent endpoints
+
+### Outlier Flag Display (2026-03-16):
+Fixed is_outlier flag propagation for consistent styling:
+- TicketListModal now adds `is_outlier: 1` to converted tickets
+- Monthly tickets API includes `is_outlier` in response
+- DailyBarChart Ticket interface includes `is_outlier`
+- Fixes outliers in "รายละเอียดประจำเดือน" modal to show red correctly
 
 ---
 
