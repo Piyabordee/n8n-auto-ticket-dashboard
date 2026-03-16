@@ -541,6 +541,192 @@ export class OutlierRepository {
 
     return { staff: staffData, summary }
   }
+
+  /**
+   * Calculate outlier status for a single ticket
+   * Uses PER-PERSON Median + 15×MAD threshold from FULL YEAR baseline
+   *
+   * @param ticketData - Ticket data containing message_id, assigned_to, close_time_minute, created_date
+   * @param year - Year to use for baseline calculation
+   * @returns true if outlier, false if normal, null if insufficient data
+   */
+  async calculateOutlierForTicket(
+    ticketData: { message_id: string; assigned_to: string; close_time_minute: number | null; created_date: Date },
+    year: number
+  ): Promise<boolean | null> {
+    // Pending tickets cannot be outliers (no close time)
+    if (ticketData.close_time_minute === null) {
+      return null
+    }
+
+    const pool = await this.connect()
+
+    // Calculate full year date range for baseline
+    const yearStart = new Date(year, 0, 1)
+    const yearEnd = new Date(year, 11, 31, 23, 59, 59)
+
+    const result = await pool.request()
+      .input('assigned_to', sql.NVarChar, ticketData.assigned_to)
+      .input('close_time_minute', sql.Int, ticketData.close_time_minute)
+      .input('yearStartDate', sql.DateTime, yearStart)
+      .input('yearEndDate', sql.DateTime, yearEnd)
+      .query(`
+        -- Full year data for baseline
+        WITH full_year_base AS (
+          SELECT
+            assigned_to,
+            close_time_minute AS diff_minutes
+          FROM [Dev_Born].[dbo].[ticket]
+          WHERE
+            close_time_minute IS NOT NULL
+            AND created_date >= @yearStartDate
+            AND created_date <= @yearEndDate
+            AND assigned_to = @assigned_to
+        ),
+        -- Calculate per-person median
+        per_person_median AS (
+          SELECT
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER () AS personal_median,
+            COUNT(*) AS ticket_count
+          FROM full_year_base
+        ),
+        -- Calculate absolute deviations from median
+        absolute_deviations AS (
+          SELECT
+            ABS(f.diff_minutes - m.personal_median) AS abs_deviation
+          FROM full_year_base f, per_person_median m
+          WHERE m.ticket_count >= 2
+        ),
+        -- Calculate MAD (Median of Absolute Deviations)
+        per_person_mad AS (
+          SELECT
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER () AS personal_mad
+          FROM absolute_deviations
+        )
+        SELECT
+          m.personal_median,
+          mad.personal_mad,
+          m.personal_median + (15 * mad.personal_mad) AS personal_threshold,
+          m.ticket_count
+        FROM per_person_median m, per_person_mad mad
+      `)
+
+    const row = result.recordset[0]
+
+    // Insufficient data (less than 2 tickets)
+    if (!row || row.ticket_count < 2) {
+      return null
+    }
+
+    // Check if ticket is an outlier
+    return ticketData.close_time_minute > row.personal_threshold
+  }
+
+  /**
+   * Recalculate outliers for all tickets in the database
+   * Updates the is_outlier column for each ticket
+   * Uses each ticket's year for baseline calculation
+   *
+   * @param onProgress - Optional callback for progress updates (current, total)
+   * @returns Summary of recalculation results
+   */
+  async recalculateAllOutliers(
+    onProgress?: (current: number, total: number) => void
+  ): Promise<{
+    total: number
+    updated: number
+    outliers: number
+    normal: number
+    null: number
+    errors: number
+  }> {
+    const pool = await this.connect()
+
+    console.log('🔄 Starting outlier recalculation...')
+
+    // 1. Get all tickets that need recalculation
+    const ticketsResult = await pool.request().query(`
+      SELECT
+        message_id,
+        assigned_to,
+        close_time_minute,
+        created_date,
+        YEAR(created_date) as ticket_year
+      FROM [Dev_Born].[dbo].[ticket]
+      WHERE close_time_minute IS NOT NULL
+      ORDER BY created_date DESC
+    `)
+
+    const tickets = ticketsResult.recordset
+    const total = tickets.length
+
+    console.log(`📊 Found ${total} tickets to process`)
+
+    let updated = 0
+    let outliers = 0
+    let normal = 0
+    let nulls = 0
+    let errors = 0
+
+    // 2. Process each ticket
+    for (let i = 0; i < tickets.length; i++) {
+      const ticket = tickets[i]
+
+      try {
+        // Use the ticket's year for baseline calculation
+        const isOutlier = await this.calculateOutlierForTicket(
+          {
+            message_id: ticket.message_id,
+            assigned_to: ticket.assigned_to,
+            close_time_minute: ticket.close_time_minute,
+            created_date: ticket.created_date
+          },
+          ticket.ticket_year
+        )
+
+        // Update the database
+        await pool.request()
+          .input('message_id', sql.NVarChar, ticket.message_id)
+          .input('is_outlier', sql.Bit, isOutlier === true ? 1 : 0)
+          .query(`
+            UPDATE [Dev_Born].[dbo].[ticket]
+            SET is_outlier = @is_outlier
+            WHERE message_id = @message_id
+          `)
+
+        updated++
+
+        if (isOutlier === true) {
+          outliers++
+        } else if (isOutlier === false) {
+          normal++
+        } else {
+          nulls++
+        }
+
+        // Report progress every 100 tickets or at the end
+        if ((i + 1) % 100 === 0 || i === tickets.length - 1) {
+          console.log(`  Progress: ${i + 1}/${total} (${Math.round((i + 1) / total * 100)}%)`)
+          onProgress?.(i + 1, total)
+        }
+      } catch (error) {
+        console.error(`Error processing ticket ${ticket.message_id}:`, error)
+        errors++
+      }
+    }
+
+    const summary = {
+      total,
+      updated,
+      outliers,
+      normal,
+      null: nulls,
+      errors
+    }
+
+    console.log('✅ Outlier recalculation complete:', summary)
+    return summary
+  }
 }
 
 // Singleton instance
