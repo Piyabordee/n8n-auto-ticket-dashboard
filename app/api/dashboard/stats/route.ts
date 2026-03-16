@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
-import { getConnection } from '@/lib/sql'
+import { getConnection } from '../../../lib/sql'
 import { generateDashboardStats } from '@/data/mockData'
 
 export async function GET(request: NextRequest) {

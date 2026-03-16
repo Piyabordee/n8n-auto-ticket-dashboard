@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getConnection } from '@/lib/sql'
+import { getConnection } from '../../../../lib/sql'
 
 export async function GET(
   request: NextRequest,

@@ -1,4 +1,4 @@
-import { normalizeStylizedText, hasStylizedText } from '@/app/lib/normalizeText'
+import { normalizeStylizedText, hasStylizedText } from '../../app/lib/normalizeText'
 
 describe('normalizeStylizedText', () => {
   describe('basic functionality', () => {

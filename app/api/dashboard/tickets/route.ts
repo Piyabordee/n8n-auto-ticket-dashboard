@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
 import { generateTickets } from '@/data/mockData'
-import { getConnection } from '@/app/lib/sql'
-import { ensureOutlierInitialized } from '@/lib/apiInitializer'
+import { getConnection } from '../../../lib/sql'
+import { ensureOutlierInitialized } from '../../../lib/apiInitializer'
 
 // Use shared connection from lib/sql
 async function getPool() {
@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
       created_date: row.created_date ? row.created_date.toISOString() : null,
       assigned_date: row.assigned_date ? row.assigned_date.toISOString() : null,
       close_time_minute: row.close_time_minute || null,
-      is_outlier: row.is_outlier || 0  // Read directly from database
+      is_outlier: row.is_outlier ? 1 : 0  // Read directly from database (convert to 1/0)
     }))
 
     return NextResponse.json({ tickets })

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
-import { normalizeStylizedText } from '@/app/lib/normalizeText'
-import { getConnection } from '@/app/lib/sql'
+import { normalizeStylizedText } from '../../../lib/normalizeText'
+import { getConnection } from '../../../lib/sql'
 import type { OutliersResponse, OutlierTicket, OutlierSummary } from '@/types/outlier'
-import { ensureOutlierInitialized } from '@/lib/apiInitializer'
+import { ensureOutlierInitialized } from '../../../lib/apiInitializer'
 import { generateAllOutliers } from '@/data/mockData'
 
 async function getPool() {

@@ -571,11 +571,11 @@ export class OutlierRepository {
       .input('yearStartDate', sql.DateTime, yearStart)
       .input('yearEndDate', sql.DateTime, yearEnd)
       .query(`
-        -- Full year data for baseline
+        -- Full year data for baseline with a constant grouping key
         WITH full_year_base AS (
           SELECT
-            assigned_to,
-            close_time_minute AS diff_minutes
+            close_time_minute AS diff_minutes,
+            1 AS grp
           FROM [Dev_Born].[dbo].[ticket]
           WHERE
             close_time_minute IS NOT NULL
@@ -583,24 +583,30 @@ export class OutlierRepository {
             AND created_date <= @yearEndDate
             AND assigned_to = @assigned_to
         ),
-        -- Calculate per-person median
-        per_person_median AS (
+        -- Calculate per-person median and count using OVER with constant partition
+        median_with_count AS (
           SELECT
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER () AS personal_median,
-            COUNT(*) AS ticket_count
+            DISTINCT
+            grp,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY grp) AS personal_median,
+            COUNT(*) OVER (PARTITION BY grp) AS ticket_count
           FROM full_year_base
         ),
         -- Calculate absolute deviations from median
         absolute_deviations AS (
           SELECT
-            ABS(f.diff_minutes - m.personal_median) AS abs_deviation
-          FROM full_year_base f, per_person_median m
+            ABS(f.diff_minutes - m.personal_median) AS abs_deviation,
+            f.grp
+          FROM full_year_base f
+          INNER JOIN median_with_count m ON f.grp = m.grp
           WHERE m.ticket_count >= 2
         ),
         -- Calculate MAD (Median of Absolute Deviations)
-        per_person_mad AS (
+        mad_result AS (
           SELECT
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER () AS personal_mad
+            DISTINCT
+            grp,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY grp) AS personal_mad
           FROM absolute_deviations
         )
         SELECT
@@ -608,7 +614,8 @@ export class OutlierRepository {
           mad.personal_mad,
           m.personal_median + (15 * mad.personal_mad) AS personal_threshold,
           m.ticket_count
-        FROM per_person_median m, per_person_mad mad
+        FROM median_with_count m
+        INNER JOIN mad_result mad ON m.grp = mad.grp
       `)
 
     const row = result.recordset[0]

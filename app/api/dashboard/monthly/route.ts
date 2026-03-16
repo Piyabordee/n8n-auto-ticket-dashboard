@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
-import { getConnection } from '@/lib/sql'
+import { getConnection } from '../../../lib/sql'
 import { generateMonthlyData } from '@/data/mockData'
 
 const THAI_MONTHS = [

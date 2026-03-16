@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getOutlierRepository } from '@/repository/OutlierRepository'
 import type { StaffPerformanceResponse } from '@/types/outlier'
 import { generateStaffPerformance } from '@/data/mockData'
-import { ensureOutlierInitialized } from '@/lib/apiInitializer'
+import { ensureOutlierInitialized } from '../../../lib/apiInitializer'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
