@@ -96,13 +96,13 @@ describe('StaffPerformanceTable', () => {
     it('should display gold medal for rank 1', () => {
       render(<StaffPerformanceTable staff={mockStaffDataWithoutOutliers} />)
 
-      expect(screen.getAllByText('🥇').length).toBeGreaterThan(0)
+      expect(screen.getAllByText('1').length).toBeGreaterThan(0)
     })
 
     it('should display silver medal for rank 2', () => {
       render(<StaffPerformanceTable staff={mockStaffDataWithoutOutliers} />)
 
-      expect(screen.getAllByText('🥈').length).toBeGreaterThan(0)
+      expect(screen.getAllByText('2').length).toBeGreaterThan(0)
     })
 
     it('should display bronze medal for rank 3', () => {
@@ -121,7 +121,7 @@ describe('StaffPerformanceTable', () => {
 
       render(<StaffPerformanceTable staff={staffWithRank3} />)
 
-      expect(screen.getAllByText('🥉').length).toBeGreaterThan(0)
+      expect(screen.getAllByText('3').length).toBeGreaterThan(0)
     })
 
     it('should display number for ranks beyond 3', () => {
@@ -139,7 +139,7 @@ describe('StaffPerformanceTable', () => {
 
       render(<StaffPerformanceTable staff={staffWithHigherRank} />)
 
-      expect(screen.getAllByText('#4').length).toBeGreaterThan(0)
+      expect(screen.getAllByText('4').length).toBeGreaterThan(0)
     })
   })
 
@@ -159,9 +159,7 @@ describe('StaffPerformanceTable', () => {
     it('should display outlier count for each staff member', () => {
       const { container } = render(<StaffPerformanceTable staff={mockStaffData} showOutlierColumns={true} />)
 
-      // Outlier counts are in buttons with specific styling
-      // Find outlier buttons (they have inline-flex, px-2, rounded classes)
-      const outlierButtons = container.querySelectorAll('button.inline-flex.items-center.px-2')
+      const outlierButtons = container.querySelectorAll('button.badge')
       expect(outlierButtons.length).toBe(3) // 3 staff members
       expect(outlierButtons[0].textContent?.includes('2')).toBe(true)
       expect(outlierButtons[1].textContent?.includes('1')).toBe(true)
@@ -205,9 +203,8 @@ describe('StaffPerformanceTable', () => {
       const mockClick = jest.fn()
       render(<StaffPerformanceTable staff={mockStaffData} showOutlierColumns={true} onOutlierClick={mockClick} />)
 
-      // Find all outlier buttons with count > 0
-      const outlierButtons = screen.getAllByText('→')
-      fireEvent.click(outlierButtons[0])
+      const outlierButton = screen.getByTitle('ดู Outliers ของ สมชาย ใจดี')
+      fireEvent.click(outlierButton)
 
       expect(mockClick).toHaveBeenCalledWith('สมชาย ใจดี')
     })
@@ -217,7 +214,7 @@ describe('StaffPerformanceTable', () => {
       const { container } = render(<StaffPerformanceTable staff={mockStaffData} showOutlierColumns={true} onOutlierClick={mockClick} />)
 
       // Rank 3 has 0 outliers - find the outlier button with '0' text
-      const outlierButtons = container.querySelectorAll('button.inline-flex.items-center.px-2')
+      const outlierButtons = container.querySelectorAll('button.badge')
       const zeroButton = Array.from(outlierButtons).find(b => b.textContent?.includes('0'))
 
       // Check that the button is disabled
@@ -280,7 +277,7 @@ describe('StaffPerformanceTable', () => {
         />
       )
 
-      const assignedSpans = container.querySelectorAll('span.text-gray-900')
+      const assignedSpans = container.querySelectorAll('span.text-neutral-900')
       const hasClickableAssigned = Array.from(assignedSpans).some(el => el.textContent === '50')
       expect(hasClickableAssigned).toBe(true)
     })
@@ -330,16 +327,14 @@ describe('StaffPerformanceTable', () => {
     it('should display gray badge for 0 outliers', () => {
       render(<StaffPerformanceTable staff={mockStaffData} showOutlierColumns={true} />)
 
-      const zeros = screen.getAllByText('0')
-      const zeroOutlier = zeros.find(el => el.textContent === '0' && el.closest('button'))
-      expect(zeroOutlier).toBeInTheDocument()
+      const zeroOutlierButton = screen.getByTitle('ไม่มี Outliers')
+      expect(zeroOutlierButton).toBeInTheDocument()
     })
 
     it('should display yellow badge for 1-2 outliers', () => {
       const { container } = render(<StaffPerformanceTable staff={mockStaffData} showOutlierColumns={true} />)
 
-      // Find outlier buttons specifically (they have inline-flex, px-2, rounded classes)
-      const outlierButtons = container.querySelectorAll('button.inline-flex.items-center.px-2')
+      const outlierButtons = container.querySelectorAll('button.badge')
 
       // Find buttons containing text '1' and '2' within outlier buttons
       const buttonsArray = Array.from(outlierButtons)
@@ -348,6 +343,8 @@ describe('StaffPerformanceTable', () => {
 
       expect(oneButton).toBeDefined()
       expect(twoButton).toBeDefined()
+      expect(oneButton?.className).toContain('bg-warning-100')
+      expect(twoButton?.className).toContain('bg-warning-100')
     })
   })
 })

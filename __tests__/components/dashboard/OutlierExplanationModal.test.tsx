@@ -59,6 +59,6 @@ describe('OutlierExplanationModal', () => {
     )
 
     // Check that modal content exists
-    expect(container.querySelector('.bg-white.rounded-lg')).toBeInTheDocument()
+    expect(container.querySelector('.bg-white.rounded-xl')).toBeInTheDocument()
   })
 })

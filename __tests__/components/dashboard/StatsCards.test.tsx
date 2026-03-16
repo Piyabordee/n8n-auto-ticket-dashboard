@@ -89,9 +89,11 @@ describe('StatsCards', () => {
       const mockClick = jest.fn()
       render(<StatsCards {...defaultProps} onCardClick={mockClick} />)
 
-      // Check for click indicators (👆 emoji)
-      const indicators = screen.getAllByText('👆')
-      expect(indicators).toHaveLength(2) // Total and Pending cards
+      const pendingCard = screen.getByText('ยังไม่ปิด').closest('div.card')
+      const totalCard = screen.getByText('จำนวนงานทั้งหมด').closest('div.card')
+
+      expect(pendingCard).toHaveClass('cursor-pointer')
+      expect(totalCard).toHaveClass('cursor-pointer')
     })
 
     it('should show 4 click indicators when outlier data is provided', () => {
@@ -104,9 +106,15 @@ describe('StatsCards', () => {
       }
       render(<StatsCards {...propsWithOutliers} onCardClick={mockClick} />)
 
-      // Check for click indicators (👆 emoji)
-      const indicators = screen.getAllByText('👆')
-      expect(indicators).toHaveLength(4) // Total, Pending, Avg Time, and Outliers cards
+      const pendingCard = screen.getByText('ยังไม่ปิด').closest('div.card')
+      const totalCard = screen.getByText('จำนวนงานทั้งหมด').closest('div.card')
+      const avgTimeCard = screen.getByText('เวลาเฉลี่ย (ปกติ / Outlier)').closest('div.card')
+      const outlierCard = screen.getByText('Outliers').closest('div.card')
+
+      expect(pendingCard).toHaveClass('cursor-pointer')
+      expect(totalCard).toHaveClass('cursor-pointer')
+      expect(avgTimeCard).toHaveClass('cursor-pointer')
+      expect(outlierCard).toHaveClass('cursor-pointer')
     })
 
     it('should call onCardClick with outlier-explanation when avg time card is clicked (with outlier data)', () => {
@@ -121,7 +129,7 @@ describe('StatsCards', () => {
 
       // Find the avg time card text
       const avgTimeText = screen.getByText('เวลาเฉลี่ย (ปกติ / Outlier)')
-      const avgTimeCard = avgTimeText.closest('div.bg-white')
+      const avgTimeCard = avgTimeText.closest('div.card')
 
       fireEvent.click(avgTimeCard!)
 
@@ -134,7 +142,7 @@ describe('StatsCards', () => {
 
       // Find the avg time card (without outlier data)
       const avgTimeText = screen.getByText('เวลาเฉลี่ย')
-      const avgTimeCard = avgTimeText.closest('div.bg-white')
+      const avgTimeCard = avgTimeText.closest('div.card')
 
       fireEvent.click(avgTimeCard!)
 
@@ -166,7 +174,11 @@ describe('StatsCards', () => {
     it('should not show click indicator when onCardClick is not provided', () => {
       render(<StatsCards {...defaultProps} />)
 
-      expect(screen.queryByText('👆')).not.toBeInTheDocument()
+      const pendingCard = screen.getByText('ยังไม่ปิด').closest('div.card')
+      const totalCard = screen.getByText('จำนวนงานทั้งหมด').closest('div.card')
+
+      expect(pendingCard).not.toHaveClass('cursor-pointer')
+      expect(totalCard).not.toHaveClass('cursor-pointer')
     })
   })
 

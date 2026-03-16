@@ -88,7 +88,7 @@ describe('DailyBarChart', () => {
       )
 
       const pendingValues = screen.getAllByText('5')
-      const redPending = pendingValues.find(el => el.className.includes('text-red-600'))
+      const redPending = pendingValues.find(el => el.className.includes('text-error'))
       expect(redPending).toBeInTheDocument()
     })
   })
@@ -146,8 +146,8 @@ describe('DailyBarChart', () => {
         />
       )
 
-      const assignedNumber = screen.getByText('50')
-      fireEvent.click(assignedNumber)
+      const assignedButton = screen.getByTitle('ดูงานทั้งหมดของ สมชาย ใจดี')
+      fireEvent.click(assignedButton)
 
       expect(mockStatClick).toHaveBeenCalledWith('สมชาย ใจดี', 'all')
     })
@@ -166,8 +166,8 @@ describe('DailyBarChart', () => {
         />
       )
 
-      const pendingNumber = screen.getByText('5')
-      fireEvent.click(pendingNumber)
+      const pendingButton = screen.getByTitle('ดูงานที่ยังไม่ปิดของ สมชาย ใจดี')
+      fireEvent.click(pendingButton)
 
       expect(mockStatClick).toHaveBeenCalledWith('สมชาย ใจดี', 'pending')
     })
@@ -186,9 +186,8 @@ describe('DailyBarChart', () => {
         />
       )
 
-      const closedNumbers = screen.getAllByText('45')
-      const closedButton = closedNumbers.find(el => el.className.includes('text-green-600'))
-      fireEvent.click(closedButton!)
+      const closedButton = screen.getByTitle('ดูงานที่ปิดแล้วของ สมชาย ใจดี')
+      fireEvent.click(closedButton)
 
       expect(mockStatClick).toHaveBeenCalledWith('สมชาย ใจดี', 'closed')
     })
