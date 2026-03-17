@@ -85,6 +85,7 @@ credentials*.json
 *.csv
 img/*
 public/logo.png
+data/env/*
 
 # ============ Runtime data ============
 pids/
