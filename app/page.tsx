@@ -12,6 +12,7 @@ import TopOutliersList from './components/dashboard/TopOutliersList'
 import TicketListModal from './components/dashboard/TicketListModal'
 import OutlierExplanationModal from './components/dashboard/OutlierExplanationModal'
 import GlobalSearch from './components/dashboard/GlobalSearch'
+import MonthlyReportModal from './components/dashboard/MonthlyReportModal'
 import { useModal } from './components/modals/ModalProvider'
 import type { OutlierTicket } from '../types/outlier'
 
@@ -129,6 +130,9 @@ export default function TeamDashboard() {
 
   // Outlier explanation modal state
   const [outlierExplanationOpen, setOutlierExplanationOpen] = useState(false)
+
+  // Monthly report modal state
+  const [monthlyReportOpen, setMonthlyReportOpen] = useState(false)
 
   // Day click state
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
@@ -347,6 +351,11 @@ export default function TeamDashboard() {
     setMonthlyFilterType('all')
   }
 
+  // Open monthly report modal for current month
+  const handleOpenMonthlyReport = () => {
+    setMonthlyReportOpen(true)
+  }
+
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
@@ -362,9 +371,24 @@ export default function TeamDashboard() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        {/* Global Search */}
-        <div className="mb-4">
-          <GlobalSearch year={year} month={month} />
+        {/* Global Search + Report Button */}
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex-1">
+            <GlobalSearch year={year} month={month} />
+          </div>
+          <button
+            onClick={handleOpenMonthlyReport}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 hover:scale-105 active:scale-95 transition-transform duration-150 flex items-center gap-2"
+            style={{
+              transitionTimingFunction: 'var(--ease-out-quart)'
+            }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span className="hidden sm:inline">ทำรายงานประจำเดือน</span>
+            <span className="sm:hidden">รายงานประจำเดือน</span>
+          </button>
         </div>
 
         {/* Stats Cards */}
@@ -484,6 +508,14 @@ export default function TeamDashboard() {
         isOpen={outlierExplanationOpen}
         onClose={() => setOutlierExplanationOpen(false)}
         year={year}
+      />
+
+      {/* Monthly Report Modal */}
+      <MonthlyReportModal
+        isOpen={monthlyReportOpen}
+        onClose={() => setMonthlyReportOpen(false)}
+        year={year}
+        month={month || new Date().getMonth() + 1}
       />
     </div>
   )

@@ -174,3 +174,83 @@
 
 /* Number counter animation - handled by JS, this is for reference */
 /* The actual counter uses requestAnimationFrame for smooth 60fps performance */
+
+/* Print styles for PDF export */
+@media print {
+  /* Hide everything except the modal content when printing */
+  body > *:not([role="dialog"]) {
+    display: none !important;
+  }
+
+  /* Show only the modal when printing */
+  [role="dialog"] {
+    position: static !important;
+    display: block !important;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Hide modal header and close button */
+  [role="dialog"] > div:first-child {
+    display: none !important;
+  }
+
+  /* Show modal content */
+  [role="dialog"] > div:nth-child(2) {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* Page break for each report page */
+  .page {
+    page-break-after: always;
+    page-break-inside: avoid;
+  }
+
+  .page:last-child {
+    page-break-after: auto;
+  }
+
+  /* Ensure colors print correctly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide shadows and borders in print */
+  .shadow-elevated,
+  .shadow-card {
+    box-shadow: none !important;
+  }
+
+  /* Hide interactive elements */
+  button,
+  [role="button"] {
+    display: none !important;
+  }
+
+  /* Ensure responsive containers work in print */
+  .recharts-wrapper,
+  .recharts-surface {
+    page-break-inside: avoid;
+  }
+}
+
+/* Show print-specific elements only when printing */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block;
+  }
+
+  .print-hide {
+    display: none !important;
+  }
+}
