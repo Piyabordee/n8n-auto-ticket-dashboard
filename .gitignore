@@ -82,6 +82,7 @@ credentials*.json
 *.pfx
 *.cert
 *.crt
+*.csv
 img/*
 public/logo.png
 
