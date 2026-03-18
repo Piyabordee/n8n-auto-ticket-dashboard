@@ -12,6 +12,7 @@ import {
   getEnabledSections,
   type ReportSectionConfig
 } from '@/lib/reportSections'
+import { loadCustomNames, mergeCustomNames, getSectionDisplayName, getChartDisplayName } from '@/lib/reportConfig'
 
 interface ReportSectionItem {
   id: string
@@ -92,6 +93,12 @@ export default function MonthlyReportModal({
   useEffect(() => {
     const saved = loadSectionPreferences()
     setSections(saved)
+  }, [])
+
+  // Load custom names and merge with sections
+  useEffect(() => {
+    const customNames = loadCustomNames()
+    setSections(prev => mergeCustomNames(prev, customNames))
   }, [])
 
   // Focus trap implementation
@@ -298,6 +305,12 @@ function ReportContent({ data, sections }: { data: ReportData; sections: ReportS
   const enabledSections = getEnabledSections(sections)
 
   const renderSection = (sectionId: string) => {
+    const section = sections.find(s => s.id === sectionId)
+    if (!section) return null
+
+    const sectionSubtitle = getSectionDisplayName(section)
+    const chartTitle = getChartDisplayName(section)
+
     switch (sectionId) {
       case 'section1':
         return (
@@ -305,9 +318,10 @@ function ReportContent({ data, sections }: { data: ReportData; sections: ReportS
             key="section1"
             title={`Ticket ${data.monthNameEnglish} ${data.year}`}
             subtitle="ส่วนที่ 1: ภาพรวม Ticket ทั้งหมด"
+            customTitle={sectionSubtitle}
           >
             <PieChartSection
-              title="Category"
+              title={chartTitle}
               data={data.section1}
               total={data.totals.section1}
             />
@@ -320,9 +334,10 @@ function ReportContent({ data, sections }: { data: ReportData; sections: ReportS
             key="section2"
             title={`Software ${data.totals.section2} Tickets`}
             subtitle="ส่วนที่ 2: เจาะลึกหมวด Software"
+            customTitle={sectionSubtitle}
           >
             <PieChartSection
-              title="Software"
+              title={chartTitle}
               data={data.section2}
               total={data.totals.section2}
             />
@@ -335,9 +350,10 @@ function ReportContent({ data, sections }: { data: ReportData; sections: ReportS
             key="section3"
             title={`Software ${data.totals.section3} Tickets`}
             subtitle="ส่วนที่ 3: การจัดกลุ่มปัญหา Software"
+            customTitle={sectionSubtitle}
           >
             <PieChartSection
-              title="Sub Services"
+              title={chartTitle}
               data={data.section3}
               total={data.totals.section3}
             />
@@ -351,9 +367,10 @@ function ReportContent({ data, sections }: { data: ReportData; sections: ReportS
             key="section4"
             title={`POS/RATE Error ${posRateCount} Tickets`}
             subtitle="ส่วนที่ 4: สาเหตุของ POS/RATE Error"
+            customTitle={sectionSubtitle}
           >
             <PieChartSection
-              title="Causes"
+              title={chartTitle}
               data={data.section4}
               total={data.totals.section4}
             />
@@ -520,10 +537,12 @@ function PieChartSection({ title, data, total }: PieChartSectionProps) {
 function ReportPage({
   title,
   subtitle,
+  customTitle,
   children
 }: {
   title: string
   subtitle: string
+  customTitle?: string
   children: React.ReactNode
 }) {
   return (
@@ -532,7 +551,7 @@ function ReportPage({
         {title}
       </h2>
       <p className="text-sm sm:text-base text-neutral-600 mb-6 text-center">
-        {subtitle}
+        {customTitle || subtitle}
       </p>
       {children}
     </div>
