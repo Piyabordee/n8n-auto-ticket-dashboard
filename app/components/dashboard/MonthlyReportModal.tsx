@@ -245,7 +245,7 @@ export default function MonthlyReportModal({
             <button
               onClick={handleExportPDF}
               disabled={loading || !reportData || isExporting}
-              className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary-700 disabled:bg-neutral-300 disabled:cursor-not-allowed transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 flex items-center gap-1.5"
+              className="px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-neutral-300 disabled:cursor-not-allowed transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 flex items-center gap-1.5"
               aria-label="Export to PDF"
             >
               {isExporting ? (
