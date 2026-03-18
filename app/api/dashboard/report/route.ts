@@ -38,25 +38,44 @@ export async function GET(request: NextRequest) {
   const year = searchParams.get('year')
   const month = searchParams.get('month')
 
-  // Get custom filters
-  const section1Filter = searchParams.get('section1Filter')
-  const section2Filter = searchParams.get('section2Filter')
-  const section3Filter = searchParams.get('section3Filter')
-  const section4Filter = searchParams.get('section4Filter')
+  // Get custom filters (support comma-separated or multiple values)
+  const parseMultiValue = (param: string | null): string[] | undefined => {
+    if (!param) return undefined
+    // Split by comma and trim whitespace
+    const values = param.split(',').map(v => v.trim()).filter(v => v.length > 0)
+    return values.length > 0 ? values : undefined
+  }
+
+  const section1Filter = parseMultiValue(searchParams.get('section1Filter'))
+  const section2Filter = parseMultiValue(searchParams.get('section2Filter'))
+  const section3Filter = parseMultiValue(searchParams.get('section3Filter'))
+  const section4Filter = parseMultiValue(searchParams.get('section4Filter'))
 
   // Build section filters object
   const sectionFilters: Record<string, SectionFilter> = {}
-  if (section1Filter) {
-    sectionFilters.section1 = { sectionId: 'section1', category: section1Filter }
+  if (section1Filter && section1Filter.length > 0) {
+    sectionFilters.section1 = {
+      sectionId: 'section1',
+      category: section1Filter.length === 1 ? section1Filter[0] : section1Filter
+    }
   }
-  if (section2Filter) {
-    sectionFilters.section2 = { sectionId: 'section2', subCategory: section2Filter }
+  if (section2Filter && section2Filter.length > 0) {
+    sectionFilters.section2 = {
+      sectionId: 'section2',
+      subCategory: section2Filter.length === 1 ? section2Filter[0] : section2Filter
+    }
   }
-  if (section3Filter) {
-    sectionFilters.section3 = { sectionId: 'section3', subCategory: section3Filter }
+  if (section3Filter && section3Filter.length > 0) {
+    sectionFilters.section3 = {
+      sectionId: 'section3',
+      subCategory: section3Filter.length === 1 ? section3Filter[0] : section3Filter
+    }
   }
-  if (section4Filter) {
-    sectionFilters.section4 = { sectionId: 'section4', closeCause: section4Filter }
+  if (section4Filter && section4Filter.length > 0) {
+    sectionFilters.section4 = {
+      sectionId: 'section4',
+      closeCause: section4Filter.length === 1 ? section4Filter[0] : section4Filter
+    }
   }
 
   // Validate parameters

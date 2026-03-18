@@ -128,20 +128,42 @@ export default function ReportConfigModal({
   }
 
   const updateSectionName = (sectionId: string, value: string) => {
-    const trimmed = value.trim()
     setLocalConfig(prev =>
-      prev.map(s =>
-        s.id === sectionId ? { ...s, customSectionName: trimmed || undefined } : s
-      )
+      prev.map(s => {
+        if (s.id !== sectionId) return s
+
+        const current = s.customSectionName
+        const selected = Array.isArray(current) ? [...current] : (current ? [current] : [])
+
+        if (selected.includes(value)) {
+          // Remove value
+          const filtered = selected.filter(v => v !== value)
+          return { ...s, customSectionName: filtered.length > 0 ? filtered : undefined }
+        } else {
+          // Add value
+          return { ...s, customSectionName: [...selected, value] }
+        }
+      })
     )
   }
 
   const updateChartName = (sectionId: string, value: string) => {
-    const trimmed = value.trim()
     setLocalConfig(prev =>
-      prev.map(s =>
-        s.id === sectionId ? { ...s, customChartName: trimmed || undefined } : s
-      )
+      prev.map(s => {
+        if (s.id !== sectionId) return s
+
+        const current = s.customChartName
+        const selected = Array.isArray(current) ? [...current] : (current ? [current] : [])
+
+        if (selected.includes(value)) {
+          // Remove value
+          const filtered = selected.filter(v => v !== value)
+          return { ...s, customChartName: filtered.length > 0 ? filtered : undefined }
+        } else {
+          // Add value
+          return { ...s, customChartName: [...selected, value] }
+        }
+      })
     )
   }
 
@@ -240,11 +262,11 @@ export default function ReportConfigModal({
               </div>
             </div>
 
-            {/* Section 2: Custom Section Names */}
+            {/* Section 2: Custom Section Names (Multi-select) */}
             {enabledSections.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-neutral-900 mb-3 pb-2 border-b">
-                  2. ชื่อหัวข้อแต่ละส่วน
+                  2. เลือกข้อมูลที่ต้องการแสดง (เลือกได้หลายตัวเลือก)
                 </h3>
                 <div className="space-y-3">
                   {enabledSections.map((section) => {
@@ -267,10 +289,13 @@ export default function ReportConfigModal({
                     }
 
                     const sectionOptions = getSectionOptions()
+                    const selectedValues = Array.isArray(section.customSectionName)
+                      ? section.customSectionName
+                      : (section.customSectionName ? [section.customSectionName] : [])
 
                     return (
                       <div key={`section-name-${section.id}`}>
-                        <label className="block text-sm text-neutral-700 mb-1">
+                        <label className="block text-sm font-neutral-700 mb-2 font-medium">
                           {section.nameThai}:
                         </label>
                         {loadingOptions ? (
@@ -278,21 +303,38 @@ export default function ReportConfigModal({
                             กำลังโหลด...
                           </div>
                         ) : sectionOptions.length > 0 ? (
-                          <select
-                            value={section.customSectionName || ''}
-                            onChange={(e) => updateSectionName(section.id, e.target.value)}
-                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
-                          >
-                            <option value="">ค่าเริ่มต้น: {section.nameThai}</option>
-                            {sectionOptions.map(option => (
-                              <option key={option} value={option}>{option}</option>
-                            ))}
-                          </select>
+                          <div className="border border-neutral-300 rounded-lg p-3 max-h-40 overflow-y-auto bg-neutral-50">
+                            <div className="space-y-2">
+                              {sectionOptions.map(option => (
+                                <label key={option} className="flex items-center gap-2 cursor-pointer hover:bg-neutral-100 p-1 rounded">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedValues.includes(option)}
+                                    onChange={() => updateSectionName(section.id, option)}
+                                    className="w-4 h-4 text-primary-600 rounded border-neutral-300 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm text-neutral-700">{option}</span>
+                                </label>
+                              ))}
+                            </div>
+                            {selectedValues.length > 0 && (
+                              <div className="mt-2 pt-2 border-t border-neutral-300 text-xs text-neutral-600">
+                                เลือก {selectedValues.length} รายการ: {selectedValues.join(', ')}
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <input
                             type="text"
                             value={section.customSectionName || ''}
-                            onChange={(e) => updateSectionName(section.id, e.target.value)}
+                            onChange={(e) => {
+                              const trimmed = e.target.value.trim()
+                              setLocalConfig(prev =>
+                                prev.map(s =>
+                                  s.id === section.id ? { ...s, customSectionName: trimmed || undefined } : s
+                                )
+                              )
+                            }}
                             placeholder={`ค่าเริ่มต้น: ${section.nameThai}`}
                             maxLength={MAX_NAME_LENGTH}
                             className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -305,21 +347,24 @@ export default function ReportConfigModal({
               </div>
             )}
 
-            {/* Section 3: Custom Chart Names */}
+            {/* Section 3: Custom Chart Names (Multi-select) */}
             {enabledSections.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-neutral-900 mb-3 pb-2 border-b">
-                  3. ชื่อกราฟวงกลมแต่ละกราฟ
+                  3. ชื่อกราฟวงกลมแต่ละกราฟ (เลือกได้หลายตัวเลือก)
                 </h3>
                 <div className="space-y-3">
                   {enabledSections.map((section) => {
                     const defaultTitle = DEFAULT_CHART_TITLES[section.id] || section.name
                     // Chart titles use categories from database
                     const chartOptions = loadingOptions || !dropdownOptions ? [] : dropdownOptions.categories
+                    const selectedValues = Array.isArray(section.customChartName)
+                      ? section.customChartName
+                      : (section.customChartName ? [section.customChartName] : [])
 
                     return (
                       <div key={`chart-name-${section.id}`}>
-                        <label className="block text-sm text-neutral-700 mb-1">
+                        <label className="block text-sm text-neutral-700 mb-2 font-medium">
                           กราฟ {defaultTitle}:
                         </label>
                         {loadingOptions ? (
@@ -327,21 +372,38 @@ export default function ReportConfigModal({
                             กำลังโหลด...
                           </div>
                         ) : chartOptions.length > 0 ? (
-                          <select
-                            value={section.customChartName || ''}
-                            onChange={(e) => updateChartName(section.id, e.target.value)}
-                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
-                          >
-                            <option value="">ค่าเริ่มต้น: {defaultTitle}</option>
-                            {chartOptions.map(option => (
-                              <option key={option} value={option}>{option}</option>
-                            ))}
-                          </select>
+                          <div className="border border-neutral-300 rounded-lg p-3 max-h-40 overflow-y-auto bg-neutral-50">
+                            <div className="space-y-2">
+                              {chartOptions.map(option => (
+                                <label key={option} className="flex items-center gap-2 cursor-pointer hover:bg-neutral-100 p-1 rounded">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedValues.includes(option)}
+                                    onChange={() => updateChartName(section.id, option)}
+                                    className="w-4 h-4 text-primary-600 rounded border-neutral-300 focus:ring-primary-500"
+                                  />
+                                  <span className="text-sm text-neutral-700">{option}</span>
+                                </label>
+                              ))}
+                            </div>
+                            {selectedValues.length > 0 && (
+                              <div className="mt-2 pt-2 border-t border-neutral-300 text-xs text-neutral-600">
+                                เลือก {selectedValues.length} รายการ: {selectedValues.join(', ')}
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <input
                             type="text"
                             value={section.customChartName || ''}
-                            onChange={(e) => updateChartName(section.id, e.target.value)}
+                            onChange={(e) => {
+                              const trimmed = e.target.value.trim()
+                              setLocalConfig(prev =>
+                                prev.map(s =>
+                                  s.id === section.id ? { ...s, customChartName: trimmed || undefined } : s
+                                )
+                              )
+                            }}
                             placeholder={`ค่าเริ่มต้น: ${defaultTitle}`}
                             maxLength={MAX_NAME_LENGTH}
                             className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
