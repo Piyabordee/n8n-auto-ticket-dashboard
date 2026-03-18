@@ -16,6 +16,55 @@ const A4_HEIGHT = 297 // mm
 const MARGIN = 10 // mm
 
 /**
+ * Convert oklch colors to computed hex values before PDF export
+ * This is a workaround for html2canvas not supporting oklch/lab colors
+ */
+function forceComputeColors(element: HTMLElement): void {
+  // Force the browser to compute all oklch colors to RGB
+  const walker = document.createTreeWalker(
+    element,
+    NodeFilter.SHOW_ELEMENT,
+    {
+      acceptNode: (node) => {
+        const computedStyle = window.getComputedStyle(node)
+        const color = computedStyle.color
+        const backgroundColor = computedStyle.backgroundColor
+        const borderColor = computedStyle.borderColor
+
+        // Check if any property uses lab/oklch
+        const usesLab = [
+          color,
+          backgroundColor,
+          borderColor,
+          computedStyle.borderTopColor,
+          computedStyle.borderRightColor,
+          computedStyle.borderBottomColor,
+          computedStyle.borderLeftColor
+        ].some(c => c && c.includes('lab'))
+
+        return usesLab ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP
+      }
+    }
+  )
+
+  const node = walker.nextNode()
+  while (node) {
+    const el = node as HTMLElement
+    const computed = window.getComputedStyle(el)
+
+    // Force color computation by setting inline styles
+    if (computed.color && computed.color.includes('lab')) {
+      (el as HTMLElement).style.color = computed.color
+    }
+    if (computed.backgroundColor && computed.backgroundColor.includes('lab')) {
+      (el as HTMLElement).style.backgroundColor = computed.backgroundColor
+    }
+
+    walker.nextNode()
+  }
+}
+
+/**
  * Export the report content to PDF
  */
 export async function exportToPdf(
@@ -46,12 +95,18 @@ export async function exportToPdf(
     // Report progress
     onProgress?.(Math.round(((i + 1) / totalPages) * 100))
 
+    // Force compute oklch colors to RGB before capture
+    forceComputeColors(page)
+
     // Create canvas from the page element
     const canvas = await html2canvas(page, {
       scale: 2, // Higher scale for better quality
       useCORS: true,
       logging: false,
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
+      allowTaint: true,
+      // Use foreignObjectRendering for better SVG support
+      foreignObjectRendering: true
     })
 
     const imgWidth = A4_WIDTH - (2 * MARGIN)
