@@ -140,6 +140,8 @@ export default function TeamDashboard() {
   // Loading states
   const [initialLoading, setInitialLoading] = useState(true)
   const [outliersLoading, setOutliersLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Modal hooks
   const { openModal, closeModal } = useModal()
@@ -205,6 +207,48 @@ export default function TeamDashboard() {
 
     fetchAvailableMonths()
   }, [])
+
+  // Handle refresh - fetch all data again
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    try {
+      // Build query params
+      const monthParam = month ? `&month=${month}` : ''
+      const yearParam = `year=${year}`
+
+      // Fetch all data in parallel
+      const [statsRes, monthlyRes, staffRes, outliersRes] = await Promise.all([
+        fetch(`/api/dashboard/stats?${yearParam}${monthParam}`),
+        fetch(`/api/dashboard/monthly?${yearParam}`),
+        fetch(`/api/dashboard/staff?${yearParam}${monthParam}`),
+        fetch(`/api/dashboard/outliers/top3?${yearParam}${monthParam}`)
+      ])
+
+      const [statsData, monthlyData, staffResponse, outliersData] = await Promise.all([
+        statsRes.json(),
+        monthlyRes.json(),
+        staffRes.json(),
+        outliersRes.json()
+      ])
+
+      setStats(statsData)
+      const monthlyWithIndex = (monthlyData.data || []).map((d: MonthlyData, index: number) => ({
+        ...d,
+        monthIndex: index
+      }))
+      setMonthlyData(monthlyWithIndex)
+      setStaffData(staffResponse.staff)
+      setOutlierSummary(staffResponse.summary)
+      setTopOutliers(outliersData.top3 || [])
+
+      // Trigger animation replay
+      setRefreshKey(prev => prev + 1)
+    } catch (error) {
+      console.error('Error refreshing dashboard data:', error)
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   // Reset selected day when year or month changes
   useEffect(() => {
@@ -389,10 +433,26 @@ export default function TeamDashboard() {
             <span className="hidden sm:inline">ทำรายงานประจำเดือน</span>
             <span className="sm:hidden">รายงานประจำเดือน</span>
           </button>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className={`w-9 h-9 flex items-center justify-center rounded-lg text-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 ${
+              refreshing
+                ? 'bg-white text-neutral-400 cursor-not-allowed border-2 border-sky-400'
+                : 'bg-white text-neutral-700 hover:bg-neutral-50 hover:scale-105 active:scale-95 shadow-sm border-2 border-sky-400'
+            }`}
+            style={{
+              transitionTimingFunction: 'var(--ease-out-quart)'
+            }}
+            aria-label="รีเฟรชข้อมูล"
+          >
+            <span className={refreshing ? 'animate-spin inline-block' : ''}>🔄</span>
+          </button>
         </div>
 
         {/* Stats Cards */}
         <StatsCards
+          key={`stats-${refreshKey}`}
           total={stats.total}
           closed={stats.closed}
           closeRate={stats.closeRate}
@@ -410,6 +470,7 @@ export default function TeamDashboard() {
           <div className="lg:col-span-2">
             {month ? (
               <InlineDailyChart
+                key={`daily-${refreshKey}`}
                 year={year}
                 month={month}
                 monthName={THAI_MONTHS[month - 1]}
@@ -421,6 +482,7 @@ export default function TeamDashboard() {
               />
             ) : (
               <MonthlyBarChart
+                key={`monthly-${refreshKey}`}
                 data={monthlyData}
                 onMonthClick={handleMonthClick}
                 year={year}
@@ -436,6 +498,7 @@ export default function TeamDashboard() {
           {/* Top Outliers List */}
           <div>
             <TopOutliersList
+              key={`outliers-${refreshKey}`}
               outliers={topOutliers}
               onViewAll={handleViewAllOutliers}
               loading={outliersLoading}
@@ -445,6 +508,7 @@ export default function TeamDashboard() {
 
         {/* Staff Performance Table */}
         <StaffPerformanceTable
+          key={`staff-${refreshKey}`}
           staff={staffData}
           showOutlierColumns={true}
           onOutlierClick={handleViewStaffOutliers}
