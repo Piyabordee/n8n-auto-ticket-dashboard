@@ -6,7 +6,8 @@ import {
   loadCustomNames,
   saveCustomNames,
   resetCustomNames,
-  extractCustomNames
+  extractCustomNames,
+  DEFAULT_CHART_TITLES
 } from '@/lib/reportConfig'
 
 interface ReportConfigModalProps {
@@ -55,6 +56,33 @@ export default function ReportConfigModal({
     window.addEventListener('keydown', handleEscape)
     return () => window.removeEventListener('keydown', handleEscape)
   }, [isOpen, showResetConfirm, onClose])
+
+  // Close modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node) && isOpen) {
+        onClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen, onClose])
+
+  // Focus first focusable element when modal opens
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )
+      const firstElement = focusableElements[0] as HTMLElement
+      if (firstElement) {
+        firstElement.focus()
+      }
+    }
+  }, [isOpen])
 
   const toggleSection = (sectionId: string) => {
     setLocalConfig(prev =>
@@ -122,14 +150,17 @@ export default function ReportConfigModal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
         <div
           ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
           className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-xl font-semibold text-neutral-900">
+            <h2 id="modal-title" className="text-xl font-semibold text-neutral-900">
               ⚙️ ตั้งค่ารายงานประจำเดือน
             </h2>
             <button
@@ -208,12 +239,7 @@ export default function ReportConfigModal({
                 </h3>
                 <div className="space-y-3">
                   {enabledSections.map((section) => {
-                    const defaultTitle = {
-                      section1: 'Category',
-                      section2: 'Software',
-                      section3: 'Sub Services',
-                      section4: 'Causes'
-                    }[section.id] || section.name
+                    const defaultTitle = DEFAULT_CHART_TITLES[section.id] || section.name
 
                     return (
                       <div key={`chart-name-${section.id}`}>
@@ -263,9 +289,14 @@ export default function ReportConfigModal({
 
       {/* Reset Confirmation Dialog */}
       {showResetConfirm && (
-        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+        <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reset-confirm-title"
+            className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6"
+          >
+            <h3 id="reset-confirm-title" className="text-lg font-semibold text-neutral-900 mb-2">
               ยืนยันการคืนค่า
             </h3>
             <p className="text-sm text-neutral-600 mb-6">
