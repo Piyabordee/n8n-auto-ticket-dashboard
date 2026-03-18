@@ -10,6 +10,10 @@ export interface ReportSectionConfig {
   description: string
   enabled: boolean
   order: number
+
+  // NEW: Custom names (optional)
+  customSectionName?: string    // Custom header name
+  customChartName?: string      // Custom pie chart title
 }
 
 export type ReportSectionId = 'section1' | 'section2' | 'section3' | 'section4'
