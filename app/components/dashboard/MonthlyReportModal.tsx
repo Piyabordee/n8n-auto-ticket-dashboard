@@ -349,6 +349,41 @@ interface PieChartSectionProps {
   total: number
 }
 
+// Custom label renderer for pie chart - handles long text and prevents overflow
+function renderCustomLabel(
+  props: any,
+  allData: Array<{ name: string; value: number; color: string }>
+) {
+  const { cx, cy, midAngle, innerRadius, outerRadius, percent, index } = props
+
+  // Calculate label position outside the pie
+  const RADIAN = Math.PI / 180
+  const radius = outerRadius + 20 // Position outside the pie
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+  const name = allData[index]?.name || ''
+  const percentage = (percent * 100).toFixed(0)
+
+  // Truncate long names to prevent overflow
+  const maxNameLength = 15
+  const displayName = name.length > maxNameLength ? name.substring(0, maxNameLength) + '...' : name
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#374151"
+      textAnchor={x > cx ? 'start' : 'end'}
+      dominantBaseline="central"
+      fontSize="12"
+      fontWeight="500"
+    >
+      {displayName} {percentage}%
+    </text>
+  )
+}
+
 function PieChartSection({ title, data, total }: PieChartSectionProps) {
   const chartData = data
     .filter(item => item.count > 0)
@@ -359,92 +394,97 @@ function PieChartSection({ title, data, total }: PieChartSectionProps) {
     }))
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
-      {/* Pie Chart */}
-      <div className="flex-1 min-w-0">
-        <div className="bg-white rounded-lg border border-neutral-200 p-4">
-          <h3 className="text-lg font-semibold text-neutral-900 mb-2 text-center">
-            {title}
-          </h3>
-          <div className="text-3xl font-bold text-neutral-900 text-center mb-4">
-            {total} Tickets
-          </div>
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={90}
-                  dataKey="value"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[280px] flex items-center justify-center text-neutral-400">
-              ไม่มีข้อมูล
-            </div>
-          )}
+    <div className="space-y-6">
+      {/* Pie Chart - Full Width */}
+      <div className="bg-white rounded-lg border border-neutral-200 p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-neutral-900 mb-2 text-center">
+          {title}
+        </h3>
+        <div className="text-3xl font-bold text-neutral-900 text-center mb-4">
+          {total} Tickets
         </div>
+        {chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={true}
+                label={(props) => renderCustomLabel(props, chartData)}
+                outerRadius={100}
+                dataKey="value"
+                labelLineStroke="#9ca3af"
+                labelLineStrokeWidth={1}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value: number, name: string) => [`${value} (${((value / total) * 100).toFixed(0)}%)`, name]}
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-[280px] flex items-center justify-center text-neutral-400">
+            ไม่มีข้อมูล
+          </div>
+        )}
       </div>
 
-      {/* Legend and Table */}
-      <div className="flex-1 min-w-0">
-        <div className="bg-white rounded-lg border border-neutral-200 p-4">
-          <h3 className="text-lg font-semibold text-neutral-900 mb-4">
-            {title}
-          </h3>
+      {/* Legend and Table - Full Width Below */}
+      <div className="bg-white rounded-lg border border-neutral-200 p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-neutral-900 mb-4">
+          รายละเอียด {title}
+        </h3>
 
-          {/* Legend */}
-          <div className="space-y-2 mb-4">
-            {chartData.map((item) => (
-              <div key={item.name} className="flex items-center gap-2">
-                <div
-                  className="w-4 h-4 rounded-sm flex-shrink-0"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-sm text-neutral-700 flex-1 truncate">
-                  {item.name}
-                </span>
-                <span className="text-sm font-medium text-neutral-900">
-                  {((item.value / total) * 100).toFixed(0)}%
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Table */}
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b-2 border-neutral-300">
-                <th className="text-left py-2 px-2 font-semibold text-neutral-900">No</th>
-                <th className="text-left py-2 px-2 font-semibold text-neutral-900">{title}</th>
-                <th className="text-right py-2 px-2 font-semibold text-neutral-900">Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.filter(item => item.count > 0).map((item, index) => (
-                <tr key={item.id} className="border-b border-neutral-200">
-                  <td className="py-2 px-2 text-neutral-700">{index + 1}</td>
-                  <td className="py-2 px-2 text-neutral-900">{item.name}</td>
-                  <td className="py-2 px-2 text-neutral-900 text-right">{item.count}</td>
-                </tr>
-              ))}
-              <tr className="border-t-2 border-neutral-300 font-semibold">
-                <td className="py-2 px-2 text-neutral-900" colSpan={2}>Grand Total</td>
-                <td className="py-2 px-2 text-neutral-900 text-right">{total}</td>
-              </tr>
-            </tbody>
-          </table>
+        {/* Legend */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          {chartData.map((item) => (
+            <div key={item.name} className="flex items-center gap-2">
+              <div
+                className="w-4 h-4 rounded-sm flex-shrink-0"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-sm text-neutral-700">
+                {item.name}
+              </span>
+              <span className="text-sm font-medium text-neutral-900">
+                {((item.value / total) * 100).toFixed(0)}%
+              </span>
+            </div>
+          ))}
         </div>
+
+        {/* Table */}
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b-2 border-neutral-300">
+              <th className="text-left py-2 px-2 sm:px-4 font-semibold text-neutral-900">No</th>
+              <th className="text-left py-2 px-2 sm:px-4 font-semibold text-neutral-900">{title}</th>
+              <th className="text-right py-2 px-2 sm:px-4 font-semibold text-neutral-900">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.filter(item => item.count > 0).map((item, index) => (
+              <tr key={item.id} className="border-b border-neutral-200">
+                <td className="py-2 px-2 sm:px-4 text-neutral-700">{index + 1}</td>
+                <td className="py-2 px-2 sm:px-4 text-neutral-900">{item.name}</td>
+                <td className="py-2 px-2 sm:px-4 text-neutral-900 text-right">{item.count}</td>
+              </tr>
+            ))}
+            <tr className="border-t-2 border-neutral-300 font-semibold">
+              <td className="py-2 px-2 sm:px-4 text-neutral-900" colSpan={2}>Grand Total</td>
+              <td className="py-2 px-2 sm:px-4 text-neutral-900 text-right">{total}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   )
