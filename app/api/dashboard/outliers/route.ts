@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
           is_outlier = 1
           AND created_date >= @filterStartDate
           AND created_date <= @filterEndDate
+          AND status != 'unsent'
         ORDER BY diff_minutes DESC
       `)
 

@@ -20,6 +20,7 @@ export async function GET(
           updated_date, updated_by, close_cause, close_reason, close_time_minute
         FROM Dev_Born.dbo.ticket
         WHERE message_id = @message_id
+        AND status != 'unsent'
       `)
 
     if (result.recordset.length === 0) {

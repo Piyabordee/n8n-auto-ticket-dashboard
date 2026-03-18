@@ -337,6 +337,7 @@ export class OutlierRepository {
             AND created_date <= @yearEndDate
             AND assigned_to IS NOT NULL
             AND assigned_to != ''
+            AND status != 'unsent'
         ),
         -- Calculate per-person median
         per_person_median AS (
@@ -386,6 +387,7 @@ export class OutlierRepository {
             AND created_date <= @filterEndDate
             AND assigned_to IS NOT NULL
             AND assigned_to != ''
+            AND status != 'unsent'
         ),
         classified AS (
           -- Classify each ticket based on FULL YEAR baseline
@@ -441,6 +443,7 @@ export class OutlierRepository {
             close_time_minute IS NOT NULL
             AND created_date >= @yearStartDate
             AND created_date <= @yearEndDate
+            AND status != 'unsent'
         ),
         -- Calculate per-person median
         per_person_median AS (
@@ -582,6 +585,7 @@ export class OutlierRepository {
             AND created_date >= @yearStartDate
             AND created_date <= @yearEndDate
             AND assigned_to = @assigned_to
+            AND status != 'unsent'
         ),
         -- Calculate per-person median and count using OVER with constant partition
         median_with_count AS (
@@ -661,6 +665,7 @@ export class OutlierRepository {
         YEAR(created_date) as ticket_year
       FROM [Dev_Born].[dbo].[ticket]
       WHERE close_time_minute IS NOT NULL
+      AND status != 'unsent'
       ORDER BY created_date DESC
     `)
 

@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
         COUNT(*) as count
       FROM [Dev_Born].[dbo].[ticket]
       WHERE created_date IS NOT NULL
+      AND status != 'unsent'
       GROUP BY YEAR(created_date), MONTH(created_date)
       ORDER BY year DESC, month DESC
     `)
