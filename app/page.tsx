@@ -378,7 +378,7 @@ export default function TeamDashboard() {
           </div>
           <button
             onClick={handleOpenMonthlyReport}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 hover:scale-105 active:scale-95 transition-transform duration-150 flex items-center gap-2"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 hover:scale-105 active:scale-95 transition-transform duration-150 flex items-center gap-2"
             style={{
               transitionTimingFunction: 'var(--ease-out-quart)'
             }}
