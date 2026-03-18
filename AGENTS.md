@@ -1,9 +1,9 @@
 # IT Helpdesk Dashboard - Project Context
 
-> **Version**: 1.10.0
+> **Version**: 1.11.0
 > **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
 > **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
-> **Last Updated**: 2026-03-16 - Accessibility & Animations Enhancement
+> **Last Updated**: 2026-03-18 - Monthly Report & PDF Export Enhancement
 
 ---
 
@@ -289,6 +289,108 @@ ensureOutlierInitialized(): Promise<void>
 
 **Fix**: Outliers in "รายละเอียดประจำเดือน" modal now show in red color correctly
 
+### Feature 15: Refresh Functionality (Version 1.11.0)
+**Spin animation for dashboard data refresh**
+
+**Enhancements**:
+- **Refresh Button**: Added refresh button with spin animation in HeaderFilter
+- **Animation**: Spin animation while fetching data, stops when complete
+- **State Management**: Tracks refreshing state to prevent duplicate requests
+- **User Feedback**: Visual feedback during data refresh
+
+**Files Modified**:
+- `app/components/dashboard/HeaderFilter.tsx` - Added refresh button with spin animation
+- Main dashboard page - Added handleRefresh function
+
+**Props**: year, month, onRefresh callback
+
+### Feature 16: Monthly Report with PDF Export (Version 1.11.0)
+**Print page for monthly report with dynamic data fetching and PDF export**
+
+**Enhancements**:
+- **Print Page Route**: New `/print` route for printable monthly reports
+- **PDF Export**: Export reports to PDF using jsPDF and html2canvas
+- **Progress Indicator**: Shows progress during PDF generation
+- **Pie Chart**: Custom pie chart with label rendering for category distribution
+- **Data Fetching**: Dynamic data fetching for selected year/month
+- **Color Handling**: Proper oklch to hex color conversion for PDF compatibility
+- **Scoped Styles**: PDF-specific styles scoped to wrapper only
+- **Text Truncation Fix**: Prevents text cutoff in PDF export
+
+**Files Modified**:
+- `app/print/page.tsx` - New print page for monthly reports
+- `app/lib/pdfExport.ts` - PDF export utility with jsPDF/html2canvas
+- `app/components/dashboard/CategoryPieChart.tsx` - Pie chart with custom labels
+- `app/components/dashboard/SectionSelectorDropdown.tsx` - Section selection
+- `package.json` - Added jspdf and html2canvas dependencies
+
+**Features**:
+- Selectable sections for report (overview, charts, staff, outliers)
+- LocalStorage persistence for section preferences
+- Download PDF button with progress indicator
+- Print-optimized layout
+
+### Feature 17: Section Selector Dropdown (Version 1.11.0)
+**Component for selecting report sections**
+
+**Component**: `app/components/dashboard/SectionSelectorDropdown.tsx`
+
+**Features**:
+- **Multi-Select**: Select multiple sections for the report
+- **Sections Available**: Overview, Charts, Staff Performance, Outliers
+- **LocalStorage**: Persists user selections across sessions
+- **Dropdown UI**: Clean dropdown interface with checkboxes
+
+**Props**:
+- selectedSections, onChange
+
+### Feature 18: Report Section Configuration (Version 1.11.0)
+**LocalStorage persistence for report section preferences**
+
+**Features**:
+- **LocalStorage Key**: `monthly-report-sections`
+- **Default Sections**: Overview, Charts, Staff, Outliers
+- **Persistence**: User selections saved across browser sessions
+- **Initialization**: Loads saved preferences on component mount
+
+**Usage**:
+```typescript
+const [selectedSections, setSelectedSections] = useState<string[]>(() => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('monthly-report-sections')
+    return saved ? JSON.parse(saved) : ['overview', 'charts', 'staff', 'outliers']
+  }
+  return ['overview', 'charts', 'staff', 'outliers']
+})
+```
+
+### Feature 19: Enhanced Pie Chart (Version 1.11.0)
+**Custom pie chart with label rendering for category distribution**
+
+**Component**: `app/components/dashboard/CategoryPieChart.tsx`
+
+**Features**:
+- **Custom Labels**: Label rendering with position calculation
+- **Color Palette**: Uses theme colors for category differentiation
+- - **Responsive**: Adapts to mobile (250px) and desktop (300px) sizes
+- **Legend**: Shows category names and percentages
+- **Accessibility**: ARIA labels for screen readers
+
+**Props**:
+- data (CategoryData[]), showLegend (default: true)
+
+### Feature 20: Status Filter Enhancement (Version 1.11.0)
+**Exclude 'unsent' tickets from queries**
+
+**Enhancements**:
+- **Query Filter**: Added `status != 'unsent'` to ticket queries
+- **Cleaner Data**: Excludes unsent/unprocessed tickets from statistics
+- **Consistent Filtering**: Applied across all ticket query endpoints
+
+**Affected APIs**:
+- `/api/dashboard/tickets` - Excludes unsent tickets
+- `/api/dashboard/monthly-tickets` - Excludes unsent tickets
+
 ---
 
 ## 4. API Endpoints
@@ -417,6 +519,15 @@ Used in: /api/dashboard/staff, /api/tickets
 
 ### HeaderFilter
 - year, setYear, month, setMonth, availableYears?, availableMonths?
+- **New**: onRefresh handler for data refresh with spin animation
+
+### SectionSelectorDropdown
+- selectedSections, onChange
+- Multi-select dropdown for report sections with localStorage persistence
+
+### CategoryPieChart
+- data, showLegend?
+- Custom pie chart with label rendering for category distribution
 
 ### TicketListModal
 - isOpen, onClose, year, month?, filterType, title, staffName?
@@ -439,6 +550,9 @@ Used in: /api/dashboard/staff, /api/tickets
 | รับงาน | Assigned | Column |
 | เวลาเฉลี่ย | Avg Time | Column |
 | ผลงานทีม | Staff Performance | Section |
+| รายงานประจำเดือน | Monthly Report | Feature |
+| ส่งออก PDF | Export PDF | Action |
+| รีเฟรชข้อมูล | Refresh Data | Action |
 
 ---
 
@@ -574,6 +688,53 @@ Fixed is_outlier flag propagation for consistent styling:
 - Monthly tickets API includes `is_outlier` in response
 - DailyBarChart Ticket interface includes `is_outlier`
 - Fixes outliers in "รายละเอียดประจำเดือน" modal to show red correctly
+
+### Refresh Functionality (2026-03-18):
+Added refresh functionality with spin animation:
+- Refresh button in HeaderFilter with spin animation
+- Visual feedback during data refresh
+- State management to prevent duplicate requests
+- `app/components/dashboard/HeaderFilter.tsx` modified
+
+### Monthly Report with PDF Export (2026-03-18):
+Implemented monthly report print page with PDF export:
+- New `/print` route for printable monthly reports
+- PDF export using jsPDF and html2canvas libraries
+- Progress indicator during PDF generation
+- Custom pie chart (CategoryPieChart) with label rendering
+- SectionSelectorDropdown for selecting report sections
+- LocalStorage persistence for section preferences
+- oklch to hex color conversion for PDF compatibility
+- Scoped styles to prevent page bugs
+- Files: `app/print/page.tsx`, `app/lib/pdfExport.ts`, `app/components/dashboard/CategoryPieChart.tsx`
+
+### Section Selector Dropdown (2026-03-18):
+Added component for selecting report sections:
+- `app/components/dashboard/SectionSelectorDropdown.tsx`
+- Multi-select with checkboxes
+- Sections: Overview, Charts, Staff, Outliers
+- LocalStorage persistence
+
+### Report Section Configuration (2026-03-18):
+Implemented localStorage persistence for report sections:
+- Key: `monthly-report-sections`
+- Default: All sections enabled
+- Loads saved preferences on mount
+
+### Status Filter Enhancement (2026-03-18):
+Enhanced ticket queries to exclude 'unsent' status:
+- Added `status != 'unsent'` filter to queries
+- Cleaner statistics by excluding unprocessed tickets
+- Applied across `/api/dashboard/tickets` and `/api/dashboard/monthly-tickets`
+
+### Enhanced Pie Chart (2026-03-18):
+Custom pie chart with label rendering:
+- `app/components/dashboard/CategoryPieChart.tsx`
+- Custom label rendering with position calculation
+- Theme color palette for categories
+- Responsive: 250px mobile, 300px desktop
+- Legend with percentages
+- Accessibility: ARIA labels
 
 ---
 
