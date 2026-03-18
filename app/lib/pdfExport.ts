@@ -19,21 +19,15 @@ const MARGIN = 10 // mm
 const A4_WIDTH_PX = 794
 const A4_HEIGHT_PX = 1123
 
+// Unique ID for PDF export wrapper
+const PDF_WRAPPER_ID = '__pdf_export_wrapper__'
+
 /**
- * Inject PDF-specific styles
+ * Get PDF-specific styles - scoped to wrapper only
  */
-function injectPDFStyles(): HTMLStyleElement {
-  const styleId = 'pdf-export-styles'
-  let styleEl = document.getElementById(styleId) as HTMLStyleElement
-
-  if (!styleEl) {
-    styleEl = document.createElement('style')
-    styleEl.id = styleId
-    document.head.appendChild(styleEl)
-  }
-
-  styleEl.textContent = `
-    .pdf-export-page-wrapper {
+function getPDFStyles(): string {
+  return `
+    #${PDF_WRAPPER_ID} {
       position: absolute !important;
       left: -9999px !important;
       top: 0 !important;
@@ -45,75 +39,60 @@ function injectPDFStyles(): HTMLStyleElement {
       z-index: 9999 !important;
     }
 
-    .pdf-export-page-wrapper * {
+    #${PDF_WRAPPER_ID} * {
       box-sizing: border-box !important;
     }
 
-    /* Ensure all text is visible */
-    .pdf-export-page-wrapper text,
-    .pdf-export-page-wrapper tspan {
+    /* Ensure all text is visible - SCOPED to wrapper only */
+    #${PDF_WRAPPER_ID} text,
+    #${PDF_WRAPPER_ID} tspan {
       visibility: visible !important;
       display: block !important;
       opacity: 1 !important;
     }
 
-    /* Recharts specific styles */
-    .pdf-export-page-wrapper .recharts-text,
-    .pdf-export-page-wrapper .recharts-label {
+    /* Recharts specific styles - SCOPED to wrapper only */
+    #${PDF_WRAPPER_ID} .recharts-text,
+    #${PDF_WRAPPER_ID} .recharts-label {
       visibility: visible !important;
       opacity: 1 !important;
       fill: currentColor !important;
     }
 
-    .pdf-export-page-wrapper .recharts-pie-label-text,
-    .pdf-export-page-wrapper .recharts-pie-label-line {
+    #${PDF_WRAPPER_ID} .recharts-pie-label-text,
+    #${PDF_WRAPPER_ID} .recharts-pie-label-line {
       visibility: visible !important;
       opacity: 1 !important;
       stroke-width: 1 !important;
     }
 
-    /* SVG styles */
-    .pdf-export-page-wrapper svg {
+    /* SVG styles - SCOPED to wrapper only */
+    #${PDF_WRAPPER_ID} svg {
       overflow: visible !important;
     }
 
-    .pdf-export-page-wrapper svg text {
+    #${PDF_WRAPPER_ID} svg text {
       font-family: sans-serif !important;
       font-size: 12px !important;
       fill: #374151 !important;
     }
 
-    .no-print {
+    #${PDF_WRAPPER_ID} .no-print {
       display: none !important;
     }
   `
-
-  return styleEl
-}
-
-/**
- * Remove PDF-specific styles
- */
-function removePDFStyles(): void {
-  const styleEl = document.getElementById('pdf-export-styles')
-  if (styleEl) {
-    styleEl.remove()
-  }
 }
 
 /**
  * Prepare a single page for PDF capture
  */
 function preparePageForCapture(page: HTMLElement): HTMLElement {
-  // Inject PDF styles
-  injectPDFStyles()
-
-  // Clone the page content (not the wrapper)
-  const clone = page.cloneNode(true) as HTMLElement
-
-  // Create a wrapper div
+  // Create a unique wrapper div
   const wrapper = document.createElement('div')
-  wrapper.className = 'pdf-export-page-wrapper'
+  wrapper.id = PDF_WRAPPER_ID
+
+  // Clone the page content
+  const clone = page.cloneNode(true)
 
   // Copy all content from the cloned page to wrapper
   while (clone.firstChild) {
@@ -122,27 +101,20 @@ function preparePageForCapture(page: HTMLElement): HTMLElement {
 
   document.body.appendChild(wrapper)
 
-  // Remove no-print elements
+  // Remove no-print elements from wrapper only
   const noPrintElements = wrapper.querySelectorAll('.no-print')
   noPrintElements.forEach(el => el.remove())
 
-  // Force SVG text to be visible
-  const svgTexts = wrapper.querySelectorAll('svg text, svg tspan')
-  svgTexts.forEach(text => {
-    const el = text as SVGElement
-    el.style.visibility = 'visible'
-    el.style.opacity = '1'
-  })
-
-  // Force Recharts labels to be visible
-  const rechartsLabels = wrapper.querySelectorAll('.recharts-text, .recharts-label')
-  rechartsLabels.forEach(label => {
-    const el = label as HTMLElement
-    el.style.visibility = 'visible'
-    el.style.opacity = '1'
-  })
-
   return wrapper
+}
+
+/**
+ * Clean up wrapper
+ */
+function cleanupWrapper(wrapper: HTMLElement): void {
+  if (wrapper && wrapper.parentNode) {
+    wrapper.parentNode.removeChild(wrapper)
+  }
 }
 
 /**
@@ -161,62 +133,71 @@ export async function exportToPdf(
     throw new Error('No report pages to export')
   }
 
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  })
+  // Create temporary style element scoped to wrapper
+  const styleEl = document.createElement('style')
+  styleEl.textContent = getPDFStyles()
+  document.head.appendChild(styleEl)
 
-  for (let i = 0; i < totalPages; i++) {
-    const page = pages[i] as HTMLElement
-    onProgress?.(Math.round(((i + 1) / totalPages) * 100))
+  try {
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    })
 
-    const wrapper = preparePageForCapture(page)
+    for (let i = 0; i < totalPages; i++) {
+      const page = pages[i] as HTMLElement
+      onProgress?.(Math.round(((i + 1) / totalPages) * 100))
 
-    try {
-      // Wait for rendering
-      await new Promise(resolve => setTimeout(resolve, 300))
+      const wrapper = preparePageForCapture(page)
 
-      const canvas = await Promise.race([
-        html2canvas(wrapper, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-          allowTaint: true,
-          width: A4_WIDTH_PX,
-          height: A4_HEIGHT_PX,
-          windowWidth: A4_WIDTH_PX,
-          windowHeight: A4_HEIGHT_PX,
-          foreignObjectRendering: false,
-          ignoreElements: (el) => {
-            return el.classList?.contains('recharts-tooltip-wrapper') ||
-                   el.classList?.contains('recharts-tooltip')
-          }
-        }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('PDF export timeout')), 25000)
-        )
-      ])
+      try {
+        // Wait for rendering
+        await new Promise(resolve => setTimeout(resolve, 300))
 
-      const imgWidth = A4_WIDTH - (2 * MARGIN)
-      const imgHeight = (canvas.height * imgWidth) / canvas.width
+        const canvas = await Promise.race([
+          html2canvas(wrapper, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            allowTaint: true,
+            width: A4_WIDTH_PX,
+            height: A4_HEIGHT_PX,
+            windowWidth: A4_WIDTH_PX,
+            windowHeight: A4_HEIGHT_PX,
+            foreignObjectRendering: false,
+            ignoreElements: (el) => {
+              return el.classList?.contains('recharts-tooltip-wrapper') ||
+                     el.classList?.contains('recharts-tooltip')
+            }
+          }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('PDF export timeout')), 25000)
+          )
+        ])
 
-      if (i > 0) {
-        pdf.addPage()
+        const imgWidth = A4_WIDTH - (2 * MARGIN)
+        const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+        if (i > 0) {
+          pdf.addPage()
+        }
+
+        const imgData = canvas.toDataURL('image/png', 0.95)
+        pdf.addImage(imgData, 'PNG', MARGIN, MARGIN, imgWidth, imgHeight)
+      } finally {
+        cleanupWrapper(wrapper)
       }
+    }
 
-      const imgData = canvas.toDataURL('image/png', 0.95)
-      pdf.addImage(imgData, 'PNG', MARGIN, MARGIN, imgWidth, imgHeight)
-    } finally {
-      if (wrapper.parentNode) {
-        wrapper.parentNode.removeChild(wrapper)
-      }
-      removePDFStyles()
+    pdf.save(filename)
+  } finally {
+    // Always remove the style element
+    if (styleEl.parentNode) {
+      styleEl.parentNode.removeChild(styleEl)
     }
   }
-
-  pdf.save(filename)
 }
 
 /**
