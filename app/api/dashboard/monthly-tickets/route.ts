@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
         WHERE
           created_date >= @startDate
           AND created_date <= @endDate
+          AND status != 'unsent'
         ORDER BY created_date DESC
       `)
 

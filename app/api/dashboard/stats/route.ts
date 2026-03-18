@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
           SELECT COUNT(*) as total
           FROM [Dev_Born].[dbo].[ticket]
           WHERE created_date >= @startDate AND created_date <= @endDate
+          AND status != 'unsent'
         `),
       pool.request()
         .input('startDate', sql.DateTime, startDate)
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest) {
           FROM [Dev_Born].[dbo].[ticket]
           WHERE created_date >= @startDate AND created_date <= @endDate
           AND status = 'closed'
+          AND status != 'unsent'
         `),
       pool.request()
         .input('startDate', sql.DateTime, startDate)
@@ -53,6 +55,7 @@ export async function GET(request: NextRequest) {
           FROM [Dev_Born].[dbo].[ticket]
           WHERE created_date >= @startDate AND created_date <= @endDate
           AND status = 'closed'
+          AND status != 'unsent'
           AND close_time_minute IS NOT NULL
         `),
       pool.request()
@@ -63,6 +66,7 @@ export async function GET(request: NextRequest) {
           FROM [Dev_Born].[dbo].[ticket]
           WHERE created_date >= @startDate AND created_date <= @endDate
           AND status IN ('pending', 'assigned')
+          AND status != 'unsent'
         `)
     ])
 

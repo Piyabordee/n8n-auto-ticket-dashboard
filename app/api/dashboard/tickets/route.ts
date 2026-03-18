@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         close_time_minute,
         is_outlier
       FROM [Dev_Born].[dbo].[ticket]
-      WHERE 1=1
+      WHERE status != 'unsent'
     `
 
     const requestQuery = pool.request()

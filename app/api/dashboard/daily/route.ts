@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
           SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed
         FROM [Dev_Born].[dbo].[ticket]
         WHERE created_date >= @startDate AND created_date <= @endDate
+        AND status != 'unsent'
         GROUP BY DAY(created_date)
         ORDER BY day
       `)
