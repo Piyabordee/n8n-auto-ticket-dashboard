@@ -49,7 +49,7 @@ function prepareElementForCapture(element: HTMLElement): HTMLElement {
         temp.style.color = value
         document.body.appendChild(temp)
         const computedColor = window.getComputedStyle(temp).color
-        document.body.removeChild(temp)
+        temp.remove()
 
         // Set the inline style with computed RGB
         (htmlEl.style as any)[prop] = computedColor
@@ -126,7 +126,7 @@ export async function exportToPdf(
       pdf.addImage(imgData, 'PNG', MARGIN, MARGIN, imgWidth, imgHeight)
     } finally {
       // Clean up cloned element
-      document.body.removeChild(preparedElement)
+      preparedElement.remove()
     }
   }
 
