@@ -2,7 +2,11 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { loadSectionPreferences, saveSectionPreferences, type ReportSectionConfig } from '@/lib/reportSections'
+import { loadCustomNames, mergeCustomNames, getSectionDisplayName, getChartDisplayName } from '@/lib/reportConfig'
+import PageHeader from '@/components/dashboard/report/PageHeader'
+import PieChartSection from '@/components/dashboard/report/PieChartSection'
+import ReportConfigModal from '@/components/dashboard/ReportConfigModal'
 
 interface ReportSectionItem {
   id: string
@@ -28,11 +32,6 @@ interface ReportData {
   }
 }
 
-const CHART_COLORS = [
-  '#3b82f6', '#f97316', '#22c55e', '#8b5cf6', '#ef4444',
-  '#06b6d4', '#f59e0b', '#ec4899', '#14b8a6', '#f97316'
-]
-
 function PrintReportContent() {
   const searchParams = useSearchParams()
   const year = Number(searchParams.get('year')) || new Date().getFullYear()
@@ -41,6 +40,8 @@ function PrintReportContent() {
   const [reportData, setReportData] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showConfigModal, setShowConfigModal] = useState(false)
+  const [sectionConfig, setSectionConfig] = useState<ReportSectionConfig[]>(loadSectionPreferences())
 
   useEffect(() => {
     const fetchReport = async () => {
@@ -58,6 +59,18 @@ function PrintReportContent() {
 
     fetchReport()
   }, [year, month])
+
+  // Load custom names on mount
+  useEffect(() => {
+    const customNames = loadCustomNames()
+    const merged = mergeCustomNames(sectionConfig, customNames)
+    setSectionConfig(merged)
+  }, [])
+
+  const handleConfigSave = (newConfig: ReportSectionConfig[]) => {
+    setSectionConfig(newConfig)
+    saveSectionPreferences(newConfig) // Persist enabled/disabled state
+  }
 
   useEffect(() => {
     // Auto-trigger print dialog after content loads
@@ -100,7 +113,17 @@ function PrintReportContent() {
         <p className="text-sm text-neutral-600 mb-2">
           หน้าต่างนี้จะปิดอัตโนมัติหลังจากพิมพ์เสร็จ หรือกดปุ่มด้านล่าง
         </p>
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 flex-wrap">
+          <button
+            onClick={() => setShowConfigModal(true)}
+            className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300 transition-colors text-sm flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            ตั้งค่ารายงาน
+          </button>
           <button
             onClick={() => window.print()}
             className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
@@ -115,6 +138,14 @@ function PrintReportContent() {
           </button>
         </div>
       </div>
+
+      {/* Config Modal */}
+      <ReportConfigModal
+        isOpen={showConfigModal}
+        onClose={() => setShowConfigModal(false)}
+        onSave={handleConfigSave}
+        sections={sectionConfig}
+      />
 
       {/* Print Content */}
       <div className="print-content">
@@ -141,61 +172,69 @@ function PrintReportContent() {
         </div>
 
         {/* Section 1: Category */}
-        {reportData.totals.section1 > 0 && (
+        {sectionConfig.find(s => s.id === 'section1')?.enabled && reportData.totals.section1 > 0 && (
           <div className="print-page page-break-after">
             <PageHeader
               title={`Ticket ${reportData.monthNameEnglish} ${reportData.year}`}
               subtitle="ส่วนที่ 1: ภาพรวม Ticket ทั้งหมด"
+              customTitle={getSectionDisplayName(sectionConfig.find(s => s.id === 'section1')!)}
             />
             <PieChartSection
               title="Category"
               data={reportData.section1}
               total={reportData.totals.section1}
+              customTitle={getChartDisplayName(sectionConfig.find(s => s.id === 'section1')!)}
             />
           </div>
         )}
 
         {/* Section 2: Software */}
-        {reportData.totals.section2 > 0 && (
+        {sectionConfig.find(s => s.id === 'section2')?.enabled && reportData.totals.section2 > 0 && (
           <div className="print-page page-break-after">
             <PageHeader
               title={`Software ${reportData.totals.section2} Tickets`}
               subtitle="ส่วนที่ 2: เจาะลึกหมวด Software"
+              customTitle={getSectionDisplayName(sectionConfig.find(s => s.id === 'section2')!)}
             />
             <PieChartSection
               title="Software"
               data={reportData.section2}
               total={reportData.totals.section2}
+              customTitle={getChartDisplayName(sectionConfig.find(s => s.id === 'section2')!)}
             />
           </div>
         )}
 
         {/* Section 3: Sub Services */}
-        {reportData.totals.section3 > 0 && (
+        {sectionConfig.find(s => s.id === 'section3')?.enabled && reportData.totals.section3 > 0 && (
           <div className="print-page page-break-after">
             <PageHeader
               title={`Software ${reportData.totals.section3} Tickets`}
               subtitle="ส่วนที่ 3: การจัดกลุ่มปัญหา Software"
+              customTitle={getSectionDisplayName(sectionConfig.find(s => s.id === 'section3')!)}
             />
             <PieChartSection
               title="Sub Services"
               data={reportData.section3}
               total={reportData.totals.section3}
+              customTitle={getChartDisplayName(sectionConfig.find(s => s.id === 'section3')!)}
             />
           </div>
         )}
 
         {/* Section 4: POS/RATE Causes */}
-        {reportData.totals.section4 > 0 && (
+        {sectionConfig.find(s => s.id === 'section4')?.enabled && reportData.totals.section4 > 0 && (
           <div className="print-page">
             <PageHeader
               title={`POS/RATE Error ${reportData.section3.find((s: ReportSectionItem) => s.id === 'pos_rate_error')?.count || 0} Tickets`}
               subtitle="ส่วนที่ 4: สาเหตุของ POS/RATE Error"
+              customTitle={getSectionDisplayName(sectionConfig.find(s => s.id === 'section4')!)}
             />
             <PieChartSection
               title="Causes"
               data={reportData.section4}
               total={reportData.totals.section4}
+              customTitle={getChartDisplayName(sectionConfig.find(s => s.id === 'section4')!)}
             />
           </div>
         )}
@@ -216,94 +255,5 @@ export default function PrintReportPage() {
     }>
       <PrintReportContent />
     </Suspense>
-  )
-}
-
-function PageHeader({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="text-center mb-8">
-      <h2 className="text-2xl font-bold text-neutral-900 mb-2">{title}</h2>
-      <p className="text-lg text-neutral-600">{subtitle}</p>
-    </div>
-  )
-}
-
-function PieChartSection({ title, data, total }: { title: string; data: ReportSectionItem[]; total: number }) {
-  const chartData = data
-    .filter(item => item.count > 0)
-    .map((item, index) => ({
-      name: item.name,
-      value: item.count,
-      color: CHART_COLORS[index % CHART_COLORS.length]
-    }))
-
-  return (
-    <div className="flex flex-col gap-8">
-      {/* Pie Chart */}
-      <div className="flex justify-center">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-4">
-            <h3 className="text-xl font-semibold text-neutral-900 mb-2">{title}</h3>
-            <p className="text-4xl font-bold text-primary-600">{total} Tickets</p>
-          </div>
-          {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={100}
-                  dataKey="value"
-                  isAnimationActive={false}
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-neutral-400">
-              ไม่มีข้อมูล
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="w-full">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b-2 border-neutral-400">
-              <th className="text-left py-3 px-4 font-bold text-neutral-900">No</th>
-              <th className="text-left py-3 px-4 font-bold text-neutral-900">{title}</th>
-              <th className="text-right py-3 px-4 font-bold text-neutral-900">Count</th>
-              <th className="text-right py-3 px-4 font-bold text-neutral-900">%</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.filter(item => item.count > 0).map((item, index) => (
-              <tr key={item.id} className="border-b border-neutral-300">
-                <td className="py-3 px-4 text-neutral-700">{index + 1}</td>
-                <td className="py-3 px-4 text-neutral-900">{item.name}</td>
-                <td className="py-3 px-4 text-neutral-900 text-right">{item.count}</td>
-                <td className="py-3 px-4 text-neutral-900 text-right">
-                  {((item.count / total) * 100).toFixed(1)}
-                </td>
-              </tr>
-            ))}
-            <tr className="border-t-2 border-neutral-400 font-bold bg-neutral-50">
-              <td className="py-3 px-4 text-neutral-900" colSpan={2}>Grand Total</td>
-              <td className="py-3 px-4 text-neutral-900 text-right">{total}</td>
-              <td className="py-3 px-4 text-neutral-900 text-right">100.0</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
   )
 }
