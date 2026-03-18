@@ -16,6 +16,51 @@ const A4_HEIGHT = 297 // mm
 const MARGIN = 10 // mm
 
 /**
+ * Clone element and convert oklch/lab colors to RGB
+ * This works around html2canvas not supporting oklch/lab colors
+ */
+function prepareElementForCapture(element: HTMLElement): HTMLElement {
+  // Clone the element to avoid modifying the original
+  const clone = element.cloneNode(true) as HTMLElement
+
+  // Set a fixed width to match A4 proportions for better capture
+  clone.style.width = '794px' // A4 width in pixels at 96dpi
+  clone.style.position = 'absolute'
+  clone.style.left = '-9999px'
+  clone.style.top = '0'
+  document.body.appendChild(clone)
+
+  // Force all colors to be computed
+  const allElements = clone.querySelectorAll('*')
+  allElements.forEach((el) => {
+    const computed = window.getComputedStyle(el)
+    const htmlEl = el as HTMLElement
+
+    // Force color computation for all color properties
+    const colorProps = ['color', 'backgroundColor', 'borderColor',
+      'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
+      'outlineColor', 'textDecorationColor', 'fill', 'stroke']
+
+    colorProps.forEach(prop => {
+      const value = computed.getPropertyValue(prop)
+      if (value && (value.includes('oklch') || value.includes('lab'))) {
+        // Get the computed RGB value
+        const temp = document.createElement('div')
+        temp.style.color = value
+        document.body.appendChild(temp)
+        const computedColor = window.getComputedStyle(temp).color
+        document.body.removeChild(temp)
+
+        // Set the inline style with computed RGB
+        (htmlEl.style as any)[prop] = computedColor
+      }
+    })
+  })
+
+  return clone
+}
+
+/**
  * Export the report content to PDF
  */
 export async function exportToPdf(
@@ -46,37 +91,43 @@ export async function exportToPdf(
     // Report progress
     onProgress?.(Math.round(((i + 1) / totalPages) * 100))
 
-    // Create canvas from the page element with timeout protection
-    const canvas = await Promise.race([
-      html2canvas(page, {
-        scale: 1.5, // Reduced scale for faster processing
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: true,
-        ignoreElements: (el) => {
-          // Skip tooltips and interactive elements
-          return el.classList?.contains('recharts-tooltip-wrapper') ||
-                 el.classList?.contains('recharts-tooltip')
-        }
-      }),
-      // Timeout after 15 seconds per page
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('PDF export timeout')), 15000)
-      )
-    ]) as any
+    // Prepare cloned element with computed colors
+    const preparedElement = prepareElementForCapture(page)
 
-    const imgWidth = A4_WIDTH - (2 * MARGIN)
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
+    try {
+      // Create canvas from the prepared element
+      const canvas = await Promise.race([
+        html2canvas(preparedElement, {
+          scale: 1.5,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          allowTaint: true,
+          ignoreElements: (el) => {
+            return el.classList?.contains('recharts-tooltip-wrapper') ||
+                   el.classList?.contains('recharts-tooltip')
+          }
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('PDF export timeout')), 15000)
+        )
+      ]) as any
 
-    // Add new page (except for the first one)
-    if (i > 0) {
-      pdf.addPage()
+      const imgWidth = A4_WIDTH - (2 * MARGIN)
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+      // Add new page (except for the first one)
+      if (i > 0) {
+        pdf.addPage()
+      }
+
+      // Add the image to the PDF
+      const imgData = canvas.toDataURL('image/png')
+      pdf.addImage(imgData, 'PNG', MARGIN, MARGIN, imgWidth, imgHeight)
+    } finally {
+      // Clean up cloned element
+      document.body.removeChild(preparedElement)
     }
-
-    // Add the image to the PDF
-    const imgData = canvas.toDataURL('image/png')
-    pdf.addImage(imgData, 'PNG', MARGIN, MARGIN, imgWidth, imgHeight)
   }
 
   // Save the PDF
