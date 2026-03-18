@@ -15,9 +15,9 @@ const A4_WIDTH = 210 // mm
 const A4_HEIGHT = 297 // mm
 const MARGIN = 10 // mm
 
-// A4 width in pixels at 96 DPI
+// A4 dimensions in pixels at 96 DPI
 const A4_WIDTH_PX = 794
-const CONTENT_WIDTH = 754 // A4_WIDTH_PX - 40px padding
+const A4_HEIGHT_PX = 1123
 
 /**
  * Inject PDF-specific styles
@@ -33,62 +33,61 @@ function injectPDFStyles(): HTMLStyleElement {
   }
 
   styleEl.textContent = `
-    .pdf-export-wrapper {
-      width: ${A4_WIDTH_PX}px !important;
-      min-height: ${A4_HEIGHT_PX}px !important;
+    .pdf-export-page-wrapper {
       position: absolute !important;
       left: -9999px !important;
       top: 0 !important;
+      width: ${A4_WIDTH_PX}px !important;
+      min-height: ${A4_HEIGHT_PX}px !important;
       background: #ffffff !important;
       padding: 20px !important;
       box-sizing: border-box !important;
-      overflow: visible !important;
+      z-index: 9999 !important;
     }
 
-    .pdf-export-wrapper .report-page {
-      width: 100% !important;
-      min-height: ${A4_HEIGHT_PX}px !important;
-      padding: 24px !important;
-      background: #ffffff !important;
+    .pdf-export-page-wrapper * {
       box-sizing: border-box !important;
-      overflow: visible !important;
-      page-break-after: always !important;
-    }
-
-    .pdf-export-wrapper * {
-      box-sizing: border-box !important;
-    }
-
-    .pdf-export-wrapper h1,
-    .pdf-export-wrapper h2,
-    .pdf-export-wrapper h3,
-    .pdf-export-wrapper h4,
-    .pdf-export-wrapper h5,
-    .pdf-export-wrapper h6 {
       overflow: visible !important;
       text-overflow: clip !important;
       white-space: normal !important;
     }
 
-    .pdf-export-wrapper p,
-    .pdf-export-wrapper span,
-    .pdf-export-wrapper div {
+    .pdf-export-page-wrapper h1,
+    .pdf-export-page-wrapper h2,
+    .pdf-export-page-wrapper h3,
+    .pdf-export-page-wrapper h4,
+    .pdf-export-page-wrapper h5,
+    .pdf-export-page-wrapper h6 {
       overflow: visible !important;
       text-overflow: clip !important;
       white-space: normal !important;
+      line-height: 1.2 !important;
     }
 
-    .pdf-export-wrapper .recharts-wrapper {
+    .pdf-export-page-wrapper p,
+    .pdf-export-page-wrapper span,
+    .pdf-export-page-wrapper li,
+    .pdf-export-page-wrapper td {
+      overflow: visible !important;
+      text-overflow: clip !important;
+    }
+
+    .pdf-export-page-wrapper .recharts-wrapper,
+    .pdf-export-page-wrapper .recharts-surface {
       overflow: visible !important;
     }
 
-    .pdf-export-wrapper svg {
+    .pdf-export-page-wrapper svg {
       overflow: visible !important;
     }
 
-    .pdf-export-wrapper .recharts-text {
+    .pdf-export-page-wrapper .recharts-text {
       overflow: visible !important;
       text-anchor: middle !important;
+    }
+
+    .pdf-export-page-wrapper .recharts-legend-wrapper {
+      overflow: visible !important;
     }
 
     .no-print {
@@ -110,30 +109,31 @@ function removePDFStyles(): void {
 }
 
 /**
- * Prepare element for PDF capture with proper A4 sizing
+ * Prepare a single page for PDF capture
  */
-function prepareElementForCapture(element: HTMLElement): HTMLElement {
+function preparePageForCapture(page: HTMLElement): HTMLElement {
   // Inject PDF styles
   injectPDFStyles()
 
-  const clone = element.cloneNode(true) as HTMLElement
-  clone.className = 'pdf-export-wrapper ' + clone.className
+  // Clone the page content (not the wrapper)
+  const clone = page.cloneNode(true) as HTMLElement
 
-  document.body.appendChild(clone)
+  // Create a wrapper div
+  const wrapper = document.createElement('div')
+  wrapper.className = 'pdf-export-page-wrapper'
+
+  // Copy all content from the cloned page to wrapper
+  while (clone.firstChild) {
+    wrapper.appendChild(clone.firstChild)
+  }
+
+  document.body.appendChild(wrapper)
 
   // Remove no-print elements
-  const noPrintElements = clone.querySelectorAll('.no-print')
+  const noPrintElements = wrapper.querySelectorAll('.no-print')
   noPrintElements.forEach(el => el.remove())
 
-  // Force images to load
-  const images = clone.querySelectorAll('img')
-  images.forEach(img => {
-    if (img instanceof HTMLImageElement) {
-      img.style.display = 'block'
-    }
-  })
-
-  return clone
+  return wrapper
 }
 
 /**
@@ -162,37 +162,30 @@ export async function exportToPdf(
     const page = pages[i] as HTMLElement
     onProgress?.(Math.round(((i + 1) / totalPages) * 100))
 
-    const preparedElement = prepareElementForCapture(page)
+    const wrapper = preparePageForCapture(page)
 
     try {
       // Wait for rendering
-      await new Promise(resolve => setTimeout(resolve, 200))
+      await new Promise(resolve => setTimeout(resolve, 300))
 
       const canvas = await Promise.race([
-        html2canvas(preparedElement, {
+        html2canvas(wrapper, {
           scale: 2,
           useCORS: true,
           logging: false,
           backgroundColor: '#ffffff',
           allowTaint: true,
+          width: A4_WIDTH_PX,
+          height: A4_HEIGHT_PX,
           windowWidth: A4_WIDTH_PX,
           windowHeight: A4_HEIGHT_PX,
-          onclone: (clonedDoc) => {
-            // Ensure all text is visible
-            const textElements = clonedDoc.querySelectorAll('*')
-            textElements.forEach(el => {
-              const htmlEl = el as HTMLElement
-              htmlEl.style.overflow = 'visible'
-              htmlEl.style.textOverflow = 'clip'
-            })
-          },
           ignoreElements: (el) => {
             return el.classList?.contains('recharts-tooltip-wrapper') ||
                    el.classList?.contains('recharts-tooltip')
           }
         }),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('PDF export timeout')), 20000)
+          setTimeout(() => reject(new Error('PDF export timeout')), 25000)
         )
       ])
 
@@ -206,8 +199,8 @@ export async function exportToPdf(
       const imgData = canvas.toDataURL('image/png', 0.95)
       pdf.addImage(imgData, 'PNG', MARGIN, MARGIN, imgWidth, imgHeight)
     } finally {
-      if (preparedElement.parentNode) {
-        preparedElement.parentNode.removeChild(preparedElement)
+      if (wrapper.parentNode) {
+        wrapper.parentNode.removeChild(wrapper)
       }
       removePDFStyles()
     }
