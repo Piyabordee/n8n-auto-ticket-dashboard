@@ -47,47 +47,40 @@ function injectPDFStyles(): HTMLStyleElement {
 
     .pdf-export-page-wrapper * {
       box-sizing: border-box !important;
-      overflow: visible !important;
-      text-overflow: clip !important;
-      white-space: normal !important;
     }
 
-    .pdf-export-page-wrapper h1,
-    .pdf-export-page-wrapper h2,
-    .pdf-export-page-wrapper h3,
-    .pdf-export-page-wrapper h4,
-    .pdf-export-page-wrapper h5,
-    .pdf-export-page-wrapper h6 {
-      overflow: visible !important;
-      text-overflow: clip !important;
-      white-space: normal !important;
-      line-height: 1.2 !important;
+    /* Ensure all text is visible */
+    .pdf-export-page-wrapper text,
+    .pdf-export-page-wrapper tspan {
+      visibility: visible !important;
+      display: block !important;
+      opacity: 1 !important;
     }
 
-    .pdf-export-page-wrapper p,
-    .pdf-export-page-wrapper span,
-    .pdf-export-page-wrapper li,
-    .pdf-export-page-wrapper td {
-      overflow: visible !important;
-      text-overflow: clip !important;
+    /* Recharts specific styles */
+    .pdf-export-page-wrapper .recharts-text,
+    .pdf-export-page-wrapper .recharts-label {
+      visibility: visible !important;
+      opacity: 1 !important;
+      fill: currentColor !important;
     }
 
-    .pdf-export-page-wrapper .recharts-wrapper,
-    .pdf-export-page-wrapper .recharts-surface {
-      overflow: visible !important;
+    .pdf-export-page-wrapper .recharts-pie-label-text,
+    .pdf-export-page-wrapper .recharts-pie-label-line {
+      visibility: visible !important;
+      opacity: 1 !important;
+      stroke-width: 1 !important;
     }
 
+    /* SVG styles */
     .pdf-export-page-wrapper svg {
       overflow: visible !important;
     }
 
-    .pdf-export-page-wrapper .recharts-text {
-      overflow: visible !important;
-      text-anchor: middle !important;
-    }
-
-    .pdf-export-page-wrapper .recharts-legend-wrapper {
-      overflow: visible !important;
+    .pdf-export-page-wrapper svg text {
+      font-family: sans-serif !important;
+      font-size: 12px !important;
+      fill: #374151 !important;
     }
 
     .no-print {
@@ -132,6 +125,22 @@ function preparePageForCapture(page: HTMLElement): HTMLElement {
   // Remove no-print elements
   const noPrintElements = wrapper.querySelectorAll('.no-print')
   noPrintElements.forEach(el => el.remove())
+
+  // Force SVG text to be visible
+  const svgTexts = wrapper.querySelectorAll('svg text, svg tspan')
+  svgTexts.forEach(text => {
+    const el = text as SVGElement
+    el.style.visibility = 'visible'
+    el.style.opacity = '1'
+  })
+
+  // Force Recharts labels to be visible
+  const rechartsLabels = wrapper.querySelectorAll('.recharts-text, .recharts-label')
+  rechartsLabels.forEach(label => {
+    const el = label as HTMLElement
+    el.style.visibility = 'visible'
+    el.style.opacity = '1'
+  })
 
   return wrapper
 }
@@ -179,6 +188,7 @@ export async function exportToPdf(
           height: A4_HEIGHT_PX,
           windowWidth: A4_WIDTH_PX,
           windowHeight: A4_HEIGHT_PX,
+          foreignObjectRendering: false,
           ignoreElements: (el) => {
             return el.classList?.contains('recharts-tooltip-wrapper') ||
                    el.classList?.contains('recharts-tooltip')
