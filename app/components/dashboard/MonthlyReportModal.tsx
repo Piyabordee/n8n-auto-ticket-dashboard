@@ -11,6 +11,7 @@ import {
   getEnabledSections,
   type ReportSectionConfig
 } from '@/lib/reportSections'
+import { exportToPdf, generateReportFilename } from '@/lib/pdfExport'
 
 interface ReportSectionItem {
   id: string
@@ -69,6 +70,7 @@ export default function MonthlyReportModal({
   const [error, setError] = useState<string | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [exportProgress, setExportProgress] = useState(0)
   const [sections, setSections] = useState<ReportSectionConfig[]>(DEFAULT_SECTIONS)
   const modalRef = useRef<HTMLDivElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
@@ -176,52 +178,31 @@ export default function MonthlyReportModal({
     }
   }, [onClose])
 
-  // Handle PDF export using browser's print functionality
+  // Handle PDF export using jsPDF
   const handleExportPDF = useCallback(async () => {
     if (!reportContentRef.current || isExporting) return
 
     setIsExporting(true)
+    setExportProgress(0)
 
     try {
-      // Create print-specific styles
-      const printStyles = document.createElement('style')
-      printStyles.textContent = `
-        @media print {
-          body * { visibility: hidden; }
-          #monthly-report-content, #monthly-report-content * { visibility: visible; }
-          #monthly-report-content {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            padding: 20px;
-          }
-          .report-page { page-break-after: always; }
-          .report-page:last-child { page-break-after: auto; }
-          .no-print { display: none !important; }
+      const filename = generateReportFilename(year, month)
+
+      await exportToPdf(reportContentRef.current, {
+        filename,
+        onProgress: (progress) => {
+          setExportProgress(progress)
         }
-      `
-      document.head.appendChild(printStyles)
-
-      // Add ID to content for print targeting
-      reportContentRef.current.id = 'monthly-report-content'
-
-      // Print
-      window.print()
-
-      // Cleanup
-      setTimeout(() => {
-        document.head.removeChild(printStyles)
-        if (reportContentRef.current) {
-          reportContentRef.current.id = ''
-        }
-      }, 1000)
+      })
     } catch (err) {
       console.error('Export error:', err)
+      // Show error to user
+      alert('ไม่สามารถสร้าง PDF ได้ กรุณาลองใหม่อีกครั้ง')
     } finally {
       setIsExporting(false)
+      setExportProgress(0)
     }
-  }, [isExporting])
+  }, [isExporting, year, month])
 
   if (!isOpen) return null
 
@@ -277,7 +258,9 @@ export default function MonthlyReportModal({
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  <span className="hidden sm:inline">กำลัง Export...</span>
+                  <span className="hidden sm:inline">
+                    กำลัง Export {exportProgress > 0 ? `(${exportProgress}%)` : '...'}
+                  </span>
                 </>
               ) : (
                 <>
