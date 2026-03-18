@@ -11,7 +11,6 @@ import {
   getEnabledSections,
   type ReportSectionConfig
 } from '@/lib/reportSections'
-import { exportToPdf, generateReportFilename } from '@/lib/pdfExport'
 
 interface ReportSectionItem {
   id: string
@@ -69,8 +68,6 @@ export default function MonthlyReportModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
-  const [exportProgress, setExportProgress] = useState(0)
   const [sections, setSections] = useState<ReportSectionConfig[]>(DEFAULT_SECTIONS)
   const modalRef = useRef<HTMLDivElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
@@ -178,31 +175,11 @@ export default function MonthlyReportModal({
     }
   }, [onClose])
 
-  // Handle PDF export using jsPDF
-  const handleExportPDF = useCallback(async () => {
-    if (!reportContentRef.current || isExporting) return
-
-    setIsExporting(true)
-    setExportProgress(0)
-
-    try {
-      const filename = generateReportFilename(year, month)
-
-      await exportToPdf(reportContentRef.current, {
-        filename,
-        onProgress: (progress) => {
-          setExportProgress(progress)
-        }
-      })
-    } catch (err) {
-      console.error('Export error:', err)
-      // Show error to user
-      alert('ไม่สามารถสร้าง PDF ได้ กรุณาลองใหม่อีกครั้ง')
-    } finally {
-      setIsExporting(false)
-      setExportProgress(0)
-    }
-  }, [isExporting, year, month])
+  // Handle PDF export - open print page
+  const handleExportPDF = useCallback(() => {
+    const printUrl = `/report/print?year=${year}&month=${month}`
+    window.open(printUrl, '_blank', 'width=1000,height=800')
+  }, [year, month])
 
   if (!isOpen) return null
 
@@ -248,28 +225,14 @@ export default function MonthlyReportModal({
             />
             <button
               onClick={handleExportPDF}
-              disabled={loading || !reportData || isExporting}
+              disabled={loading || !reportData}
               className="px-3 py-1.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-neutral-300 disabled:cursor-not-allowed transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 flex items-center gap-1.5"
-              aria-label="Export to PDF"
+              aria-label="พิมพ์รายงาน"
             >
-              {isExporting ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  <span className="hidden sm:inline">
-                    กำลัง Export {exportProgress > 0 ? `(${exportProgress}%)` : '...'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <span className="hidden sm:inline">Export PDF</span>
-                </>
-              )}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              <span className="hidden sm:inline">พิมพ์รายงาน</span>
             </button>
             <button
               ref={closeButtonRef}

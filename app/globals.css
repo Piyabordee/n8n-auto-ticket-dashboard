@@ -174,3 +174,207 @@
 
 /* Number counter animation - handled by JS, this is for reference */
 /* The actual counter uses requestAnimationFrame for smooth 60fps performance */
+
+/* ============================================
+   PRINT PAGE STYLES - /report/print
+   ============================================ */
+.print-container {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.print-content {
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.print-page {
+  background: white;
+  padding: 15mm;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.page-break-after {
+  page-break-after: always;
+}
+
+/* Print-specific styles */
+@media print {
+  /* Hide non-print elements */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  /* Container */
+  .print-container {
+    background: white !important;
+  }
+
+  .print-content {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .print-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-after: always !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print-page:last-child {
+    page-break-after: auto !important;
+  }
+
+  /* Colors */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* SVG charts */
+  svg {
+    overflow: visible !important;
+  }
+
+  svg text,
+  svg tspan {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .recharts-text,
+  .recharts-label,
+  .recharts-pie-label-text,
+  .recharts-pie-label-line {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Tables */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th,
+  td {
+    border: 1px solid #d1d5db !important;
+  }
+
+  thead {
+    border-bottom: 2px solid #9ca3af !important;
+  }
+
+  /* Responsive container */
+  .recharts-responsive-container {
+    width: 100% !important;
+  }
+}
+
+/* ============================================
+   PRINT STYLES - Monthly Report PDF Export
+   ============================================ */
+@media print {
+  /* Hide elements that shouldn't be printed */
+  .no-print,
+  button,
+  a[href^="http"]::after {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Report pages - one per page */
+  .report-page {
+    page-break-after: always !important;
+    page-break-inside: avoid !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .report-page:last-child {
+    page-break-after: avoid !important;
+  }
+
+  /* Ensure charts render properly */
+  svg {
+    overflow: visible !important;
+  }
+
+  svg text,
+  svg tspan {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .recharts-text,
+  .recharts-label,
+  .recharts-pie-label-text,
+  .recharts-pie-label-line {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Tables - ensure proper borders */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th,
+  td {
+    border: 1px solid #d1d5db !important;
+    padding: 8px !important;
+  }
+
+  thead {
+    border-bottom: 2px solid #9ca3af !important;
+  }
+
+  /* Background colors */
+  .bg-white,
+  .bg-primary-600,
+  .bg-error-600,
+  .bg-warning-600,
+  .bg-success-600,
+  .bg-neutral-100,
+  [style*="background"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Text colors */
+  .text-primary-600,
+  .text-error-600,
+  .text-warning-600,
+  .text-success-600,
+  [style*="color"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
