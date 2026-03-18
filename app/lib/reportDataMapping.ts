@@ -151,9 +151,9 @@ export const SECTION_4_CAUSES: ReportCause[] = [
  */
 export interface SectionFilter {
   sectionId: string
-  category?: string      // Filter by category
-  subCategory?: string   // Filter by sub_category
-  closeCause?: string    // Filter by close_cause (section 4)
+  category?: string | string[]      // Filter by category (single or multiple)
+  subCategory?: string | string[]   // Filter by sub_category (single or multiple)
+  closeCause?: string | string[]    // Filter by close_cause (section 4, single or multiple)
 }
 
 /**
@@ -240,33 +240,39 @@ export interface TicketData {
 }
 
 /**
- * Check if a ticket matches the section filter
+ * Check if a ticket matches the section filter (supports multiple values)
  */
 function matchesFilter(ticket: TicketData, filter: SectionFilter): boolean {
   const category = ticket.category?.trim().toLowerCase() || ''
   const subCategory = ticket.sub_category?.trim().toLowerCase() || ''
   const closeCause = ticket.close_cause?.trim().toLowerCase() || ''
 
-  // Category filter
+  // Category filter (supports multiple values - OR logic)
   if (filter.category) {
-    const filterValue = filter.category.toLowerCase()
-    if (!category.includes(filterValue)) {
+    const filterValues = Array.isArray(filter.category)
+      ? filter.category.map(v => v.toLowerCase())
+      : [filter.category.toLowerCase()]
+    if (!filterValues.some(v => category.includes(v))) {
       return false
     }
   }
 
-  // Sub-category filter
+  // Sub-category filter (supports multiple values - OR logic)
   if (filter.subCategory) {
-    const filterValue = filter.subCategory.toLowerCase()
-    if (!subCategory.includes(filterValue)) {
+    const filterValues = Array.isArray(filter.subCategory)
+      ? filter.subCategory.map(v => v.toLowerCase())
+      : [filter.subCategory.toLowerCase()]
+    if (!filterValues.some(v => subCategory.includes(v))) {
       return false
     }
   }
 
-  // Close cause filter (for section 4)
+  // Close cause filter (supports multiple values - OR logic)
   if (filter.closeCause) {
-    const filterValue = filter.closeCause.toLowerCase()
-    if (!closeCause.includes(filterValue)) {
+    const filterValues = Array.isArray(filter.closeCause)
+      ? filter.closeCause.map(v => v.toLowerCase())
+      : [filter.closeCause.toLowerCase()]
+    if (!filterValues.some(v => closeCause.includes(v))) {
       return false
     }
   }

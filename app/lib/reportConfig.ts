@@ -9,8 +9,8 @@ const NAMES_STORAGE_KEY = 'monthly-report-section-names'
 
 export interface CustomNamesConfig {
   [sectionId: string]: {
-    customSectionName?: string
-    customChartName?: string
+    customSectionName?: string | string[]
+    customChartName?: string | string[]
   }
 }
 
@@ -72,22 +72,37 @@ export function resetCustomNames(): void {
 /**
  * Get display name for a section header
  * Priority: customSectionName > nameThai
+ * Supports single string or array of strings
  */
 export function getSectionDisplayName(config: ReportSectionConfig): string {
-  const customName = config.customSectionName?.trim()
-  return customName && customName.length > 0 ? customName : config.nameThai
+  const customName = config.customSectionName
+  if (!customName) return config.nameThai
+
+  if (Array.isArray(customName)) {
+    return customName.length > 0 ? customName.join(', ') : config.nameThai
+  }
+
+  const trimmed = customName.trim()
+  return trimmed.length > 0 ? trimmed : config.nameThai
 }
 
 /**
  * Get display name for a chart
  * Priority: customChartName > DEFAULT_CHART_TITLES
+ * Supports single string or array of strings
  */
 export function getChartDisplayName(config: ReportSectionConfig): string {
-  const customName = config.customChartName?.trim()
-  if (customName && customName.length > 0) {
-    return customName
+  const customName = config.customChartName
+  if (!customName) {
+    return DEFAULT_CHART_TITLES[config.id] || config.name
   }
-  return DEFAULT_CHART_TITLES[config.id] || config.name
+
+  if (Array.isArray(customName)) {
+    return customName.length > 0 ? customName.join(', ') : DEFAULT_CHART_TITLES[config.id] || config.name
+  }
+
+  const trimmed = customName.trim()
+  return trimmed.length > 0 ? trimmed : DEFAULT_CHART_TITLES[config.id] || config.name
 }
 
 /**

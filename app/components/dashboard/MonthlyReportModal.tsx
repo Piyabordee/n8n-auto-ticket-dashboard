@@ -162,21 +162,25 @@ export default function MonthlyReportModal({
         url.searchParams.set('year', String(year))
         url.searchParams.set('month', String(month))
 
-        // Add custom section names as filters
+        // Add custom section names as filters (support arrays)
         sections.forEach(section => {
           if (section.customSectionName) {
+            const value = Array.isArray(section.customSectionName)
+              ? section.customSectionName.join(',')
+              : section.customSectionName
+
             switch (section.id) {
               case 'section1':
-                url.searchParams.set('section1Filter', section.customSectionName)
+                url.searchParams.set('section1Filter', value)
                 break
               case 'section2':
-                url.searchParams.set('section2Filter', section.customSectionName)
+                url.searchParams.set('section2Filter', value)
                 break
               case 'section3':
-                url.searchParams.set('section3Filter', section.customSectionName)
+                url.searchParams.set('section3Filter', value)
                 break
               case 'section4':
-                url.searchParams.set('section4Filter', section.customSectionName)
+                url.searchParams.set('section4Filter', value)
                 break
             }
           }

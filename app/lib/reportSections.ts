@@ -11,9 +11,9 @@ export interface ReportSectionConfig {
   enabled: boolean
   order: number
 
-  // NEW: Custom names (optional)
-  customSectionName?: string    // Custom header name
-  customChartName?: string      // Custom pie chart title
+  // NEW: Custom names (optional) - now support multiple values as arrays
+  customSectionName?: string | string[]    // Custom header name(s) - single value or array
+  customChartName?: string | string[]      // Custom pie chart title(s) - single value or array
 }
 
 export type ReportSectionId = 'section1' | 'section2' | 'section3' | 'section4'
