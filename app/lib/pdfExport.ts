@@ -15,76 +15,94 @@ const A4_WIDTH = 210 // mm
 const A4_HEIGHT = 297 // mm
 const MARGIN = 10 // mm
 
-// Color cache for oklch to RGB conversion
-const colorCache = new Map<string, string>()
-
-/**
- * Convert oklch/lab color to RGB by creating a temporary element
- */
-function getComputedColor(colorValue: string): string {
-  if (!colorValue || colorValue === 'transparent' || colorValue === 'none') {
-    return colorValue
-  }
-
-  // Check cache first
-  if (colorCache.has(colorValue)) {
-    return colorCache.get(colorValue)!
-  }
-
-  // Already RGB/RGBA/HSL
-  if (colorValue.startsWith('rgb') || colorValue.startsWith('#') || colorValue.startsWith('hsl')) {
-    return colorValue
-  }
-
-  // Create temp element to get computed color
-  const temp = document.createElement('div')
-  temp.style.color = colorValue
-  temp.style.display = 'none'
-  document.documentElement.appendChild(temp)
-
-  const computed = window.getComputedStyle(temp).color
-
-  // Clean up
-  if (temp.parentNode) {
-    temp.parentNode.removeChild(temp)
-  }
-
-  // Cache the result
-  colorCache.set(colorValue, computed)
-  return computed
+// RGB equivalents for oklch colors in Tailwind config
+const RGB_COLORS: Record<string, string> = {
+  // Primary colors
+  '--tw-primary-opacity': '1',
+  '--primary': 'rgb(79, 70, 229)',
+  '--primary-50': 'rgb(238, 242, 255)',
+  '--primary-100': 'rgb(224, 231, 255)',
+  '--primary-200': 'rgb(199, 210, 254)',
+  '--primary-300': 'rgb(165, 180, 252)',
+  '--primary-400': 'rgb(129, 140, 248)',
+  '--primary-500': 'rgb(99, 102, 241)',
+  '--primary-600': 'rgb(79, 70, 229)',
+  '--primary-700': 'rgb(67, 56, 202)',
+  '--primary-800': 'rgb(55, 48, 163)',
+  '--primary-900': 'rgb(49, 46, 129)',
+  '--primary-950': 'rgb(30, 27, 75)',
 }
 
 /**
- * Clone element and convert oklch/lab colors to RGB
+ * Add RGB color override styles to element
+ */
+function addRGBOverrideStyles(element: HTMLElement): void {
+  const styleId = 'pdf-rgb-override'
+  let styleEl = document.getElementById(styleId) as HTMLStyleElement
+
+  if (!styleEl) {
+    styleEl = document.createElement('style')
+    styleEl.id = styleId
+    document.head.appendChild(styleEl)
+  }
+
+  // Create CSS that overrides oklch with RGB
+  let css = `
+    .pdf-export-container * {
+      color: rgb(0, 0, 0) !important;
+      background-color: transparent !important;
+      border-color: rgb(200, 200, 200) !important;
+    }
+  `
+
+  styleEl.textContent = css
+}
+
+/**
+ * Remove RGB override styles
+ */
+function removeRGBOverrideStyles(): void {
+  const styleEl = document.getElementById('pdf-rgb-override')
+  if (styleEl) {
+    styleEl.remove()
+  }
+}
+
+/**
+ * Prepare element for PDF capture
  */
 function prepareElementForCapture(element: HTMLElement): HTMLElement {
   const clone = element.cloneNode(true) as HTMLElement
-
+  clone.className = 'pdf-export-container ' + clone.className
   clone.style.width = '794px'
   clone.style.position = 'absolute'
   clone.style.left = '-9999px'
   clone.style.top = '0'
+  clone.style.visibility = 'visible'
+  clone.style.backgroundColor = '#ffffff'
   document.body.appendChild(clone)
 
-  // Force all colors to be computed
+  // Override all colors with safe values
   const allElements = clone.querySelectorAll('*')
   allElements.forEach((el) => {
-    const computed = window.getComputedStyle(el)
     const htmlEl = el as HTMLElement
+    const computed = window.getComputedStyle(el)
 
-    const colorProps = ['color', 'backgroundColor', 'borderColor',
-      'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
-      'outlineColor', 'fill', 'stroke']
+    // Get computed colors (browser returns RGB even for oklch)
+    const color = computed.color
+    const bgColor = computed.backgroundColor
+    const borderColor = computed.borderColor
 
-    colorProps.forEach(prop => {
-      const value = computed.getPropertyValue(prop)
-      if (value && (value.includes('oklch') || value.includes('lab'))) {
-        const rgbColor = getComputedColor(value)
-        if (rgbColor) {
-          (htmlEl.style as any)[prop] = rgbColor
-        }
-      }
-    })
+    // Set inline styles with computed values
+    if (color && color !== 'rgba(0, 0, 0, 0)') {
+      htmlEl.style.color = color
+    }
+    if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+      htmlEl.style.backgroundColor = bgColor
+    }
+    if (borderColor && borderColor !== 'rgba(0, 0, 0, 0)' && borderColor !== 'transparent') {
+      htmlEl.style.borderColor = borderColor
+    }
   })
 
   return clone
@@ -131,10 +149,10 @@ export async function exportToPdf(
                    el.classList?.contains('recharts-tooltip')
           }
         }),
-        new Promise((_, reject) =>
+        new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('PDF export timeout')), 15000)
         )
-      ]) as any
+      ])
 
       const imgWidth = A4_WIDTH - (2 * MARGIN)
       const imgHeight = (canvas.height * imgWidth) / canvas.width
