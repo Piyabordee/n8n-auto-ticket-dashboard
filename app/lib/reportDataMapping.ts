@@ -1,6 +1,6 @@
 /**
- * Fixed Category Structure for Monthly Report
- * This defines the fixed hierarchy used in the report regardless of database values
+ * Dynamic Category Structure for Monthly Report
+ * Supports custom filtering by database values
  */
 
 export interface ReportCategory {
@@ -147,6 +147,16 @@ export const SECTION_4_CAUSES: ReportCause[] = [
 ]
 
 /**
+ * Filter configuration for each section
+ */
+export interface SectionFilter {
+  sectionId: string
+  category?: string      // Filter by category
+  subCategory?: string   // Filter by sub_category
+  closeCause?: string    // Filter by close_cause (section 4)
+}
+
+/**
  * Find which category a database value belongs to
  * Uses partial keyword matching for flexibility
  */
@@ -226,14 +236,85 @@ export interface TicketData {
   category: string
   sub_category: string
   subject: string
+  close_cause?: string
 }
 
 /**
- * Map database tickets to fixed report structure
+ * Check if a ticket matches the section filter
  */
-export function mapTicketsToReportStructure(tickets: TicketData[]) {
+function matchesFilter(ticket: TicketData, filter: SectionFilter): boolean {
+  const category = ticket.category?.trim().toLowerCase() || ''
+  const subCategory = ticket.sub_category?.trim().toLowerCase() || ''
+  const closeCause = ticket.close_cause?.trim().toLowerCase() || ''
+
+  // Category filter
+  if (filter.category) {
+    const filterValue = filter.category.toLowerCase()
+    if (!category.includes(filterValue)) {
+      return false
+    }
+  }
+
+  // Sub-category filter
+  if (filter.subCategory) {
+    const filterValue = filter.subCategory.toLowerCase()
+    if (!subCategory.includes(filterValue)) {
+      return false
+    }
+  }
+
+  // Close cause filter (for section 4)
+  if (filter.closeCause) {
+    const filterValue = filter.closeCause.toLowerCase()
+    if (!closeCause.includes(filterValue)) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/**
+ * Map database tickets to report structure with optional filters
+ * @param tickets - All tickets to process
+ * @param sectionFilters - Optional filters for each section
+ */
+export function mapTicketsToReportStructure(
+  tickets: TicketData[],
+  sectionFilters?: Record<string, SectionFilter>
+) {
   console.log('=== Mapping Tickets to Report Structure ===')
   console.log(`Total tickets to map: ${tickets.length}`)
+  if (sectionFilters) {
+    console.log('Section filters:', sectionFilters)
+  }
+
+  // Apply filters to get tickets for each section
+  const section1Tickets = sectionFilters?.section1
+    ? tickets.filter(t => matchesFilter(t, sectionFilters.section1))
+    : tickets
+
+  const section2Filter = sectionFilters?.section2
+  const section2BaseTickets = section2Filter
+    ? tickets.filter(t => matchesFilter(t, section2Filter))
+    : tickets
+
+  // Section 3 uses same filter as section 2 (Problem Groups)
+  const section3Tickets = section2BaseTickets
+
+  // Section 4: Only POS/RATE tickets, optionally filtered by close_cause
+  let section4BaseTickets = section2BaseTickets.filter(t => {
+    const catMatch = findCategoryMatch(t.category, SECTION_1_CATEGORIES)
+    return catMatch === 'software'
+  })
+  if (sectionFilters?.section4?.closeCause) {
+    section4BaseTickets = section4BaseTickets.filter(t => matchesFilter(t, sectionFilters.section4))
+  }
+
+  console.log(`Section 1 tickets: ${section1Tickets.length}`)
+  console.log(`Section 2 tickets: ${section2BaseTickets.length}`)
+  console.log(`Section 3 tickets: ${section3Tickets.length}`)
+  console.log(`Section 4 tickets: ${section4BaseTickets.length}`)
 
   // Section 1: Overall Summary
   const section1Counts: Record<string, number> = {}
@@ -262,7 +343,7 @@ export function mapTicketsToReportStructure(tickets: TicketData[]) {
   let softwareCount = 0
   let posRateErrorCount = 0
 
-  for (const ticket of tickets) {
+  for (const ticket of section1Tickets) {
     const category = ticket.category?.trim() || ''
     const subCategory = ticket.sub_category?.trim() || ''
     const subject = ticket.subject?.trim() || ''
@@ -280,8 +361,15 @@ export function mapTicketsToReportStructure(tickets: TicketData[]) {
     if (catMatch) {
       section1Counts[catMatch]++
     }
+  }
+
+  for (const ticket of section2BaseTickets) {
+    const category = ticket.category?.trim() || ''
+    const subCategory = ticket.sub_category?.trim() || ''
+    const subject = ticket.subject?.trim() || ''
 
     // Only Software tickets go to Sections 2-4
+    const catMatch = findCategoryMatch(category, SECTION_1_CATEGORIES)
     if (catMatch === 'software') {
       softwareCount++
       console.log(`[Software Ticket] Category: "${category}", Sub: "${subCategory}", Subject: "${subject}"`)
@@ -340,36 +428,37 @@ export function mapTicketsToReportStructure(tickets: TicketData[]) {
       } else {
         section3Counts[groupMatch]++
       }
+    }
+  }
 
-      // Section 4: Only for POS/RATE Error tickets specifically
-      // Use isPosRateError flag to determine if THIS ticket is a POS/RATE error
-      if (isPosRateError) {
-        posRateErrorCount++
+  for (const ticket of section4BaseTickets) {
+    const subCategory = ticket.sub_category?.trim() || ''
+    const subject = ticket.subject?.trim() || ''
 
-        // Determine cause by sub_category first
-        let causeMatch = findCauseMatch(subCategory, SECTION_4_CAUSES)
-        if (causeMatch) {
-          section4Counts[causeMatch]++
-        } else {
-          // Try to match by subject
-          let matched = false
-          for (const cause of SECTION_4_CAUSES) {
-            for (const keyword of cause.keywords) {
-              if (subject.toLowerCase().includes(keyword.toLowerCase())) {
-                section4Counts[cause.id]++
-                console.log(`    -> Section 4 matched by subject: ${cause.name}`)
-                matched = true
-                break
-              }
-            }
-            if (matched) break
-          }
-          // If no match, put in "program_issue" as default for POS/RATE errors
-          if (!matched) {
-            section4Counts['program_issue']++
-            console.log(`    -> Section 4: No match, counted as "เป็นที่โปรแกรม POS / RATE"`)
+    posRateErrorCount++
+
+    // Determine cause by sub_category first
+    let causeMatch = findCauseMatch(subCategory, SECTION_4_CAUSES)
+    if (causeMatch) {
+      section4Counts[causeMatch]++
+    } else {
+      // Try to match by subject
+      let matched = false
+      for (const cause of SECTION_4_CAUSES) {
+        for (const keyword of cause.keywords) {
+          if (subject.toLowerCase().includes(keyword.toLowerCase())) {
+            section4Counts[cause.id]++
+            console.log(`    -> Section 4 matched by subject: ${cause.name}`)
+            matched = true
+            break
           }
         }
+        if (matched) break
+      }
+      // If no match, put in "program_issue" as default for POS/RATE errors
+      if (!matched) {
+        section4Counts['program_issue']++
+        console.log(`    -> Section 4: No match, counted as "เป็นที่โปรแกรม POS / RATE"`)
       }
     }
   }
@@ -386,24 +475,24 @@ export function mapTicketsToReportStructure(tickets: TicketData[]) {
       id: cat.id,
       name: cat.name,
       count: section1Counts[cat.id] || 0
-    })),
+    })).filter(item => item.count > 0),
     section2: SECTION_2_SOFTWARE_SUBS.map(sub => ({
       id: sub.id,
       name: sub.name,
       count: section2Counts[sub.id] || 0
-    })),
+    })).filter(item => item.count > 0),
     section3: SECTION_3_PROBLEM_GROUPS.map(group => ({
       id: group.id,
       name: group.name,
       count: section3Counts[group.id] || 0
-    })),
+    })).filter(item => item.count > 0),
     section4: SECTION_4_CAUSES.map(cause => ({
       id: cause.id,
       name: cause.name,
       count: section4Counts[cause.id] || 0
-    })),
+    })).filter(item => item.count > 0),
     totals: {
-      section1: tickets.length,
+      section1: section1Tickets.length,
       section2: softwareCount,
       section3: softwareCount,
       section4: posRateErrorCount
