@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 
@@ -33,7 +33,7 @@ const CHART_COLORS = [
   '#06b6d4', '#f59e0b', '#ec4899', '#14b8a6', '#f97316'
 ]
 
-export default function PrintReportPage() {
+function PrintReportContent() {
   const searchParams = useSearchParams()
   const year = Number(searchParams.get('year')) || new Date().getFullYear()
   const month = Number(searchParams.get('month')) || new Date().getMonth() + 1
@@ -201,6 +201,21 @@ export default function PrintReportPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function PrintReportPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full mx-auto mb-4" />
+          <p className="text-neutral-600">กำลังโหลดข้อมูล...</p>
+        </div>
+      </div>
+    }>
+      <PrintReportContent />
+    </Suspense>
   )
 }
 
