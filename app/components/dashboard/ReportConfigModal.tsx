@@ -15,6 +15,15 @@ interface ReportConfigModalProps {
   onClose: () => void
   onSave: (config: ReportSectionConfig[]) => void
   sections: ReportSectionConfig[]
+  year: number
+  month: number
+}
+
+interface DropdownOptions {
+  categories: string[]
+  subCategoriesSoftware: string[]
+  subCategoriesHardware: string[]
+  closeCauses: string[]
 }
 
 const MAX_NAME_LENGTH = 100
@@ -23,11 +32,37 @@ export default function ReportConfigModal({
   isOpen,
   onClose,
   onSave,
-  sections: initialSections
+  sections: initialSections,
+  year,
+  month
 }: ReportConfigModalProps) {
   const [localConfig, setLocalConfig] = useState<ReportSectionConfig[]>(initialSections)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [dropdownOptions, setDropdownOptions] = useState<DropdownOptions | null>(null)
+  const [loadingOptions, setLoadingOptions] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
+
+  // Fetch dropdown options when modal opens
+  useEffect(() => {
+    const fetchOptions = async () => {
+      if (!isOpen) return
+
+      setLoadingOptions(true)
+      try {
+        const res = await fetch(`/api/dashboard/report/options?year=${year}&month=${month}`)
+        if (!res.ok) throw new Error('Failed to fetch options')
+        const data = await res.json()
+        setDropdownOptions(data)
+      } catch (error) {
+        console.error('Error fetching dropdown options:', error)
+        setDropdownOptions(null)
+      } finally {
+        setLoadingOptions(false)
+      }
+    }
+
+    fetchOptions()
+  }, [isOpen, year, month])
 
   // Load custom names when modal opens
   useEffect(() => {
@@ -212,21 +247,60 @@ export default function ReportConfigModal({
                   2. ชื่อหัวข้อแต่ละส่วน
                 </h3>
                 <div className="space-y-3">
-                  {enabledSections.map((section) => (
-                    <div key={`section-name-${section.id}`}>
-                      <label className="block text-sm text-neutral-700 mb-1">
-                        {section.nameThai}:
-                      </label>
-                      <input
-                        type="text"
-                        value={section.customSectionName || ''}
-                        onChange={(e) => updateSectionName(section.id, e.target.value)}
-                        placeholder={`ค่าเริ่มต้น: ${section.nameThai}`}
-                        maxLength={MAX_NAME_LENGTH}
-                        className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                      />
-                    </div>
-                  ))}
+                  {enabledSections.map((section) => {
+                    // Get dropdown options for this section
+                    const getSectionOptions = (): string[] => {
+                      if (loadingOptions || !dropdownOptions) return []
+
+                      switch (section.id) {
+                        case 'section1':
+                          return dropdownOptions.categories
+                        case 'section2':
+                          return dropdownOptions.subCategoriesSoftware
+                        case 'section3':
+                          return dropdownOptions.subCategoriesHardware
+                        case 'section4':
+                          return dropdownOptions.closeCauses
+                        default:
+                          return []
+                      }
+                    }
+
+                    const sectionOptions = getSectionOptions()
+
+                    return (
+                      <div key={`section-name-${section.id}`}>
+                        <label className="block text-sm text-neutral-700 mb-1">
+                          {section.nameThai}:
+                        </label>
+                        {loadingOptions ? (
+                          <div className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-neutral-50 text-neutral-500 text-sm">
+                            กำลังโหลด...
+                          </div>
+                        ) : sectionOptions.length > 0 ? (
+                          <select
+                            value={section.customSectionName || ''}
+                            onChange={(e) => updateSectionName(section.id, e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+                          >
+                            <option value="">ค่าเริ่มต้น: {section.nameThai}</option>
+                            {sectionOptions.map(option => (
+                              <option key={option} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={section.customSectionName || ''}
+                            onChange={(e) => updateSectionName(section.id, e.target.value)}
+                            placeholder={`ค่าเริ่มต้น: ${section.nameThai}`}
+                            maxLength={MAX_NAME_LENGTH}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -240,20 +314,39 @@ export default function ReportConfigModal({
                 <div className="space-y-3">
                   {enabledSections.map((section) => {
                     const defaultTitle = DEFAULT_CHART_TITLES[section.id] || section.name
+                    // Chart titles use categories from database
+                    const chartOptions = loadingOptions || !dropdownOptions ? [] : dropdownOptions.categories
 
                     return (
                       <div key={`chart-name-${section.id}`}>
                         <label className="block text-sm text-neutral-700 mb-1">
                           กราฟ {defaultTitle}:
                         </label>
-                        <input
-                          type="text"
-                          value={section.customChartName || ''}
-                          onChange={(e) => updateChartName(section.id, e.target.value)}
-                          placeholder={`ค่าเริ่มต้น: ${defaultTitle}`}
-                          maxLength={MAX_NAME_LENGTH}
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                        />
+                        {loadingOptions ? (
+                          <div className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-neutral-50 text-neutral-500 text-sm">
+                            กำลังโหลด...
+                          </div>
+                        ) : chartOptions.length > 0 ? (
+                          <select
+                            value={section.customChartName || ''}
+                            onChange={(e) => updateChartName(section.id, e.target.value)}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+                          >
+                            <option value="">ค่าเริ่มต้น: {defaultTitle}</option>
+                            {chartOptions.map(option => (
+                              <option key={option} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={section.customChartName || ''}
+                            onChange={(e) => updateChartName(section.id, e.target.value)}
+                            placeholder={`ค่าเริ่มต้น: ${defaultTitle}`}
+                            maxLength={MAX_NAME_LENGTH}
+                            className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          />
+                        )}
                       </div>
                     )
                   })}

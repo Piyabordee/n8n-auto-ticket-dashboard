@@ -287,6 +287,8 @@ export default function MonthlyReportModal({
         onClose={() => setShowConfigModal(false)}
         onSave={handleConfigSave}
         sections={sections}
+        year={year}
+        month={month}
       />
     </div>
   )

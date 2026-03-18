@@ -145,6 +145,8 @@ function PrintReportContent() {
         onClose={() => setShowConfigModal(false)}
         onSave={handleConfigSave}
         sections={sectionConfig}
+        year={year}
+        month={month}
       />
 
       {/* Print Content */}
