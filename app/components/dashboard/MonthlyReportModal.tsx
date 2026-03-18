@@ -157,8 +157,32 @@ export default function MonthlyReportModal({
       setLoading(true)
       setError(null)
       try {
-        const url = `/api/dashboard/report?year=${year}&month=${month}`
-        const res = await fetch(url)
+        // Build URL with filter parameters from custom section names
+        const url = new URL(`/api/dashboard/report`, window.location.origin)
+        url.searchParams.set('year', String(year))
+        url.searchParams.set('month', String(month))
+
+        // Add custom section names as filters
+        sections.forEach(section => {
+          if (section.customSectionName) {
+            switch (section.id) {
+              case 'section1':
+                url.searchParams.set('section1Filter', section.customSectionName)
+                break
+              case 'section2':
+                url.searchParams.set('section2Filter', section.customSectionName)
+                break
+              case 'section3':
+                url.searchParams.set('section3Filter', section.customSectionName)
+                break
+              case 'section4':
+                url.searchParams.set('section4Filter', section.customSectionName)
+                break
+            }
+          }
+        })
+
+        const res = await fetch(url.toString())
 
         if (!res.ok) {
           throw new Error(`Failed to fetch report data: ${res.status}`)
@@ -176,7 +200,7 @@ export default function MonthlyReportModal({
     }
 
     fetchReportData()
-  }, [isOpen, year, month])
+  }, [isOpen, year, month, sections])
 
   const handleBackdropClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {

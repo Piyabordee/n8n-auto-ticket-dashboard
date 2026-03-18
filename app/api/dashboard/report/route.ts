@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getConnection } from '@/lib/sql'
 import sql from 'mssql'
-import { mapTicketsToReportStructure } from '@/lib/reportDataMapping'
+import { mapTicketsToReportStructure, type SectionFilter } from '@/lib/reportDataMapping'
 
 /**
- * Monthly Report API - Fixed Structure
+ * Monthly Report API - Fixed Structure with Custom Filters
  * Returns report data with fixed categories as specified
  * Query params:
  * - year (required): Year to report on
  * - month (required): Month number (1-12)
+ * - section1Filter: Optional category filter for section 1
+ * - section2Filter: Optional sub_category filter for section 2
+ * - section3Filter: Optional sub_category filter for section 3
+ * - section4Filter: Optional close_cause filter for section 4
  */
 
 const THAI_MONTHS = [
@@ -34,6 +38,27 @@ export async function GET(request: NextRequest) {
   const year = searchParams.get('year')
   const month = searchParams.get('month')
 
+  // Get custom filters
+  const section1Filter = searchParams.get('section1Filter')
+  const section2Filter = searchParams.get('section2Filter')
+  const section3Filter = searchParams.get('section3Filter')
+  const section4Filter = searchParams.get('section4Filter')
+
+  // Build section filters object
+  const sectionFilters: Record<string, SectionFilter> = {}
+  if (section1Filter) {
+    sectionFilters.section1 = { sectionId: 'section1', category: section1Filter }
+  }
+  if (section2Filter) {
+    sectionFilters.section2 = { sectionId: 'section2', subCategory: section2Filter }
+  }
+  if (section3Filter) {
+    sectionFilters.section3 = { sectionId: 'section3', subCategory: section3Filter }
+  }
+  if (section4Filter) {
+    sectionFilters.section4 = { sectionId: 'section4', closeCause: section4Filter }
+  }
+
   // Validate parameters
   const currentYear = year ? parseInt(year) : new Date().getFullYear()
   if (isNaN(currentYear) || currentYear < 2020 || currentYear > 2100) {
@@ -57,12 +82,13 @@ export async function GET(request: NextRequest) {
     const startDate = new Date(currentYear, monthNum - 1, 1)
     const endDate = new Date(currentYear, monthNum, 0, 23, 59, 59)
 
-    // Fetch all tickets for the month
+    // Fetch all tickets for the month (including close_cause for section 4)
     const query = `
       SELECT
         category,
         sub_category,
-        subject
+        subject,
+        close_cause
       FROM [Dev_Born].[dbo].[ticket]
       WHERE created_date >= @startDate
         AND created_date <= @endDate
@@ -77,7 +103,8 @@ export async function GET(request: NextRequest) {
     const tickets = result.recordset.map((row: any) => ({
       category: row.category || '',
       sub_category: row.sub_category || '',
-      subject: row.subject || ''
+      subject: row.subject || '',
+      close_cause: row.close_cause || ''
     }))
 
     // Debug: Show unique categories and sub-categories in database
@@ -88,9 +115,10 @@ export async function GET(request: NextRequest) {
     console.log('Unique Categories:', uniqueCategories)
     console.log('Unique Sub-categories:', uniqueSubCategories)
     console.log('======================')
+    console.log('Active filters:', sectionFilters)
 
-    // Map to fixed structure
-    const reportData = mapTicketsToReportStructure(tickets)
+    // Map to fixed structure with filters
+    const reportData = mapTicketsToReportStructure(tickets, sectionFilters)
 
     // Debug logging
     console.log('=== Report Data Debug ===')
