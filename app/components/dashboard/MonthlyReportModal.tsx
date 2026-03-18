@@ -414,8 +414,6 @@ function PieChartSection({ title, data, total }: PieChartSectionProps) {
                 label={(props) => renderCustomLabel(props, chartData)}
                 outerRadius={100}
                 dataKey="value"
-                labelLineStroke="#9ca3af"
-                labelLineStrokeWidth={1}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
