@@ -43,12 +43,26 @@ app/
   components/
     dashboard/
       ReportConfigModal.tsx          # NEW - Main configuration modal
+      report/
+        PageHeader.tsx               # NEW - Extracted from print page
+        PieChartSection.tsx          # NEW - Extracted from print page
   lib/
     reportConfig.ts                  # NEW - Config management utilities
+    reportSections.ts                # MODIFY - Add custom name fields to interface
   report/
     print/
-      page.tsx                       # MODIFY - Use custom settings
+      page.tsx                       # MODIFY - Use custom settings, extract components
 ```
+
+### Prerequisite: Component Extraction
+
+Before implementing the customization feature, extract inline components from `app/report/print/page.tsx`:
+
+1. **Extract `PageHeader`** (lines 222-229) → `app/components/dashboard/report/PageHeader.tsx`
+   - Props: `title: string`, `subtitle: string`, `customTitle?: string`
+
+2. **Extract `PieChartSection`** (lines 231-309) → `app/components/dashboard/report/PieChartSection.tsx`
+   - Props: `title: string`, `data: ReportSectionItem[]`, `total: number`, `customTitle?: string`
 
 ### Data Flow
 
@@ -90,12 +104,16 @@ interface ReportSectionConfig {
   customSectionName?: string    // Custom header name
   customChartName?: string      // Custom pie chart title
 }
+```
 
-interface ReportNamesConfig {
-  [sectionId: string]: {
-    sectionName?: string
-    chartName?: string
-  }
+### Default Chart Title Mappings
+
+```typescript
+const DEFAULT_CHART_TITLES: Record<string, string> = {
+  section1: 'Category',
+  section2: 'Software',
+  section3: 'Sub Services',
+  section4: 'Causes'
 }
 ```
 
@@ -104,17 +122,26 @@ interface ReportNamesConfig {
 | Key | Type | Description |
 |-----|------|-------------|
 | `monthly-report-sections` | `Record<string, { enabled: boolean }>` | Section visibility (existing) |
-| `monthly-report-section-names` | `ReportNamesConfig` | Custom names (NEW) |
+| `monthly-report-section-names` | `Record<string, { customSectionName?, customChartName? }>` | Custom names (NEW) |
 
 ### Display Priority
 
 For section headers:
-1. If `customSectionName` exists → use it
+1. If `customSectionName` exists and not empty → use it
 2. Otherwise → use default `nameThai`
 
 For pie charts:
-1. If `customChartName` exists → use it
-2. Otherwise → use default chart title
+1. If `customChartName` exists and not empty → use it
+2. Otherwise → use `DEFAULT_CHART_TITLES[sectionId]`
+
+### Section Visibility Logic
+
+Sections display with **AND logic**:
+- Show section if `enabled === true` **AND** `totalTickets > 0`
+- This means:
+  - User-disabled sections never show (even with data)
+  - Sections with no data never show (even if enabled)
+  - User cannot force-show empty sections
 
 ---
 
@@ -191,18 +218,23 @@ interface ReportConfigModalProps {
 
 **State:**
 ```typescript
-const [localSections, setLocalSections] = useState<ReportSectionConfig[]>(sections)
-const [localNames, setLocalNames] = useState<ReportNamesConfig>({})
+const [localConfig, setLocalConfig] = useState<ReportSectionConfig[]>(sections)
 const [showResetConfirm, setShowResetConfirm] = useState(false)
 ```
 
 **Key Functions:**
 - `toggleSection(id: string)` - Toggle section enabled state
-- `updateSectionName(id: string, name: string)` - Update custom section name
-- `updateChartName(id: string, name: string)` - Update custom chart name
-- `handleSave()` - Save to localStorage and call onSave
-- `handleReset()` - Clear all custom names (with confirmation)
+- `updateSectionName(id: string, name: string)` - Update customSectionName in localConfig
+- `updateChartName(id: string, name: string)` - Update customChartName in localConfig
+- `handleSave()` - Save to localStorage and call onSave with merged config
+- `handleResetConfirm()` - Show reset confirmation dialog
+- `handleResetConfirmed()` - Clear all custom names and save
 - `canSave()` - Check if at least 1 section is enabled
+
+**Reset Confirmation UI:**
+- Custom confirmation dialog (NOT browser confirm)
+- Thai language: "คุณต้องการคืนค่าชื่อทั้งหมดเป็นค่าเริ่มต้นหรือไม่?"
+- Buttons: "ยกเลิก" (cancel), "คืนค่า" (confirm)
 
 ### reportConfig.ts (New Library)
 
@@ -228,27 +260,58 @@ function getChartDisplayName(config: ReportSectionConfig, defaultTitle: string):
 
 ## Integration Points
 
-### Existing Components to Modify
+### Existing Files to Modify
 
-1. **`/report/print/page.tsx`**
+1. **`app/report/print/page.tsx`**
    - Add state for custom names
    - Load custom names on mount
    - Add "⚙️ ตั้งค่ารายงาน" button
    - Pass custom names to `PageHeader` and `PieChartSection`
-   - Conditionally render sections based on `enabled` flag
+   - Conditionally render sections based on `enabled` flag AND data availability
+   - Import extracted components
 
-2. **`PageHeader` component**
-   - Add `customTitle?: string` prop
-   - Use custom title if provided, otherwise use default
+2. **`app/lib/reportSections.ts`**
+   - Add `customSectionName?: string` to `ReportSectionConfig`
+   - Add `customChartName?: string` to `ReportSectionConfig`
+   - Update load/save functions to handle custom names
 
-3. **`PieChartSection` component**
-   - Add `customTitle?: string` prop
-   - Use custom title if provided, otherwise use default
+3. **`app/components/dashboard/SectionSelectorDropdown.tsx`**
+   - Note: This component is NOT replaced by the new modal
+   - The dropdown is used in other contexts; ReportConfigModal is report-specific
 
-### Existing Files to Reference
+### New Components to Create
 
-- `app/lib/reportSections.ts` - Section definitions and utilities
-- `app/components/dashboard/SectionSelectorDropdown.tsx` - Reference for section selection UI
+1. **`app/components/dashboard/report/PageHeader.tsx`** (extracted)
+   - Props: `title: string`, `subtitle: string`, `customTitle?: string`
+   - Uses `customTitle` for subtitle if provided
+
+2. **`app/components/dashboard/report/PieChartSection.tsx`** (extracted)
+   - Props: `title: string`, `data: ReportSectionItem[]`, `total: number`, `customTitle?: string`
+   - Uses `customTitle` for chart title if provided
+
+3. **`app/components/dashboard/ReportConfigModal.tsx`**
+   - Main configuration modal with 3 sections
+
+4. **`app/lib/reportConfig.ts`**
+   - Utility functions for managing custom names
+
+### Migration Strategy
+
+Existing users may have `monthly-report-sections` in localStorage. The implementation must:
+
+1. **Read existing data gracefully**:
+   - Try to read `monthly-report-sections` (old format)
+   - If missing, use all sections enabled (default)
+   - If corrupted, clear and use defaults
+
+2. **Write new format**:
+   - `monthly-report-sections` continues to store `{ enabled: boolean }`
+   - `monthly-report-section-names` stores new custom names
+
+3. **No data migration needed**:
+   - Old keys remain unchanged
+   - New keys are additive only
+   - Users without custom names see default behavior
 
 ---
 
@@ -259,16 +322,19 @@ function getChartDisplayName(config: ReportSectionConfig, defaultTitle: string):
 | Scenario | Handling |
 |----------|----------|
 | User tries to uncheck last section | Disable checkbox, show tooltip "ต้องเลือกอย่างน้อย 1 ส่วน" |
-| Custom name is empty string | Fall back to default name, don't save empty string |
+| Custom name is empty string | Treat as "no custom name", use default, don't save empty string to localStorage |
+| Section enabled but has no data | Section doesn't show (AND logic: enabled AND has data) |
+| Section disabled but has data | Section doesn't show (user preference overrides data) |
 | localStorage corrupted | Log error, use defaults, clear corrupted data |
-| localStorage quota exceeded | Show error message, don't save |
-| Reset confirmation | Show confirm dialog before clearing names |
+| localStorage quota exceeded | Show error message to user, don't save changes |
+| Reset confirmation | Show custom confirmation dialog (Thai: "คุณต้องการคืนค่าชื่อทั้งหมดเป็นค่าเริ่มต้นหรือไม่?") |
 
 ### Validation
 
 - At least 1 section must be enabled before save
-- Empty string names are treated as "no custom name"
-- Trim whitespace from input values
+- Empty string names are treated as "no custom name" (not saved)
+- Trim whitespace from input values before saving
+- Maximum length for custom names: 100 characters (prevent abuse)
 
 ---
 
