@@ -3,6 +3,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 
+import SectionSelectorDropdown from './SectionSelectorDropdown'
+import {
+  DEFAULT_SECTIONS,
+  loadSectionPreferences,
+  saveSectionPreferences,
+  getEnabledSections,
+  type ReportSectionConfig
+} from '@/lib/reportSections'
+
 interface ReportSectionItem {
   id: string
   name: string
@@ -60,6 +69,7 @@ export default function MonthlyReportModal({
   const [error, setError] = useState<string | null>(null)
   const [isAnimating, setIsAnimating] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [sections, setSections] = useState<ReportSectionConfig[]>(DEFAULT_SECTIONS)
   const modalRef = useRef<HTMLDivElement>(null)
   const backdropRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
@@ -76,6 +86,12 @@ export default function MonthlyReportModal({
       setIsAnimating(false)
     }
   }, [isOpen])
+
+  // Load saved section preferences
+  useEffect(() => {
+    const saved = loadSectionPreferences()
+    setSections(saved)
+  }, [])
 
   // Focus trap implementation
   useEffect(() => {
@@ -242,6 +258,13 @@ export default function MonthlyReportModal({
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
+            <SectionSelectorDropdown
+              sections={sections}
+              onSectionsChange={(updated) => {
+                setSections(updated)
+                saveSectionPreferences(updated)
+              }}
+            />
             <button
               onClick={handleExportPDF}
               disabled={loading || !reportData || isExporting}
@@ -288,7 +311,7 @@ export default function MonthlyReportModal({
           ) : loading ? (
             <LoadingState />
           ) : reportData ? (
-            <ReportContent data={reportData} />
+            <ReportContent data={reportData} sections={sections} />
           ) : null}
         </div>
       </div>
@@ -296,58 +319,80 @@ export default function MonthlyReportModal({
   )
 }
 
-function ReportContent({ data }: { data: ReportData }) {
-  const posRateCount = data.section3.find(s => s.id === 'pos_rate_error')?.count || 0
+function ReportContent({ data, sections }: { data: ReportData; sections: ReportSectionConfig[] }) {
+  const enabledSections = getEnabledSections(sections)
+
+  const renderSection = (sectionId: string) => {
+    switch (sectionId) {
+      case 'section1':
+        return (
+          <ReportPage
+            key="section1"
+            title={`Ticket ${data.monthNameEnglish} ${data.year}`}
+            subtitle="ส่วนที่ 1: ภาพรวม Ticket ทั้งหมด"
+          >
+            <PieChartSection
+              title="Category"
+              data={data.section1}
+              total={data.totals.section1}
+            />
+          </ReportPage>
+        )
+
+      case 'section2':
+        return (
+          <ReportPage
+            key="section2"
+            title={`Software ${data.totals.section2} Tickets`}
+            subtitle="ส่วนที่ 2: เจาะลึกหมวด Software"
+          >
+            <PieChartSection
+              title="Software"
+              data={data.section2}
+              total={data.totals.section2}
+            />
+          </ReportPage>
+        )
+
+      case 'section3':
+        return (
+          <ReportPage
+            key="section3"
+            title={`Software ${data.totals.section3} Tickets`}
+            subtitle="ส่วนที่ 3: การจัดกลุ่มปัญหา Software"
+          >
+            <PieChartSection
+              title="Sub Services"
+              data={data.section3}
+              total={data.totals.section3}
+            />
+          </ReportPage>
+        )
+
+      case 'section4':
+        const posRateCount = data.section3.find(s => s.id === 'pos_rate_error')?.count || 0
+        return (
+          <ReportPage
+            key="section4"
+            title={`POS/RATE Error ${posRateCount} Tickets`}
+            subtitle="ส่วนที่ 4: สาเหตุของ POS/RATE Error"
+          >
+            <PieChartSection
+              title="Causes"
+              data={data.section4}
+              total={data.totals.section4}
+            />
+          </ReportPage>
+        )
+
+      default:
+        return null
+    }
+  }
 
   return (
     <div className="space-y-6">
-      {/* Section 1: Overall Ticket Summary */}
-      <ReportPage
-        title={`Ticket ${data.monthNameEnglish} ${data.year}`}
-        subtitle="ส่วนที่ 1: ภาพรวม Ticket ทั้งหมด"
-      >
-        <PieChartSection
-          title="Category"
-          data={data.section1}
-          total={data.totals.section1}
-        />
-      </ReportPage>
-
-      {/* Section 2: Software Deep Dive */}
-      <ReportPage
-        title={`Software ${data.totals.section2} Tickets`}
-        subtitle="ส่วนที่ 2: เจาะลึกหมวด Software"
-      >
-        <PieChartSection
-          title="Software"
-          data={data.section2}
-          total={data.totals.section2}
-        />
-      </ReportPage>
-
-      {/* Section 3: Software Problem Grouping */}
-      <ReportPage
-        title={`Software ${data.totals.section3} Tickets`}
-        subtitle="ส่วนที่ 3: การจัดกลุ่มปัญหา Software"
-      >
-        <PieChartSection
-          title="Sub Services"
-          data={data.section3}
-          total={data.totals.section3}
-        />
-      </ReportPage>
-
-      {/* Section 4: Causes of POS/RATE Error */}
-      <ReportPage
-        title={`POS/RATE Error ${posRateCount} Tickets`}
-        subtitle="ส่วนที่ 4: สาเหตุของ POS/RATE Error"
-      >
-        <PieChartSection
-          title="Causes"
-          data={data.section4}
-          total={data.totals.section4}
-        />
-      </ReportPage>
+      {enabledSections.map(section => renderSection(section.id))}
     </div>
   )
 }
