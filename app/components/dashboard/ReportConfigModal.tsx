@@ -167,6 +167,38 @@ export default function ReportConfigModal({
     )
   }
 
+  const selectAllSectionNames = (sectionId: string, options: string[]) => {
+    setLocalConfig(prev =>
+      prev.map(s =>
+        s.id === sectionId ? { ...s, customSectionName: options } : s
+      )
+    )
+  }
+
+  const clearAllSectionNames = (sectionId: string) => {
+    setLocalConfig(prev =>
+      prev.map(s =>
+        s.id === sectionId ? { ...s, customSectionName: undefined } : s
+      )
+    )
+  }
+
+  const selectAllChartNames = (sectionId: string, options: string[]) => {
+    setLocalConfig(prev =>
+      prev.map(s =>
+        s.id === sectionId ? { ...s, customChartName: options } : s
+      )
+    )
+  }
+
+  const clearAllChartNames = (sectionId: string) => {
+    setLocalConfig(prev =>
+      prev.map(s =>
+        s.id === sectionId ? { ...s, customChartName: undefined } : s
+      )
+    )
+  }
+
   const canSave = () => {
     return localConfig.some(s => s.enabled)
   }
@@ -292,6 +324,7 @@ export default function ReportConfigModal({
                     const selectedValues = Array.isArray(section.customSectionName)
                       ? section.customSectionName
                       : (section.customSectionName ? [section.customSectionName] : [])
+                    const allSelected = sectionOptions.length > 0 && selectedValues.length === sectionOptions.length
 
                     return (
                       <div key={`section-name-${section.id}`}>
@@ -304,6 +337,24 @@ export default function ReportConfigModal({
                           </div>
                         ) : sectionOptions.length > 0 ? (
                           <div className="border border-neutral-300 rounded-lg p-3 max-h-40 overflow-y-auto bg-neutral-50">
+                            {/* Select All checkbox */}
+                            {sectionOptions.length > 1 && (
+                              <label className="flex items-center gap-2 cursor-pointer hover:bg-neutral-200 p-2 rounded mb-2 bg-white border-b border-neutral-200">
+                                <input
+                                  type="checkbox"
+                                  checked={allSelected}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      selectAllSectionNames(section.id, sectionOptions)
+                                    } else {
+                                      clearAllSectionNames(section.id)
+                                    }
+                                  }}
+                                  className="w-4 h-4 text-primary-600 rounded border-neutral-300 focus:ring-primary-500"
+                                />
+                                <span className="text-sm font-medium text-neutral-900">เลือกทั้งหมด ({sectionOptions.length})</span>
+                              </label>
+                            )}
                             <div className="space-y-2">
                               {sectionOptions.map(option => (
                                 <label key={option} className="flex items-center gap-2 cursor-pointer hover:bg-neutral-100 p-1 rounded">
@@ -361,6 +412,7 @@ export default function ReportConfigModal({
                     const selectedValues = Array.isArray(section.customChartName)
                       ? section.customChartName
                       : (section.customChartName ? [section.customChartName] : [])
+                    const allSelected = chartOptions.length > 0 && selectedValues.length === chartOptions.length
 
                     return (
                       <div key={`chart-name-${section.id}`}>
@@ -373,6 +425,24 @@ export default function ReportConfigModal({
                           </div>
                         ) : chartOptions.length > 0 ? (
                           <div className="border border-neutral-300 rounded-lg p-3 max-h-40 overflow-y-auto bg-neutral-50">
+                            {/* Select All checkbox */}
+                            {chartOptions.length > 1 && (
+                              <label className="flex items-center gap-2 cursor-pointer hover:bg-neutral-200 p-2 rounded mb-2 bg-white border-b border-neutral-200">
+                                <input
+                                  type="checkbox"
+                                  checked={allSelected}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      selectAllChartNames(section.id, chartOptions)
+                                    } else {
+                                      clearAllChartNames(section.id)
+                                    }
+                                  }}
+                                  className="w-4 h-4 text-primary-600 rounded border-neutral-300 focus:ring-primary-500"
+                                />
+                                <span className="text-sm font-medium text-neutral-900">เลือกทั้งหมด ({chartOptions.length})</span>
+                              </label>
+                            )}
                             <div className="space-y-2">
                               {chartOptions.map(option => (
                                 <label key={option} className="flex items-center gap-2 cursor-pointer hover:bg-neutral-100 p-1 rounded">
