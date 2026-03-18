@@ -15,6 +15,38 @@ const A4_WIDTH = 210 // mm
 const A4_HEIGHT = 297 // mm
 const MARGIN = 10 // mm
 
+// A4 width in pixels at 96 DPI (for proper scaling)
+const A4_WIDTH_PX = 794
+const A4_HEIGHT_PX = 1123
+
+/**
+ * Prepare element for PDF capture with proper A4 sizing
+ */
+function prepareElementForCapture(element: HTMLElement): HTMLElement {
+  const clone = element.cloneNode(true) as HTMLElement
+
+  // Set up container for A4 page proportions
+  clone.style.width = `${A4_WIDTH_PX}px`
+  clone.style.minHeight = `${A4_HEIGHT_PX}px`
+  clone.style.position = 'absolute'
+  clone.style.left = '-9999px'
+  clone.style.top = '0'
+  clone.style.backgroundColor = '#ffffff'
+  clone.style.padding = '20px'
+  clone.style.boxSizing = 'border-box'
+  clone.style.overflow = 'visible'
+
+  document.body.appendChild(clone)
+
+  // Force text rendering to complete
+  const images = clone.querySelectorAll('img')
+  images.forEach(img => {
+    img.style.display = 'block'
+  })
+
+  return clone
+}
+
 /**
  * Export the report content to PDF
  */
@@ -41,32 +73,45 @@ export async function exportToPdf(
     const page = pages[i] as HTMLElement
     onProgress?.(Math.round(((i + 1) / totalPages) * 100))
 
-    const canvas = await Promise.race([
-      html2canvas(page, {
-        scale: 1.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        allowTaint: true,
-        ignoreElements: (el) => {
-          return el.classList?.contains('recharts-tooltip-wrapper') ||
-                 el.classList?.contains('recharts-tooltip')
-        }
-      }),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('PDF export timeout')), 15000)
-      )
-    ])
+    const preparedElement = prepareElementForCapture(page)
 
-    const imgWidth = A4_WIDTH - (2 * MARGIN)
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
+    try {
+      // Wait a bit for rendering
+      await new Promise(resolve => setTimeout(resolve, 100))
 
-    if (i > 0) {
-      pdf.addPage()
+      const canvas = await Promise.race([
+        html2canvas(preparedElement, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          allowTaint: true,
+          windowWidth: A4_WIDTH_PX,
+          windowHeight: A4_HEIGHT_PX,
+          ignoreElements: (el) => {
+            return el.classList?.contains('recharts-tooltip-wrapper') ||
+                   el.classList?.contains('recharts-tooltip')
+          }
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('PDF export timeout')), 20000)
+        )
+      ])
+
+      const imgWidth = A4_WIDTH - (2 * MARGIN)
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+      if (i > 0) {
+        pdf.addPage()
+      }
+
+      const imgData = canvas.toDataURL('image/png', 0.95)
+      pdf.addImage(imgData, 'PNG', MARGIN, MARGIN, imgWidth, imgHeight)
+    } finally {
+      if (preparedElement.parentNode) {
+        preparedElement.parentNode.removeChild(preparedElement)
+      }
     }
-
-    const imgData = canvas.toDataURL('image/png')
-    pdf.addImage(imgData, 'PNG', MARGIN, MARGIN, imgWidth, imgHeight)
   }
 
   pdf.save(filename)
