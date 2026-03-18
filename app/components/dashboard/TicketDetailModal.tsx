@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import type { TicketDetail, TicketDetailModalProps } from '@/types/ticket'
 
 const statusColors: Record<string, string> = {
@@ -67,7 +68,10 @@ export default function TicketDetailModal({
 
   if (!isOpen) return null
 
-  return (
+  // Use Portal to render modal at document body level to avoid issues with table cells
+  if (typeof window === 'undefined') return null
+
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-2 sm:p-4">
       <div className="bg-white rounded-xl shadow-elevated max-w-full sm:max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
@@ -254,6 +258,7 @@ export default function TicketDetailModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
