@@ -10,6 +10,8 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 
 **Built with 99% Vibe Code (AI-assisted development)** - This project demonstrates the power of AI-assisted software development.
 
+**Latest Version**: 1.11.0 (2026-03-18) - Monthly Report & PDF Export Enhancement
+
 ## Features
 
 ### Dashboard (/)
@@ -30,6 +32,17 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 - Branch selection with hierarchical data
 - Image attachment with Base64 encoding
 - Real-time form validation
+
+### Monthly Report Print Page (/print)
+- **Printable monthly reports** with dynamic data fetching
+- **PDF Export**: Export reports to PDF using jsPDF and html2canvas
+  - Progress indicator during PDF generation
+  - oklch to hex color conversion for PDF compatibility
+  - Scoped styles to prevent layout issues
+- **Category Pie Chart**: Custom pie chart with label rendering
+- **Section Selector**: Choose which sections to include (Overview, Charts, Staff, Outliers)
+- **LocalStorage Persistence**: Remembers your section preferences
+- **Refresh Functionality**: Spin animation for data refresh
 
 ### Technical Highlights
 - **Per-Person Outlier Detection**: Each staff member has their own statistical threshold
@@ -58,6 +71,13 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
   - Charts adjust height (250px mobile, 300px desktop)
   - Typography scales appropriately (text-xs sm:text-sm for labels)
 - **Auth-Ready Architecture**: Mock authentication structure prepared for NextAuth.js, Clerk, Auth0, or Supabase
+- **Refresh Functionality**: Spin animation for dashboard data refresh with visual feedback
+- **Monthly Report & PDF Export**: Print page (`/print`) with dynamic data fetching and PDF generation
+  - PDF export using jsPDF and html2canvas with progress indicator
+  - Category pie chart with custom label rendering
+  - Section selector dropdown with localStorage persistence
+  - oklch to hex color conversion for PDF compatibility
+- **Status Filter Enhancement**: Excludes 'unsent' tickets from queries for cleaner statistics
 
 ## Tech Stack
 
@@ -68,6 +88,7 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 | Styling | Tailwind CSS |
 | UI Components | shadcn/ui |
 | Charts | Recharts |
+| PDF Export | jsPDF, html2canvas |
 | Authentication | Placeholder (prepared for NextAuth.js, Clerk, etc.) |
 | Database | Microsoft SQL Server via mssql |
 | Integration | n8n workflow automation |
@@ -105,6 +126,7 @@ n8n-auto-ticket-dashboard/
 │   │   ├── auth/          # Authentication components
 │   │   └── dashboard/     # Dashboard components
 │   ├── lib/               # Utilities
+│   ├── print/             # Monthly report print page
 │   └── types/             # TypeScript types
 ├── repository/            # Database access layer
 └── public/                # Static assets
@@ -368,6 +390,12 @@ The project includes custom test utilities in `__tests__/utils/test-utils.tsx`:
 - ✅ Outlier flag display working across all modals
 - ✅ WCAG-compliant accessibility (keyboard navigation, ARIA labels, reduced motion)
 - ✅ Smooth animations with count-up effects and entrance transitions
+- ✅ Refresh functionality with spin animation for dashboard data
+- ✅ Monthly report print page with dynamic data fetching
+- ✅ PDF export with jsPDF and html2canvas
+- ✅ Category pie chart with custom label rendering
+- ✅ Section selector dropdown with localStorage persistence
+- ✅ Status filter enhancement excludes 'unsent' tickets
 
 ### Writing New Tests
 
