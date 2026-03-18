@@ -22,8 +22,8 @@ const CHART_COLORS = [
 
 export default function PieChartSection({ title, data, total, customTitle }: PieChartSectionProps) {
   const displayTitle = customTitle || title
-  const chartData = data
-    .filter(item => item.count > 0)
+  const filteredData = data.filter(item => item.count > 0)
+  const chartData = filteredData
     .map((item, index) => ({
       name: item.name,
       value: item.count,
@@ -79,18 +79,18 @@ export default function PieChartSection({ title, data, total, customTitle }: Pie
             </tr>
           </thead>
           <tbody>
-            {data.filter(item => item.count > 0).map((item, index) => (
+            {filteredData.map((item, index) => (
               <tr key={item.id} className="border-b border-neutral-300">
                 <td className="py-3 px-4 text-neutral-700">{index + 1}</td>
                 <td className="py-3 px-4 text-neutral-900">{item.name}</td>
                 <td className="py-3 px-4 text-neutral-900 text-right">{item.count}</td>
                 <td className="py-3 px-4 text-neutral-900 text-right">
-                  {((item.count / total) * 100).toFixed(1)}
+                  {total > 0 ? ((item.count / total) * 100).toFixed(1) : '0.0'}
                 </td>
               </tr>
             ))}
             <tr className="border-t-2 border-neutral-400 font-bold bg-neutral-50">
-              <td className="py-3 px-4 text-neutral-900" colSpan={2}>Grand Total</td>
+              <td className="py-3 px-4 text-neutral-900" colSpan={2}>รวมทั้งหมด</td>
               <td className="py-3 px-4 text-neutral-900 text-right">{total}</td>
               <td className="py-3 px-4 text-neutral-900 text-right">100.0</td>
             </tr>
