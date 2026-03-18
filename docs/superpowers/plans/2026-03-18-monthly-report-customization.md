@@ -733,9 +733,17 @@ This chunk integrates all the new components into the print page and adds the co
 **Files:**
 - Modify: `app/report/print/page.tsx`
 
-- [ ] **Step 1: Add imports and state for custom configuration**
+- [ ] **Step 1: Add imports for new components and utilities**
 
-Replace lines 1-34 with:
+Add these imports after line 4 (after useSearchParams import):
+
+```typescript
+import { loadSectionPreferences, saveSectionPreferences } from '@/lib/reportSections'
+import { loadCustomNames, mergeCustomNames, getSectionDisplayName, getChartDisplayName } from '@/lib/reportConfig'
+import PageHeader from '@/components/dashboard/report/PageHeader'
+import PieChartSection from '@/components/dashboard/report/PieChartSection'
+import ReportConfigModal from '@/components/dashboard/ReportConfigModal'
+```
 
 ```typescript
 'use client'
@@ -780,37 +788,16 @@ const CHART_COLORS = [
 
 - [ ] **Step 2: Add state and load custom names in PrintReportContent**
 
-Replace lines 36-60 with:
+Add state after line 40 (after existing useState declarations):
 
 ```typescript
-function PrintReportContent() {
-  const searchParams = useSearchParams()
-  const year = Number(searchParams.get('year')) || new Date().getFullYear()
-  const month = Number(searchParams.get('month')) || new Date().getMonth() + 1
-
-  const [reportData, setReportData] = useState<ReportData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
-  const [sectionConfig, setSectionConfig] = useState(loadSectionPreferences)
+  const [sectionConfig, setSectionConfig] = useState<ReportSectionConfig[]>(loadSectionPreferences())
+```
 
-  useEffect(() => {
-    const fetchReport = async () => {
-      try {
-        const res = await fetch(`/api/dashboard/report?year=${year}&month=${month}`)
-        if (!res.ok) throw new Error('Failed to fetch report')
-        const data = await res.json()
-        setReportData(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error')
-      } finally {
-        setLoading(false)
-      }
-    }
+Add effect to load custom names after the fetchReport useEffect (around line 60):
 
-    fetchReport()
-  }, [year, month])
-
+```typescript
   // Load custom names on mount
   useEffect(() => {
     const customNames = loadCustomNames()
@@ -818,15 +805,56 @@ function PrintReportContent() {
     setSectionConfig(merged)
   }, [])
 
-  const handleConfigSave = (newConfig: typeof sectionConfig) => {
+  const handleConfigSave = (newConfig: ReportSectionConfig[]) => {
     setSectionConfig(newConfig)
-    // Trigger re-render by updating state
+    saveSectionPreferences(newConfig) // Persist enabled/disabled state
   }
+```
 ```
 
 - [ ] **Step 3: Add config button to header**
 
-Replace the header div (lines 98-117) with:
+Replace lines 103-108 (the div with flex justify-center gap-4) to add the settings button:
+
+```typescript
+        <div className="flex justify-center gap-4 flex-wrap">
+          <button
+            onClick={() => setShowConfigModal(true)}
+            className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300 transition-colors text-sm flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            ตั้งค่ารายงาน
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            พิมพ์ / Save as PDF
+          </button>
+          <button
+            onClick={() => window.close()}
+            className="px-6 py-2 bg-neutral-500 text-white rounded-lg hover:bg-neutral-600"
+          >
+            ปิดหน้าต่าง
+          </button>
+        </div>
+```
+
+Add after the header div (after line 117):
+
+```typescript
+
+      {/* Config Modal */}
+      <ReportConfigModal
+        isOpen={showConfigModal}
+        onClose={() => setShowConfigModal(false)}
+        onSave={handleConfigSave}
+        sections={sectionConfig}
+      />
+```
 
 ```typescript
       {/* Header - no print */}
@@ -871,7 +899,87 @@ Replace the header div (lines 98-117) with:
 
 - [ ] **Step 4: Update section rendering with AND logic and custom names**
 
-Replace the sections rendering (lines 143-201) with:
+Replace each section block (lines 143-156, 158-171, 173-186, 188-201) to use the section config with AND logic:
+
+Section 1 (lines 143-156):
+```typescript
+        {/* Section 1: Category */}
+        {sectionConfig.find(s => s.id === 'section1')?.enabled && reportData.totals.section1 > 0 && (
+          <div className="print-page page-break-after">
+            <PageHeader
+              title={`Ticket ${reportData.monthNameEnglish} ${reportData.year}`}
+              subtitle="ส่วนที่ 1: ภาพรวม Ticket ทั้งหมด"
+              customTitle={getSectionDisplayName(sectionConfig.find(s => s.id === 'section1')!)}
+            />
+            <PieChartSection
+              title="Category"
+              data={reportData.section1}
+              total={reportData.totals.section1}
+              customTitle={getChartDisplayName(sectionConfig.find(s => s.id === 'section1')!)}
+            />
+          </div>
+        )}
+```
+
+Section 2 (lines 158-171):
+```typescript
+        {/* Section 2: Software */}
+        {sectionConfig.find(s => s.id === 'section2')?.enabled && reportData.totals.section2 > 0 && (
+          <div className="print-page page-break-after">
+            <PageHeader
+              title={`Software ${reportData.totals.section2} Tickets`}
+              subtitle="ส่วนที่ 2: เจาะลึกหมวด Software"
+              customTitle={getSectionDisplayName(sectionConfig.find(s => s.id === 'section2')!)}
+            />
+            <PieChartSection
+              title="Software"
+              data={reportData.section2}
+              total={reportData.totals.section2}
+              customTitle={getChartDisplayName(sectionConfig.find(s => s.id === 'section2')!)}
+            />
+          </div>
+        )}
+```
+
+Section 3 (lines 173-186):
+```typescript
+        {/* Section 3: Sub Services */}
+        {sectionConfig.find(s => s.id === 'section3')?.enabled && reportData.totals.section3 > 0 && (
+          <div className="print-page page-break-after">
+            <PageHeader
+              title={`Software ${reportData.totals.section3} Tickets`}
+              subtitle="ส่วนที่ 3: การจัดกลุ่มปัญหา Software"
+              customTitle={getSectionDisplayName(sectionConfig.find(s => s.id === 'section3')!)}
+            />
+            <PieChartSection
+              title="Sub Services"
+              data={reportData.section3}
+              total={reportData.totals.section3}
+              customTitle={getChartDisplayName(sectionConfig.find(s => s.id === 'section3')!)}
+            />
+          </div>
+        )}
+```
+
+Section 4 (lines 188-201):
+```typescript
+        {/* Section 4: POS/RATE Causes */}
+        {sectionConfig.find(s => s.id === 'section4')?.enabled && reportData.totals.section4 > 0 && (
+          <div className="print-page">
+            <PageHeader
+              title={`POS/RATE Error ${reportData.section3.find((s: ReportSectionItem) => s.id === 'pos_rate_error')?.count || 0} Tickets`}
+              subtitle="สาเหตุของ POS/RATE Error"
+              customTitle={getSectionDisplayName(sectionConfig.find(s => s.id === 'section4')!)}
+            />
+            <PieChartSection
+              title="Causes"
+              data={reportData.section4}
+              total={reportData.totals.section4}
+              customTitle={getChartDisplayName(sectionConfig.find(s => s.id === 'section4')!)}
+            />
+          </div>
+        )}
+```
 
 ```typescript
         {/* Section 1: Category */}
@@ -945,7 +1053,9 @@ Replace the sections rendering (lines 143-201) with:
 
 - [ ] **Step 5: Remove inline components**
 
-Delete lines 222-309 (the old inline PageHeader and PieChartSection functions) as they are now in separate files.
+Delete the inline component definitions (lines 222-309: `function PageHeader...` and `function PieChartSection...`) as they are now in separate files:
+- `app/components/dashboard/report/PageHeader.tsx`
+- `app/components/dashboard/report/PieChartSection.tsx`
 
 - [ ] **Step 6: Run type check and build**
 
