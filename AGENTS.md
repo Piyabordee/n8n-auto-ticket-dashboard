@@ -1,9 +1,9 @@
 # IT Helpdesk Dashboard - Project Context
 
-> **Version**: 1.11.0
+> **Version**: 1.12.0
 > **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
 > **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
-> **Last Updated**: 2026-03-18 - Monthly Report & PDF Export Enhancement
+> **Last Updated**: 2026-03-19 - Monthly Report Customization Enhancement
 
 ---
 
@@ -391,6 +391,123 @@ const [selectedSections, setSelectedSections] = useState<string[]>(() => {
 - `/api/dashboard/tickets` - Excludes unsent tickets
 - `/api/dashboard/monthly-tickets` - Excludes unsent tickets
 
+### Feature 21: Monthly Report Modal (Version 1.12.0)
+**Comprehensive monthly report modal with customization**
+
+**Component**: `app/components/dashboard/MonthlyReportModal.tsx`
+
+**Features**:
+- **Modal Rendering**: Uses createPortal to avoid layout issues
+- **Report Sections**: Four sections with pie charts and data tables
+  - Section 1: Overall Ticket Summary (by Category)
+  - Section 2: Software Deep Dive (by Software Sub-category)
+  - Section 3: Software Problem Grouping (by Hardware Sub-category)
+  - Section 4: POS/RATE Error Causes (by Close Cause)
+- **Settings Button**: Opens ReportConfigModal for customization
+- **Print Button**: Opens print page for PDF export
+- **Focus Trap**: Proper keyboard navigation within modal
+- **Backdrop Click**: Close modal when clicking outside
+- **Animation**: Smooth entrance/exit animations
+
+**Props**:
+- isOpen, onClose, year, month
+
+### Feature 22: Report Configuration Modal (Version 1.12.0)
+**Modal for customizing monthly report sections and charts**
+
+**Component**: `app/components/dashboard/ReportConfigModal.tsx`
+
+**Features**:
+- **Section Visibility**: Toggle which sections appear in report
+- **Multi-Select Section Names**: Choose multiple categories/sub-categories for each section
+- **Multi-Select Chart Names**: Customize pie chart titles with multiple selections
+- **Select All Checkbox**: Quick selection for all options in a dropdown
+- **Dynamic Options**: Fetches dropdown options from database based on year/month
+- **Reset Confirmation**: Confirm before resetting all custom names
+- **Accessibility**: Proper ARIA labels, keyboard navigation, focus management
+
+**Props**:
+- isOpen, onClose, onSave, sections, year, month
+
+### Feature 23: Report Config Utility (Version 1.12.0)
+**Utility library for managing custom report names**
+
+**File**: `app/lib/reportConfig.ts`
+
+**Functions**:
+- `loadCustomNames()`: Load custom names from localStorage
+- `saveCustomNames(names)`: Save custom names to localStorage
+- `resetCustomNames()`: Clear all custom names
+- `getSectionDisplayName(config)`: Get display name for section header
+- `getChartDisplayName(config)`: Get display name for chart
+- `mergeCustomNames(sections, customNames)`: Merge custom names into sections
+- `extractCustomNames(sections)`: Extract custom names for saving
+
+**LocalStorage Key**: `monthly-report-section-names`
+
+**DEFAULT_CHART_TITLES**:
+- section1: 'Category'
+- section2: 'Software'
+- section3: 'Sub Services'
+- section4: 'Causes'
+
+### Feature 24: Data Filtering by Custom Names (Version 1.12.0)
+**Filter report data based on selected custom section names**
+
+**How It Works**:
+- When custom section names are selected, report API is called with filter parameters
+- Section filters map to database fields:
+  - section1Filter → category
+  - section2Filter → sub_category (Software)
+  - section3Filter → sub_category (Hardware)
+  - section4Filter → close_cause
+- Multiple values are comma-separated in API call
+- Server filters data based on selected values
+
+**API**: `/api/dashboard/report` supports:
+- `section1Filter`: Comma-separated category names
+- `section2Filter`: Comma-separated software sub-categories
+- `section3Filter`: Comma-separated hardware sub-categories
+- `section4Filter`: Comma-separated close causes
+
+### Feature 25: Report Options API (Version 1.12.0)
+**API endpoint for fetching dropdown options**
+
+**Endpoint**: `GET /api/dashboard/report/options`
+
+**Query Params**:
+- year (required): Year for data filtering
+- month (required): Month for data filtering
+
+**Returns**:
+```json
+{
+  "categories": ["Hardware", "Software", ...],
+  "subCategoriesSoftware": ["Installation", "License", ...],
+  "subCategoriesHardware": ["Monitor", "Keyboard", ...],
+  "closeCauses": ["User Error", "System Bug", ...]
+}
+```
+
+**Usage**: Populates dropdown options in ReportConfigModal
+
+### Feature 26: createPortal Modal Rendering (Version 1.12.0)
+**Proper modal rendering using React Portal**
+
+**How It Works**:
+- Uses `ReactDOM.createPortal()` to render modals outside the DOM hierarchy
+- Prevents z-index and overflow issues with nested components
+- Modals render to a dedicated portal container at document.body level
+
+**Benefits**:
+- Avoids layout issues with parent containers
+- Proper z-index stacking for nested modals
+- CSS isolation from parent components
+
+**Files**:
+- All modal components now use portal rendering
+- ModalProvider manages portal container
+
 ---
 
 ## 4. API Endpoints
@@ -449,6 +566,17 @@ Single ticket detail with full information.
 Available years and months.
 - Returns: years array, months array
 - **New**: Each ticket now includes `is_outlier` field for proper red styling
+
+#### GET /api/dashboard/report
+Monthly report data with optional filters.
+- Query: year (required), month (required), section1Filter?, section2Filter?, section3Filter?, section4Filter?
+- Returns: Report data with sections filtered by custom names
+- **Filters**: Comma-separated values for category, sub-category, close_cause
+
+#### GET /api/dashboard/report/options
+Dropdown options for report configuration.
+- Query: year (required), month (required)
+- Returns: categories, subCategoriesSoftware, subCategoriesHardware, closeCauses
 
 ### 4.3 Admin APIs
 
@@ -536,6 +664,20 @@ Used in: /api/dashboard/staff, /api/tickets
 ### TicketDetailModal
 - isOpen, onClose, messageId
 - Shows close_cause and close_reason fields in basic section
+
+### MonthlyReportModal
+- isOpen, onClose, year, month
+- Comprehensive monthly report with four sections
+- Settings button for ReportConfigModal
+- Print button for PDF export
+- Uses createPortal for proper modal rendering
+
+### ReportConfigModal
+- isOpen, onClose, onSave, sections, year, month
+- Modal for customizing report sections and chart titles
+- Multi-select dropdowns with Select All checkbox
+- Fetches dropdown options from database
+- Reset confirmation dialog
 
 ---
 
@@ -735,6 +877,55 @@ Custom pie chart with label rendering:
 - Responsive: 250px mobile, 300px desktop
 - Legend with percentages
 - Accessibility: ARIA labels
+
+### Monthly Report Modal (2026-03-19):
+Comprehensive monthly report modal with customization:
+- `app/components/dashboard/MonthlyReportModal.tsx`
+- Four report sections with pie charts and data tables
+- Settings button for ReportConfigModal
+- Print button for PDF export
+- Focus trap and backdrop click handling
+- Smooth entrance/exit animations
+- Uses createPortal for proper modal rendering
+
+### Report Configuration Modal (2026-03-19):
+Modal for customizing monthly report sections and charts:
+- `app/components/dashboard/ReportConfigModal.tsx`
+- Section visibility toggles
+- Multi-select dropdowns for section and chart names
+- Select All checkbox for quick selection
+- Dynamic dropdown options fetched from database
+- Reset confirmation dialog
+- Accessibility: ARIA labels, keyboard navigation
+
+### Report Config Utility (2026-03-19):
+Utility library for managing custom report names:
+- `app/lib/reportConfig.ts`
+- LocalStorage persistence for custom names
+- Functions: loadCustomNames, saveCustomNames, resetCustomNames
+- Display name helpers: getSectionDisplayName, getChartDisplayName
+- Merge and extract utilities for custom names
+
+### Data Filtering by Custom Names (2026-03-19):
+Filter report data based on selected custom section names:
+- Custom names map to database fields (category, sub_category, close_cause)
+- Multiple values sent as comma-separated in API call
+- `/api/dashboard/report` accepts section filter parameters
+- Server filters data based on selected values
+
+### Report Options API (2026-03-19):
+API endpoint for fetching dropdown options:
+- `/api/dashboard/report/options`
+- Returns: categories, subCategoriesSoftware, subCategoriesHardware, closeCauses
+- Filters by year/month for relevant data
+- Populates dropdown options in ReportConfigModal
+
+### createPortal Modal Rendering (2026-03-19):
+Proper modal rendering using React Portal:
+- All modals now use ReactDOM.createPortal()
+- Renders modals outside DOM hierarchy at document.body level
+- Prevents z-index and overflow issues with nested components
+- CSS isolation from parent containers
 
 ---
 
