@@ -10,7 +10,7 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 
 **Built with 99% Vibe Code (AI-assisted development)** - This project demonstrates the power of AI-assisted software development.
 
-**Latest Version**: 1.11.0 (2026-03-18) - Monthly Report & PDF Export Enhancement
+**Latest Version**: 1.12.0 (2026-03-19) - Monthly Report Customization Enhancement
 
 ## Features
 
@@ -32,6 +32,17 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 - Branch selection with hierarchical data
 - Image attachment with Base64 encoding
 - Real-time form validation
+
+### Monthly Report Modal (Dashboard)
+- **Monthly Report Modal**: Access from dashboard with comprehensive report view
+- **Report Configuration Modal**: Customize report sections and chart titles
+  - Multi-select dropdowns for section and chart names
+  - Select All checkbox for quick selection
+  - Data filtering by custom section names
+  - LocalStorage persistence for custom names
+- **Dynamic Data Fetching**: Filters report data based on selected custom names
+- **Settings Button**: Quick access to report customization
+- **Print Button**: Export to print page for PDF generation
 
 ### Monthly Report Print Page (/print)
 - **Printable monthly reports** with dynamic data fetching
@@ -77,6 +88,12 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
   - Category pie chart with custom label rendering
   - Section selector dropdown with localStorage persistence
   - oklch to hex color conversion for PDF compatibility
+- **Monthly Report Customization**: Comprehensive report configuration modal
+  - Multi-select dropdowns for section and chart names with Select All checkbox
+  - Data filtering by custom section names (categories, sub-categories, close causes)
+  - LocalStorage persistence for custom names across sessions
+  - Dynamic dropdown options fetched from database
+  - createPortal for proper modal rendering to avoid layout issues
 - **Status Filter Enhancement**: Excludes 'unsent' tickets from queries for cleaner statistics
 
 ## Tech Stack
@@ -145,6 +162,8 @@ n8n-auto-ticket-dashboard/
 | /api/dashboard/tickets | GET | year, month?, filterType, staffName?, status?, search? | Filtered list with global search support |
 | /api/dashboard/monthly-tickets | GET | - | Available years and months with is_outlier flag |
 | /api/dashboard/ticket/[message_id] | GET | year, month? | Single ticket details |
+| /api/dashboard/report | GET | year, month, section1Filter?, section2Filter?, section3Filter?, section4Filter? | Monthly report data with optional filters |
+| /api/dashboard/report/options | GET | year, month | Dropdown options for report configuration |
 
 ## Database Schema
 
@@ -396,6 +415,13 @@ The project includes custom test utilities in `__tests__/utils/test-utils.tsx`:
 - ✅ Category pie chart with custom label rendering
 - ✅ Section selector dropdown with localStorage persistence
 - ✅ Status filter enhancement excludes 'unsent' tickets
+- ✅ Monthly report modal with customization features
+- ✅ Report configuration modal with multi-select dropdowns
+- ✅ Select All checkbox for quick selection
+- ✅ Data filtering by custom section names
+- ✅ Report options API for dynamic dropdown values
+- ✅ createPortal modal rendering for proper layout
+- ✅ LocalStorage persistence for custom names
 
 ### Writing New Tests
 
