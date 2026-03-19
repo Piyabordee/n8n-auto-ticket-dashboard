@@ -154,14 +154,14 @@ export default function InlineDailyChart({
           <Legend />
           <Bar
             dataKey="closed"
-            fill="#3b82f6"
+            fill="oklch(0.55 0.080 260)"
             name="ปิดแล้ว"
             stackId="1"
             onClick={(data) => onDayClick?.(data.payload?.day)}
           />
           <Bar
             dataKey="pending"
-            fill="#ef4444"
+            fill="oklch(0.52 0.125 25)"
             name="ยังไม่ปิด"
             stackId="1"
             onClick={(data) => onDayClick?.(data.payload?.day)}
