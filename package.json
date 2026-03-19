@@ -1,19 +1,30 @@
 {
-  "name": "liff-it-helpdesk",
-  "version": "0.1.0",
+  "name": "n8n-auto-ticket-dashboard",
+  "version": "1.12.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 5000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test": "vitest run",
+    "test:unit": "vitest run __tests__/unit",
+    "test:unit:watch": "vitest __tests__/unit",
+    "test:integration": "vitest run __tests__/integration",
+    "test:integration:watch": "vitest __tests__/integration",
+    "test:security": "vitest run __tests__/security",
+    "test:security:watch": "vitest __tests__/security",
+    "test:performance": "vitest run __tests__/performance",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "test:e2e:headed": "playwright test --headed"
+    "test:e2e:headed": "playwright test --headed",
+    "test:load": "k6 run tests/load/k6-load-test.js",
+    "test:load:spike": "k6 run tests/load/k6-spike-test.js",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e",
+    "test:ci": "vitest run --coverage && playwright test"
   },
   "dependencies": {
     "html2canvas": "^1.4.1",
@@ -36,12 +47,14 @@
     "@types/node": "^20.11.6",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^1.4.0",
     "autoprefixer": "^10.4.16",
-    "jest-environment-jsdom": "^30.2.0",
+    "jsdom": "^24.0.0",
     "msw": "^2.12.10",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.4.0",
-    "ts-jest": "^29.4.6",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.2",
+    "vitest": "^1.4.0"
   }
 }

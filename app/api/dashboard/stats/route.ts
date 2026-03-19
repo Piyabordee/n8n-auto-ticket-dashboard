@@ -1,30 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
-import { getConnection } from '../../../lib/sql'
+import { getConnection } from '@/lib/sql'
 import { generateDashboardStats } from '@/data/mockData'
+import { validateYear, validateMonth, validationError } from '@/lib/apiValidation'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
-  const year = searchParams.get('year')
-  const month = searchParams.get('month')
+  const yearParam = searchParams.get('year')
+  const monthParam = searchParams.get('month')
+
+  // Validate year parameter
+  const year = validateYear(yearParam)
+  if (year === null && yearParam !== null) {
+    return validationError('Invalid year parameter')
+  }
+
+  if (!year) {
+    return validationError('Year parameter is required')
+  }
+
+  // Validate month parameter (optional)
+  let month: number | undefined = undefined
+  if (monthParam) {
+    const validatedMonth = validateMonth(monthParam)
+    if (validatedMonth === null) {
+      return validationError('Invalid month parameter')
+    }
+    month = validatedMonth
+  }
 
   // Use mock data if USE_MOCK_DATA is enabled
   if (process.env.USE_MOCK_DATA === 'true') {
-    const currentYear = year ? parseInt(year) : new Date().getFullYear()
-    const currentMonth = month ? parseInt(month) : undefined
-    return NextResponse.json(generateDashboardStats(currentYear, currentMonth))
+    return NextResponse.json(generateDashboardStats(year, month))
   }
 
   try {
     const pool = await getConnection()
 
     // Build date range
-    const currentYear = year ? parseInt(year) : new Date().getFullYear()
-    const startMonth = month ? parseInt(month) : 1
-    const endMonth = month ? parseInt(month) : 12
+    const startMonth = month || 1
+    const endMonth = month || 12
 
-    const startDate = new Date(currentYear, startMonth - 1, 1)
-    const endDate = new Date(currentYear, endMonth, 0, 23, 59, 59)
+    const startDate = new Date(year, startMonth - 1, 1)
+    const endDate = new Date(year, endMonth, 0, 23, 59, 59)
 
     // Run all queries in parallel for better performance
     const [totalResult, closedResult, avgTimeResult, pendingResult] = await Promise.all([
@@ -87,9 +105,7 @@ export async function GET(request: NextRequest) {
     console.error('Stats API Error:', error)
     // Fallback to mock data if database connection fails
     console.log('Falling back to mock data due to database error')
-    const currentYear = year ? parseInt(year) : new Date().getFullYear()
-    const currentMonth = month ? parseInt(month) : undefined
-    return NextResponse.json(generateDashboardStats(currentYear, currentMonth))
+    return NextResponse.json(generateDashboardStats(year, month))
   }
   // Don't close the pool - let it be reused for subsequent requests
 }

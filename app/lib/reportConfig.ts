@@ -44,15 +44,17 @@ export function loadCustomNames(): CustomNamesConfig {
 
 /**
  * Save custom names to localStorage
+ * Returns false if save fails
  */
-export function saveCustomNames(names: CustomNamesConfig): void {
-  if (typeof window === 'undefined') return
+export function saveCustomNames(names: CustomNamesConfig): boolean {
+  if (typeof window === 'undefined') return false
 
   try {
     localStorage.setItem(NAMES_STORAGE_KEY, JSON.stringify(names))
+    return true
   } catch (error) {
     console.error('Failed to save custom names:', error)
-    throw error
+    return false
   }
 }
 

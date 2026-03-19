@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
 import { generateTickets } from '@/data/mockData'
-import { getConnection } from '../../../lib/sql'
-import { ensureOutlierInitialized } from '../../../lib/apiInitializer'
+import { getConnection } from '@/lib/sql'
+import { ensureOutlierInitialized } from '@/lib/apiInitializer'
+import { validateYear, validateMonth, validateSearch, validationError } from '@/lib/apiValidation'
 
 // Use shared connection from lib/sql
 async function getPool() {
@@ -11,28 +12,42 @@ async function getPool() {
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
-  const year = searchParams.get('year')
-  const month = searchParams.get('month')
+  const yearParam = searchParams.get('year')
+  const monthParam = searchParams.get('month')
   const status = searchParams.get('status') || 'all'
   const staff = searchParams.get('staff')
   const day = searchParams.get('day')
-  const search = searchParams.get('search')?.trim() || ''
+  const searchParam = searchParams.get('search')
 
   // Validate year parameter
-  const currentYear = year ? parseInt(year) : new Date().getFullYear()
-  if (isNaN(currentYear) || currentYear < 2020 || currentYear > 2100) {
-    return NextResponse.json(
-      { error: 'Invalid year parameter' },
-      { status: 400 }
-    )
+  const year = validateYear(yearParam)
+  if (year === null && yearParam !== null) {
+    return validationError('Invalid year parameter')
+  }
+
+  if (!year) {
+    return validationError('Year parameter is required')
+  }
+
+  // Validate month parameter (optional)
+  let month: number | undefined = undefined
+  if (monthParam) {
+    const validatedMonth = validateMonth(monthParam)
+    if (validatedMonth === null) {
+      return validationError('Invalid month parameter')
+    }
+    month = validatedMonth
   }
 
   // Validate status parameter
   if (status !== 'all' && status !== 'pending' && status !== 'closed') {
-    return NextResponse.json(
-      { error: 'Invalid status parameter. Must be: all, pending, or closed' },
-      { status: 400 }
-    )
+    return validationError('Invalid status parameter. Must be: all, pending, or closed')
+  }
+
+  // Validate and sanitize search parameter
+  const search = validateSearch(searchParam)
+  if (searchParam !== null && search === null) {
+    return validationError('Invalid search parameter')
   }
 
   // Ensure outlier detection is initialized
@@ -40,7 +55,7 @@ export async function GET(request: NextRequest) {
 
   // Use mock data if USE_MOCK_DATA is enabled
   if (process.env.USE_MOCK_DATA === 'true') {
-    return NextResponse.json(generateTickets(currentYear, month ? parseInt(month) : undefined, status as 'all' | 'pending' | 'closed', staff || undefined, day ? parseInt(day) : undefined))
+    return NextResponse.json(generateTickets(year, month, status as 'all' | 'pending' | 'closed', staff || undefined, day ? parseInt(day) : undefined))
   }
 
   try {
@@ -66,23 +81,16 @@ export async function GET(request: NextRequest) {
     const requestQuery = pool.request()
 
     // Add year filter
-    const startDate = new Date(currentYear, 0, 1)
-    const endDate = new Date(currentYear, 11, 31, 23, 59, 59)
+    const startDate = new Date(year, 0, 1)
+    const endDate = new Date(year, 11, 31, 23, 59, 59)
     query += ` AND created_date >= @startDate AND created_date <= @endDate`
     requestQuery.input('startDate', sql.DateTime, startDate)
     requestQuery.input('endDate', sql.DateTime, endDate)
 
     // Add month filter if provided
     if (month) {
-      const monthNum = parseInt(month)
-      if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
-        return NextResponse.json(
-          { error: 'Invalid month parameter' },
-          { status: 400 }
-        )
-      }
-      const monthStart = new Date(currentYear, monthNum - 1, 1)
-      const monthEnd = new Date(currentYear, monthNum, 0, 23, 59, 59)
+      const monthStart = new Date(year, month - 1, 1)
+      const monthEnd = new Date(year, month, 0, 23, 59, 59)
       query += ` AND created_date >= @monthStart AND created_date <= @monthEnd`
       requestQuery.input('monthStart', sql.DateTime, monthStart)
       requestQuery.input('monthEnd', sql.DateTime, monthEnd)
@@ -92,11 +100,10 @@ export async function GET(request: NextRequest) {
     if (day) {
       const dayNum = parseInt(day)
       if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
-        return NextResponse.json(
-          { error: 'Invalid day parameter' },
-          { status: 400 }
-        )
+        return validationError('Invalid day parameter')
       }
+      query += ` AND DAY(created_date) = @day`
+      requestQuery.input('day', sql.Int, dayNum)
     }
 
     // Add status filter
@@ -106,17 +113,10 @@ export async function GET(request: NextRequest) {
       query += ` AND status = 'closed'`
     }
 
-    // Add staff filter
+    // Add staff filter (sanitize input)
     if (staff) {
       query += ` AND assigned_to = @staff`
       requestQuery.input('staff', sql.NVarChar, staff)
-    }
-
-    // Add day filter if provided
-    if (day) {
-      const dayNum = parseInt(day)
-      query += ` AND DAY(created_date) = @day`
-      requestQuery.input('day', sql.Int, dayNum)
     }
 
     // Add search filter - searches across multiple fields
@@ -137,9 +137,6 @@ export async function GET(request: NextRequest) {
 
     const result = await requestQuery.query(query)
 
-    // The is_outlier column is now stored in the database
-    // No need for dynamic calculation - just read the stored value
-
     const tickets = result.recordset.map((row: any) => ({
       message_id: row.message_id,
       subject: row.subject || '(No subject)',
@@ -151,7 +148,7 @@ export async function GET(request: NextRequest) {
       created_date: row.created_date ? row.created_date.toISOString() : null,
       assigned_date: row.assigned_date ? row.assigned_date.toISOString() : null,
       close_time_minute: row.close_time_minute || null,
-      is_outlier: row.is_outlier ? 1 : 0  // Read directly from database (convert to 1/0)
+      is_outlier: row.is_outlier ? 1 : 0
     }))
 
     return NextResponse.json({ tickets })
@@ -159,6 +156,6 @@ export async function GET(request: NextRequest) {
     console.error('Filtered tickets API Error:', error)
     // Fallback to mock data if database connection fails
     console.log('Falling back to mock data due to database error')
-    return NextResponse.json(generateTickets(currentYear, month ? parseInt(month) : undefined, status as 'all' | 'pending' | 'closed', staff || undefined, day ? parseInt(day) : undefined))
+    return NextResponse.json(generateTickets(year, month, status as 'all' | 'pending' | 'closed', staff || undefined, day ? parseInt(day) : undefined))
   }
 }
