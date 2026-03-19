@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
-// Base URL for Next.js API routes
-const API_BASE = '/api'
+// Base URL for API testing
+const API_BASE = 'http://localhost:5000/api'
 
 export const handlers = [
   // /api/dashboard/stats
@@ -310,6 +310,60 @@ export const handlers = [
         { value: 10, label: 'ต.ค.' },
         { value: 11, label: 'พ.ย.' },
         { value: 12, label: 'ธ.ค.' },
+      ],
+    })
+  }),
+
+  // /api/dashboard/report
+  http.get(`${API_BASE}/dashboard/report`, ({ request }) => {
+    const url = new URL(request.url)
+    const year = url.searchParams.get('year')
+    const month = url.searchParams.get('month')
+
+    if (!year || !month) {
+      return HttpResponse.json({ error: 'Year and month are required' }, { status: 400 })
+    }
+
+    return HttpResponse.json({
+      sections: [
+        {
+          id: 'section1',
+          name: 'Overall Ticket Summary',
+          nameThai: 'ภาพรวม Ticket ทั้งหมด',
+          data: [
+            { category: 'Hardware', count: 45, percentage: 45 },
+            { category: 'Software', count: 35, percentage: 35 },
+            { category: 'Network', count: 20, percentage: 20 },
+          ],
+        },
+        {
+          id: 'section2',
+          name: 'Software Deep Dive',
+          nameThai: 'เจาะลึกหมวด Software',
+          data: [
+            { sub_category: 'Installation', count: 15, percentage: 30 },
+            { sub_category: 'License', count: 10, percentage: 20 },
+            { sub_category: 'Configuration', count: 10, percentage: 20 },
+          ],
+        },
+        {
+          id: 'section3',
+          name: 'Software Problem Grouping',
+          nameThai: 'การจัดกลุ่มปัญหา Software',
+          data: [
+            { sub_category: 'Monitor', count: 12, percentage: 24 },
+            { sub_category: 'Keyboard', count: 8, percentage: 16 },
+          ],
+        },
+        {
+          id: 'section4',
+          name: 'POS/RATE Error Causes',
+          nameThai: 'สาเหตุของ POS/RATE Error',
+          data: [
+            { close_cause: 'User Error', count: 25, percentage: 50 },
+            { close_cause: 'System Bug', count: 15, percentage: 30 },
+          ],
+        },
       ],
     })
   }),

@@ -3,7 +3,7 @@
  * Converts characters like 🆃🅾🅲🅺🆃🅰🅲🅺 to TOCTACK
  */
 export function normalizeStylizedText(text: string): string {
-  if (!text) return text
+  if (!text) return ''
 
   // Mapping of stylized Unicode characters to regular ASCII
   const stylizedMap: Record<string, string> = {
