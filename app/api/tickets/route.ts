@@ -24,7 +24,7 @@ interface Ticket {
   created_date: string
   clean_text?: string
   fromuser?: string
-  assigned_to?: string
+  updated_by?: string
 }
 
 export async function GET(request: NextRequest) {
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
           branch_name,
           clean_text,
           fromuser,
-          assigned_to,
+          updated_by,
           created_date
         FROM [Dev_Born].[dbo].[ticket]
         WHERE message_id = @message_id
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       branch_name: row.branch_name || '-',
       clean_text: row.clean_text || undefined,
       fromuser: row.fromuser || undefined,
-      assigned_to: row.assigned_to ? normalizeStylizedText(row.assigned_to) : undefined,
+      updated_by: row.updated_by ? normalizeStylizedText(row.updated_by) : undefined,
       created_date: row.created_date ? new Date(row.created_date).toISOString() : new Date().toISOString()
     }
 
