@@ -1,9 +1,10 @@
 # Design: Migrate from assigned_to to updated_by
 
 **Date:** 2026-03-23
-**Status:** Draft
+**Status:** Approved (with minor recommendations incorporated)
 **Author:** Claude Code
 **Branch:** `feature/migrate-to-updated-by`
+**Review:** Approved by code-reviewer agent
 
 ---
 
@@ -63,6 +64,9 @@ Replace `assigned_to` with `updated_by` in all SQL queries:
 | `/api/dashboard/outliers` | Query uses `updated_by` |
 | `/api/dashboard/ticket/[message_id]` | Return `updated_by` in detail |
 | `/api/dashboard/report` | Group by `updated_by` |
+| `/api/dashboard/report/options` | Update to return `updated_by` values |
+| `/api/dashboard/staff` | Update all references to use `updated_by` |
+| `/api/dashboard/kpi` | Review if staff metrics need `updated_by` |
 
 ### 3. Types
 
@@ -71,14 +75,64 @@ Replace `assigned_to` with `updated_by` in all SQL queries:
 - [`types/ticket.ts`](../../types/ticket.ts)
 
 **Changes:**
-- Change `assigned_to: string` → `updated_by: string` in interfaces
-- Keep `assigned_to` as optional in `TicketDetail` (for reference)
+
+```typescript
+// types/ticket.ts - AFTER migration
+export interface TicketDetail {
+  // ... other fields
+  assigned_to?: string  // OPTIONAL - kept for historical reference/auditing
+  updated_by: string    // REQUIRED - primary field for KPI tracking
+}
+
+// types/outlier.ts - AFTER migration
+export interface OutlierTicket {
+  message_id: string
+  updated_by: string  // Changed from assigned_to
+  // ... other fields
+}
+```
+
+**Rationale:** We keep `assigned_to` as optional because it may be useful for auditing/tracking who initially received a ticket, but all KPI calculations will use `updated_by`.
 
 ---
 
 ## Database Changes
 
+### 0. Pre-Migration Verification (REQUIRED)
+
+**Run BEFORE any code changes:**
+
+```sql
+-- Verify updated_by column exists and has no NULL values
+SELECT
+    COUNT(*) as total_tickets,
+    COUNT(updated_by) as tickets_with_updated_by,
+    COUNT(*) - COUNT(updated_by) as tickets_without_updated_by
+FROM [Dev_Born].[dbo].[ticket]
+WHERE status != 'unsent'
+
+-- If tickets_without_updated_by > 0, migration CANNOT proceed safely
+-- Run data migration script first (see section 1.5 below)
+```
+
 ### 1. Index Migration
+
+**First, audit existing indexes:**
+
+```sql
+-- Find all indexes that include assigned_to or updated_by
+SELECT
+    i.name AS index_name,
+    i.type_desc,
+    STRING_AGG(c.name, ', ') AS included_columns
+FROM sys.indexes i
+INNER JOIN sys.tables t ON i.object_id = t.object_id
+INNER JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+INNER JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+WHERE t.name = 'ticket'
+AND c.name IN ('assigned_to', 'updated_by')
+GROUP BY i.name, i.type_desc
+```
 
 **File:** [`app/lib/sql.ts`](../../app/lib/sql.ts)
 
@@ -92,7 +146,26 @@ ON [Dev_Born].[dbo].[ticket](is_outlier)
 INCLUDE (message_id, updated_by, close_time_minute, created_date)
 ```
 
-### 2. Outlier Recalculation
+### 2. Data Migration Script (if needed)
+
+**Run IF pre-migration verification found NULL values:**
+
+```sql
+-- Fill NULL updated_by with assigned_to as fallback
+UPDATE [Dev_Born].[dbo].[ticket]
+SET updated_by = assigned_to
+WHERE updated_by IS NULL
+  AND assigned_to IS NOT NULL
+  AND status != 'unsent'
+
+-- Log any tickets that still have NULL updated_by (these need manual attention)
+SELECT COUNT(*) as orphan_tickets
+FROM [Dev_Born].[dbo].[ticket]
+WHERE updated_by IS NULL
+  AND status != 'unsent'
+```
+
+### 3. Outlier Recalculation
 
 When migrating to `updated_by`:
 - Trigger `recalculateAllOutliers()` for all tickets
@@ -100,13 +173,13 @@ When migrating to `updated_by`:
 - Update `is_outlier` column for every record
 - **Impact:** All historical outlier classifications will change based on new Per-Person Thresholds
 
-### 3. Initializer
+### 4. Initializer
 
 **File:** [`app/lib/outlierInitialization.ts`](../../app/lib/outlierInitialization.ts)
 
 - Startup service will automatically run `recalculateAllOutliers()` when server starts
 
-### 4. Admin Endpoint
+### 5. Admin Endpoint
 
 **File:** [`app/api/admin/recalc-outliers/route.ts`](../../app/api/admin/recalc-outliers/route.ts)
 
@@ -132,12 +205,27 @@ When migrating to `updated_by`:
 
 ### 2. Thai Label Changes
 
-Change throughout the entire system:
-- **"รับงานโดย" → "ปิดงานโดย"** (Assigned to → Closed by)
-- "ผลงานทีม" - No change
-- "Outlier ของ" - No change (but now refers to closer)
+**Complete label mapping:**
 
-### 3. API Calls
+| Context | Old Label | New Label |
+|---------|-----------|-----------|
+| Table headers | รับงานโดย | ปิดงานโดย |
+| Table headers | รับงาน | ปิดงาน |
+| Detail modal | ผู้รับงาน | ผู้ปิดงาน |
+| Column headers | Assigned to | Closed by |
+
+**Note:** "ผลงานทีม" and "Outlier ของ" remain unchanged, but now refer to the ticket closer.
+
+### 3. Props and API Parameters
+
+**Props remain the same name, but filter by different field:**
+
+| Component/Hook | Old Behavior | New Behavior |
+|----------------|-------------|--------------|
+| `TicketListModal` | `staffName` filters by `assigned_to` | `staffName` filters by `updated_by` |
+| API calls | `staffName` query param filters by `assigned_to` | `staffName` query param filters by `updated_by` |
+
+### 4. API Calls
 
 Change `staffName` query parameter to filter by `updated_by`
 
@@ -202,14 +290,30 @@ git push origin feature/migrate-to-updated-by
 
 ### Implementation Order
 
-1. **Types & Interfaces** - Change type definitions first
-2. **Database Layer** - Repository, SQL queries, Index migration
-3. **API Routes** - Update all routes
-4. **Mock Data & Tests** - Update test fixtures
-5. **Frontend Components** - Change all components
-6. **Thai Labels** - Change Thai text labels
-7. **Run Outlier Recalculation** - On actual database
-8. **Full Testing** - Test entire system
+1. **Pre-Migration Verification** - Verify DB schema (no NULL `updated_by`)
+2. **Types & Interfaces** - Change type definitions first
+3. **Database Layer** - Repository, SQL queries, Index migration
+4. **Data Migration Script** - Run if NULL values found (step 1)
+5. **API Routes** - Update all routes
+6. **Mock Data & Tests** - Update test fixtures
+7. **Frontend Components** - Change all components
+8. **Thai Labels** - Change Thai text labels
+9. **Run Outlier Recalculation** - On actual database
+10. **Full Testing** - Test entire system
+11. **Post-Migration Validation** - Verify data integrity
+
+### Testing Checklist
+
+- [ ] Dashboard displays Staff Performance correctly
+- [ ] Outlier Detection calculates with `updated_by` correctly
+- [ ] Search finds staff by `updated_by`
+- [ ] Ticket Detail displays `updated_by` correctly
+- [ ] Monthly Report summarizes by `updated_by` correctly
+- [ ] Mock Data works (fallback scenario)
+- [ ] All unit tests pass
+- [ ] Run test coverage report: `npm run test:coverage`
+- [ ] Test edge case: tickets where assigned_to ≠ updated_by
+- [ ] Verify query performance after index migration
 
 ### Testing Checklist
 
@@ -232,6 +336,50 @@ git revert -m 1 <merge-commit>
 # Or rollback to previous commit
 git reset --hard <previous-commit>
 ```
+
+### Post-Migration Validation
+
+**Run AFTER deployment:**
+
+```sql
+-- Verify all tickets have updated_by
+SELECT COUNT(*) as orphan_tickets
+FROM [Dev_Born].[dbo].[ticket]
+WHERE updated_by IS NULL AND status != 'unsent'
+-- Should return 0
+
+-- Verify new index exists
+SELECT name FROM sys.indexes
+WHERE name = 'IX_ticket_is_outlier_updated_by'
+-- Should return 1 row
+
+-- Verify outlier recalculation completed
+SELECT COUNT(*) as outliers_count
+FROM [Dev_Born].[dbo].[ticket]
+WHERE is_outlier = 1
+-- Should return a number > 0
+
+-- Sample check: compare old vs new metrics
+SELECT
+    COUNT(*) as total_tickets,
+    COUNT(DISTINCT updated_by) as unique_closers,
+    AVG(close_time_minute) as avg_close_time
+FROM [Dev_Born].[dbo].[ticket]
+WHERE status = 'closed' AND close_time_minute IS NOT NULL
+```
+
+### Documentation Updates
+
+**After successful migration, update:**
+- [`AGENTS.md`](../../AGENTS.md) - Change all `assigned_to` references to `updated_by`
+- [`CLAUDE.md`](../../CLAUDE.md) - Update feature descriptions
+- API documentation - Update parameter descriptions
+
+### User Communication
+
+**Prepare communication for users:**
+
+> "เราได้ปรับปรุงระบบให้คำนวณ KPI จาก 'ผู้ปิดงาน' (updated_by) แทน 'ผู้รับงานแรก' (assigned_to) เพื่อให้สะท้อนถึงผลงานที่แท้จริง หลังจากการอัปเดต ตัวเลข KPI อาจมีการเปลี่ยนแปลงเล็กน้อย"
 
 ---
 
@@ -267,3 +415,6 @@ git reset --hard <previous-commit>
 4. All Thai labels changed from "รับงานโดย" to "ปิดงานโดย"
 5. All tests pass (unit + integration)
 6. Manual testing confirms correct behavior
+7. Post-migration validation queries pass (0 orphan tickets, index exists)
+8. Documentation updated (AGENTS.md, CLAUDE.md)
+9. Users notified of KPI calculation changes
