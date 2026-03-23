@@ -6,7 +6,7 @@ import MonthlyTicketList from './MonthlyTicketList'
 interface Ticket {
   message_id: string
   subject: string
-  assigned_to: string
+  updated_by: string
   status: string
   category: string
   sub_category: string

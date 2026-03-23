@@ -6,7 +6,7 @@ import MonthlyTicketList from './MonthlyTicketList'
 interface Ticket {
   message_id: string
   subject: string
-  assigned_to: string
+  updated_by: string
   status: string
   category: string
   sub_category: string
@@ -153,7 +153,7 @@ export default function TicketListModal({
           const outlierTickets: Ticket[] = (data.outliers || []).map((o: any) => ({
             message_id: o.message_id,
             subject: o.subject,
-            assigned_to: o.assigned_to,
+            updated_by: o.updated_by,
             status: 'closed', // Outliers are tickets that took too long to close
             category: '-',
             sub_category: '-',

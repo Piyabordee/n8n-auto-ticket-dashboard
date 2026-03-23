@@ -123,8 +123,8 @@ export default function TicketDetailModal({
 
                   <div className="flex items-center gap-2">
                     <span>👤</span>
-                    <span className="font-medium">ผู้รับงาน:</span>
-                    <span>{ticket.assigned_to || '-'}</span>
+                    <span className="font-medium">ผู้ปิดงาน:</span>
+                    <span>{ticket.updated_by || '-'}</span>
                   </div>
 
                   <div className="flex items-center gap-2">

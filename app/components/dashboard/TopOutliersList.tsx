@@ -107,7 +107,7 @@ export default function TopOutliersList({ outliers = [], onViewAll, loading = fa
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-1">
                   <span className="text-xs sm:text-sm font-medium text-neutral-900">
-                    {outlier.assigned_to}
+                    {outlier.updated_by}
                   </span>
                   <span className="text-xs text-neutral-500">•</span>
                   <span className="text-xs text-neutral-500">
