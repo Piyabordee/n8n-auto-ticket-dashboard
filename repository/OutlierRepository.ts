@@ -61,7 +61,7 @@ export class OutlierRepository {
         -- Full year data for baseline calculation
         WITH full_year_base AS (
           SELECT
-            assigned_to,
+            updated_by,
             message_id,
             subject,
             created_date,
@@ -78,42 +78,42 @@ export class OutlierRepository {
         -- Calculate per-person median using PERCENTILE_CONT
         per_person_median AS (
           SELECT DISTINCT
-            assigned_to,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY assigned_to) AS personal_median,
-            COUNT(*) OVER (PARTITION BY assigned_to) AS ticket_count
+            updated_by,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY updated_by) AS personal_median,
+            COUNT(*) OVER (PARTITION BY updated_by) AS ticket_count
           FROM full_year_base
         ),
         -- Calculate absolute deviations from median
         absolute_deviations AS (
           SELECT
-            f.assigned_to,
+            f.updated_by,
             ABS(f.diff_minutes - m.personal_median) AS abs_deviation
           FROM full_year_base f
-          INNER JOIN per_person_median m ON f.assigned_to = m.assigned_to
+          INNER JOIN per_person_median m ON f.updated_by = m.updated_by
           WHERE m.ticket_count >= 2  -- Need at least 2 tickets
         ),
         -- Calculate MAD (Median of Absolute Deviations)
         per_person_mad AS (
           SELECT DISTINCT
-            assigned_to,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY assigned_to) AS personal_mad
+            updated_by,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY updated_by) AS personal_mad
           FROM absolute_deviations
         ),
         -- Combined stats: median + 15*MAD
         per_person_stats AS (
           SELECT
-            m.assigned_to,
+            m.updated_by,
             m.personal_median,
             mad.personal_mad,
             m.personal_median + (15 * mad.personal_mad) AS personal_threshold
           FROM per_person_median m
-          INNER JOIN per_person_mad mad ON m.assigned_to = mad.assigned_to
+          INNER JOIN per_person_mad mad ON m.updated_by = mad.updated_by
           WHERE m.ticket_count >= 2
         ),
         -- Filtered data (for results display)
         filtered_base AS (
           SELECT
-            assigned_to,
+            updated_by,
             message_id,
             subject,
             created_date,
@@ -139,7 +139,7 @@ export class OutlierRepository {
               ELSE 'Normal'
             END AS is_outlier
           FROM filtered_base b
-          LEFT JOIN per_person_stats s ON b.assigned_to = s.assigned_to
+          LEFT JOIN per_person_stats s ON b.updated_by = s.updated_by
         )
         SELECT *
         FROM classified
@@ -158,7 +158,7 @@ export class OutlierRepository {
     // Convert to OutlierTicket format
     const outliers: OutlierTicket[] = rows.map(row => ({
       message_id: row.message_id,
-      assigned_to: normalizeStylizedText(row.assigned_to),
+      updated_by: normalizeStylizedText(row.updated_by),
       subject: row.subject || '(No subject)',
       diff_minutes: row.diff_minutes,
       created_date: row.created_date.toISOString(),
@@ -202,7 +202,7 @@ export class OutlierRepository {
         -- Full year data for baseline
         WITH full_year_base AS (
           SELECT
-            assigned_to,
+            updated_by,
             message_id,
             subject,
             created_date,
@@ -219,42 +219,42 @@ export class OutlierRepository {
         -- Calculate per-person median
         per_person_median AS (
           SELECT DISTINCT
-            assigned_to,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY assigned_to) AS personal_median,
-            COUNT(*) OVER (PARTITION BY assigned_to) AS ticket_count
+            updated_by,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY updated_by) AS personal_median,
+            COUNT(*) OVER (PARTITION BY updated_by) AS ticket_count
           FROM full_year_base
         ),
         -- Calculate absolute deviations from median
         absolute_deviations AS (
           SELECT
-            f.assigned_to,
+            f.updated_by,
             ABS(f.diff_minutes - m.personal_median) AS abs_deviation
           FROM full_year_base f
-          INNER JOIN per_person_median m ON f.assigned_to = m.assigned_to
+          INNER JOIN per_person_median m ON f.updated_by = m.updated_by
           WHERE m.ticket_count >= 2
         ),
         -- Calculate MAD (Median of Absolute Deviations)
         per_person_mad AS (
           SELECT DISTINCT
-            assigned_to,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY assigned_to) AS personal_mad
+            updated_by,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY updated_by) AS personal_mad
           FROM absolute_deviations
         ),
         -- Combined stats: median + 15*MAD
         per_person_stats AS (
           SELECT
-            m.assigned_to,
+            m.updated_by,
             m.personal_median,
             mad.personal_mad,
             m.personal_median + (15 * mad.personal_mad) AS personal_threshold
           FROM per_person_median m
-          INNER JOIN per_person_mad mad ON m.assigned_to = mad.assigned_to
+          INNER JOIN per_person_mad mad ON m.updated_by = mad.updated_by
           WHERE m.ticket_count >= 2
         ),
         -- Filtered data for results
         filtered_base AS (
           SELECT
-            assigned_to,
+            updated_by,
             message_id,
             subject,
             created_date,
@@ -275,12 +275,12 @@ export class OutlierRepository {
             s.personal_mad,
             s.personal_threshold
           FROM filtered_base b
-          INNER JOIN per_person_stats s ON b.assigned_to = s.assigned_to
+          INNER JOIN per_person_stats s ON b.updated_by = s.updated_by
           WHERE b.diff_minutes > s.personal_threshold
         )
         SELECT TOP 3
           message_id,
-          assigned_to,
+          updated_by,
           subject,
           diff_minutes,
           created_date,
@@ -292,7 +292,7 @@ export class OutlierRepository {
 
     return result.recordset.map((row: any) => ({
       message_id: row.message_id,
-      assigned_to: normalizeStylizedText(row.assigned_to),
+      updated_by: normalizeStylizedText(row.updated_by),
       subject: row.subject || '(No subject)',
       diff_minutes: row.diff_minutes,
       created_date: row.created_date.toISOString(),
@@ -327,7 +327,7 @@ export class OutlierRepository {
         -- Full year data for baseline
         WITH full_year_base AS (
           SELECT
-            assigned_to,
+            updated_by,
             message_id,
             close_time_minute AS diff_minutes
           FROM [Dev_Born].[dbo].[ticket]
@@ -335,49 +335,49 @@ export class OutlierRepository {
             close_time_minute IS NOT NULL
             AND created_date >= @yearStartDate
             AND created_date <= @yearEndDate
-            AND assigned_to IS NOT NULL
-            AND assigned_to != ''
+            AND updated_by IS NOT NULL
+            AND updated_by != ''
             AND status != 'unsent'
         ),
         -- Calculate per-person median
         per_person_median AS (
           SELECT DISTINCT
-            assigned_to,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY assigned_to) AS personal_median,
-            COUNT(*) OVER (PARTITION BY assigned_to) AS ticket_count
+            updated_by,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY updated_by) AS personal_median,
+            COUNT(*) OVER (PARTITION BY updated_by) AS ticket_count
           FROM full_year_base
         ),
         -- Calculate absolute deviations from median
         absolute_deviations AS (
           SELECT
-            f.assigned_to,
+            f.updated_by,
             ABS(f.diff_minutes - m.personal_median) AS abs_deviation
           FROM full_year_base f
-          INNER JOIN per_person_median m ON f.assigned_to = m.assigned_to
+          INNER JOIN per_person_median m ON f.updated_by = m.updated_by
           WHERE m.ticket_count >= 2
         ),
         -- Calculate MAD (Median of Absolute Deviations)
         per_person_mad AS (
           SELECT DISTINCT
-            assigned_to,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY assigned_to) AS personal_mad
+            updated_by,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY updated_by) AS personal_mad
           FROM absolute_deviations
         ),
         -- Combined stats: median + 15*MAD
         per_person_stats AS (
           SELECT
-            m.assigned_to,
+            m.updated_by,
             m.personal_median,
             mad.personal_mad,
             m.personal_median + (15 * mad.personal_mad) AS personal_threshold
           FROM per_person_median m
-          INNER JOIN per_person_mad mad ON m.assigned_to = mad.assigned_to
+          INNER JOIN per_person_mad mad ON m.updated_by = mad.updated_by
           WHERE m.ticket_count >= 2
         ),
         -- Filtered data for results display - ALL tickets including pending
         filtered_base AS (
           SELECT
-            assigned_to,
+            updated_by,
             message_id,
             status,
             close_time_minute AS diff_minutes
@@ -385,14 +385,14 @@ export class OutlierRepository {
           WHERE
             created_date >= @filterStartDate
             AND created_date <= @filterEndDate
-            AND assigned_to IS NOT NULL
-            AND assigned_to != ''
+            AND updated_by IS NOT NULL
+            AND updated_by != ''
             AND status != 'unsent'
         ),
         classified AS (
           -- Classify each ticket based on FULL YEAR baseline
           SELECT
-            b.assigned_to,
+            b.updated_by,
             b.message_id,
             b.status,
             b.diff_minutes,
@@ -406,10 +406,10 @@ export class OutlierRepository {
               ELSE 0
             END AS is_outlier
           FROM filtered_base b
-          LEFT JOIN per_person_stats s ON b.assigned_to = s.assigned_to
+          LEFT JOIN per_person_stats s ON b.updated_by = s.updated_by
         )
         SELECT
-          CAST(assigned_to AS NVARCHAR(MAX)) as assigned_to,
+          CAST(updated_by AS NVARCHAR(MAX)) as updated_by,
           COUNT(*) as totalAssigned,
           SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as totalClosed,
           SUM(CASE WHEN status != 'closed' THEN 1 ELSE 0 END) as totalPending,
@@ -422,7 +422,7 @@ export class OutlierRepository {
           MAX(c.personal_mad) as personal_mad,
           MAX(c.personal_threshold) as personal_threshold
         FROM classified c
-        GROUP BY CAST(assigned_to AS NVARCHAR(MAX))
+        GROUP BY CAST(updated_by AS NVARCHAR(MAX))
         ORDER BY totalAssigned DESC
       `)
 
@@ -436,7 +436,7 @@ export class OutlierRepository {
         -- Full year data for baseline
         WITH full_year_base AS (
           SELECT
-            assigned_to,
+            updated_by,
             close_time_minute AS diff_minutes
           FROM [Dev_Born].[dbo].[ticket]
           WHERE
@@ -448,42 +448,42 @@ export class OutlierRepository {
         -- Calculate per-person median
         per_person_median AS (
           SELECT DISTINCT
-            assigned_to,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY assigned_to) AS personal_median,
-            COUNT(*) OVER (PARTITION BY assigned_to) AS ticket_count
+            updated_by,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY updated_by) AS personal_median,
+            COUNT(*) OVER (PARTITION BY updated_by) AS ticket_count
           FROM full_year_base
         ),
         -- Calculate absolute deviations from median
         absolute_deviations AS (
           SELECT
-            f.assigned_to,
+            f.updated_by,
             ABS(f.diff_minutes - m.personal_median) AS abs_deviation
           FROM full_year_base f
-          INNER JOIN per_person_median m ON f.assigned_to = m.assigned_to
+          INNER JOIN per_person_median m ON f.updated_by = m.updated_by
           WHERE m.ticket_count >= 2
         ),
         -- Calculate MAD (Median of Absolute Deviations)
         per_person_mad AS (
           SELECT DISTINCT
-            assigned_to,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY assigned_to) AS personal_mad
+            updated_by,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY updated_by) AS personal_mad
           FROM absolute_deviations
         ),
         -- Combined stats: median + 15*MAD
         per_person_stats AS (
           SELECT
-            m.assigned_to,
+            m.updated_by,
             m.personal_median,
             mad.personal_mad,
             m.personal_median + (15 * mad.personal_mad) AS personal_threshold
           FROM per_person_median m
-          INNER JOIN per_person_mad mad ON m.assigned_to = mad.assigned_to
+          INNER JOIN per_person_mad mad ON m.updated_by = mad.updated_by
           WHERE m.ticket_count >= 2
         ),
         -- Filtered data for results
         filtered_base AS (
           SELECT
-            assigned_to,
+            updated_by,
             close_time_minute AS diff_minutes
           FROM [Dev_Born].[dbo].[ticket]
           WHERE
@@ -504,7 +504,7 @@ export class OutlierRepository {
               ELSE 0
             END AS is_outlier
           FROM filtered_base b
-          LEFT JOIN per_person_stats s ON b.assigned_to = s.assigned_to
+          LEFT JOIN per_person_stats s ON b.updated_by = s.updated_by
         )
         SELECT
           AVG(diff_minutes) as avgTimeAll,
@@ -520,7 +520,7 @@ export class OutlierRepository {
     // Format staff results with ranking and normalization
     const staffData: StaffStats[] = staffResult.recordset.map((row: any, index: number) => ({
       rank: index + 1,
-      name: normalizeStylizedText(row.assigned_to),
+      name: normalizeStylizedText(row.updated_by),
       totalAssigned: row.totalAssigned,
       totalClosed: row.totalClosed,
       totalPending: row.totalPending || 0,
@@ -549,12 +549,12 @@ export class OutlierRepository {
    * Calculate outlier status for a single ticket
    * Uses PER-PERSON Median + 15×MAD threshold from FULL YEAR baseline
    *
-   * @param ticketData - Ticket data containing message_id, assigned_to, close_time_minute, created_date
+   * @param ticketData - Ticket data containing message_id, updated_by, close_time_minute, created_date
    * @param year - Year to use for baseline calculation
    * @returns true if outlier, false if normal, null if insufficient data
    */
   async calculateOutlierForTicket(
-    ticketData: { message_id: string; assigned_to: string; close_time_minute: number | null; created_date: Date },
+    ticketData: { message_id: string; updated_by: string; close_time_minute: number | null; created_date: Date },
     year: number
   ): Promise<boolean | null> {
     // Pending tickets cannot be outliers (no close time)
@@ -569,7 +569,7 @@ export class OutlierRepository {
     const yearEnd = new Date(year, 11, 31, 23, 59, 59)
 
     const result = await pool.request()
-      .input('assigned_to', sql.NVarChar, ticketData.assigned_to)
+      .input('updated_by', sql.NVarChar, ticketData.updated_by)
       .input('close_time_minute', sql.Int, ticketData.close_time_minute)
       .input('yearStartDate', sql.DateTime, yearStart)
       .input('yearEndDate', sql.DateTime, yearEnd)
@@ -584,7 +584,7 @@ export class OutlierRepository {
             close_time_minute IS NOT NULL
             AND created_date >= @yearStartDate
             AND created_date <= @yearEndDate
-            AND assigned_to = @assigned_to
+            AND updated_by = @updated_by
             AND status != 'unsent'
         ),
         -- Calculate per-person median and count using OVER with constant partition
@@ -659,7 +659,7 @@ export class OutlierRepository {
     const ticketsResult = await pool.request().query(`
       SELECT
         message_id,
-        assigned_to,
+        updated_by,
         close_time_minute,
         created_date,
         YEAR(created_date) as ticket_year
@@ -689,7 +689,7 @@ export class OutlierRepository {
         const isOutlier = await this.calculateOutlierForTicket(
           {
             message_id: ticket.message_id,
-            assigned_to: ticket.assigned_to,
+            updated_by: ticket.updated_by,
             close_time_minute: ticket.close_time_minute,
             created_date: ticket.created_date
           },
