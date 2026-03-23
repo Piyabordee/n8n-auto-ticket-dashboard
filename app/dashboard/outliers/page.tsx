@@ -28,8 +28,8 @@ function OutliersContent() {
   const [loading, setLoading] = useState(true)
 
   // Filter outliers by staff name
-  const filteredOutliers = staffFilter 
-    ? allOutliers.filter(o => o.assigned_to === staffFilter)
+  const filteredOutliers = staffFilter
+    ? allOutliers.filter(o => o.updated_by === staffFilter)
     : allOutliers
 
   // Fetch outliers data
