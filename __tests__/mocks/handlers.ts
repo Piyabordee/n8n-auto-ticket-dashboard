@@ -143,7 +143,7 @@ export const handlers = [
     const top3Outliers = [
       {
         message_id: 'MSG001',
-        assigned_to: 'สมชาย ใจดี',
+        updated_by: 'สมชาย ใจดี',
         subject: 'ปัญหาเครื่องปริ้นเตอร์ไม่ทำงาน',
         diff_minutes: 150,
         created_date: '2026-03-01T10:00:00',
@@ -152,7 +152,7 @@ export const handlers = [
       },
       {
         message_id: 'MSG002',
-        assigned_to: 'วิภา สุขสันต์',
+        updated_by: 'วิภา สุขสันต์',
         subject: 'เน็ตเวิร์กล่าช้า',
         diff_minutes: 120,
         created_date: '2026-03-02T14:00:00',
@@ -161,7 +161,7 @@ export const handlers = [
       },
       {
         message_id: 'MSG003',
-        assigned_to: 'สมชาย ใจดี',
+        updated_by: 'สมชาย ใจดี',
         subject: 'ติดตั้งโปรแกรมใหม่',
         diff_minutes: 95,
         created_date: '2026-03-03T09:00:00',
@@ -189,7 +189,7 @@ export const handlers = [
     const allOutliers = [
       {
         message_id: 'MSG001',
-        assigned_to: 'สมชาย ใจดี',
+        updated_by: 'สมชาย ใจดี',
         subject: 'ปัญหาเครื่องปริ้นเตอร์ไม่ทำงาน',
         diff_minutes: 150,
         created_date: '2026-03-01T10:00:00',
@@ -198,7 +198,7 @@ export const handlers = [
       },
       {
         message_id: 'MSG002',
-        assigned_to: 'วิภา สุขสันต์',
+        updated_by: 'วิภา สุขสันต์',
         subject: 'เน็ตเวิร์กล่าช้า',
         diff_minutes: 120,
         created_date: '2026-03-02T14:00:00',
@@ -207,7 +207,7 @@ export const handlers = [
       },
       {
         message_id: 'MSG003',
-        assigned_to: 'สมชาย ใจดี',
+        updated_by: 'สมชาย ใจดี',
         subject: 'ติดตั้งโปรแกรมใหม่',
         diff_minutes: 95,
         created_date: '2026-03-03T09:00:00',
@@ -216,7 +216,7 @@ export const handlers = [
       },
       {
         message_id: 'MSG004',
-        assigned_to: 'ประยุทธ์ มั่นคง',
+        updated_by: 'ประยุทธ์ มั่นคง',
         subject: 'อัปเกรด Windows',
         diff_minutes: 88,
         created_date: '2026-03-04T11:00:00',
@@ -225,7 +225,7 @@ export const handlers = [
       },
       {
         message_id: 'MSG005',
-        assigned_to: 'วิภา สุขสันต์',
+        updated_by: 'วิภา สุขสันต์',
         subject: 'ตั้งค่า Email',
         diff_minutes: 85,
         created_date: '2026-03-05T13:00:00',
@@ -259,7 +259,7 @@ export const handlers = [
     const tickets = [
       {
         message_id: 'MSG001',
-        assigned_to: 'สมชาย ใจดี',
+        updated_by: 'สมชาย ใจดี',
         subject: 'ปัญหาเครื่องปริ้นเตอร์ไม่ทำงาน',
         status: 'closed',
         close_time_minute: 150,
@@ -268,7 +268,7 @@ export const handlers = [
       },
       {
         message_id: 'MSG002',
-        assigned_to: 'วิภา สุขสันต์',
+        updated_by: 'วิภา สุขสันต์',
         subject: 'เน็ตเวิร์กล่าช้า',
         status: 'pending',
         close_time_minute: null,
@@ -277,7 +277,7 @@ export const handlers = [
       },
       {
         message_id: 'MSG003',
-        assigned_to: 'ประยุทธ์ มั่นคง',
+        updated_by: 'ประยุทธ์ มั่นคง',
         subject: 'ติดตั้งโปรแกรมใหม่',
         status: 'closed',
         close_time_minute: 35,
