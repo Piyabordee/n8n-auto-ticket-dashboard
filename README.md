@@ -172,7 +172,7 @@ n8n-auto-ticket-dashboard/
 | Column | Type | Description |
 |--------|------|-------------|
 | message_id | varchar(50) | Unique ID |
-| assigned_to | nvarchar(255) | Staff name |
+| updated_by | nvarchar(255) | Staff name (ticket closer) |
 | subject | nvarchar(max) | Subject |
 | status | varchar(50) | closed, pending, unsent |
 | created_date | datetime | Created at |
