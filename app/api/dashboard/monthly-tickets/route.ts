@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
         SELECT
           message_id,
           subject,
-          assigned_to,
           updated_by,
           status,
           category,
@@ -75,8 +74,7 @@ export async function GET(request: NextRequest) {
     const tickets = result.recordset.map((row: any) => ({
       message_id: row.message_id,
       subject: row.subject || '(No subject)',
-      assigned_to: row.assigned_to || 'Unassigned',
-      updated_by: row.updated_by || row.assigned_to || 'Unassigned',
+      updated_by: row.updated_by || 'Unassigned',
       status: row.status || 'unknown',
       category: row.category || '-',
       sub_category: row.sub_category || '-',

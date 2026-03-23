@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       .query(`
         SELECT
           message_id,
-          assigned_to,
+          updated_by,
           subject,
           close_time_minute AS diff_minutes,
           created_date,
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     // Convert to OutlierTicket format
     const outliers: OutlierTicket[] = rows.map(row => ({
       message_id: row.message_id,
-      assigned_to: normalizeStylizedText(row.assigned_to),
+      updated_by: normalizeStylizedText(row.updated_by),
       subject: row.subject || '(No subject)',
       diff_minutes: row.diff_minutes,
       created_date: row.created_date.toISOString(),

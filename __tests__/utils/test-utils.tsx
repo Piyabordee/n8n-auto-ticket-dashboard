@@ -96,7 +96,7 @@ export const mockStaffData = [
 export const mockOutlierData = [
   {
     message_id: 'MSG001',
-    assigned_to: 'สมชาย ใจดี',
+    updated_by: 'สมชาย ใจดี',
     subject: 'ปัญหาเครื่องปริ้นเตอร์ไม่ทำงาน',
     diff_minutes: 150,
     created_date: '2026-03-01T10:00:00',
@@ -105,7 +105,7 @@ export const mockOutlierData = [
   },
   {
     message_id: 'MSG002',
-    assigned_to: 'วิภา สุขสันต์',
+    updated_by: 'วิภา สุขสันต์',
     subject: 'เน็ตเวิร์กล่าช้า',
     diff_minutes: 120,
     created_date: '2026-03-02T14:00:00',
@@ -114,7 +114,7 @@ export const mockOutlierData = [
   },
   {
     message_id: 'MSG003',
-    assigned_to: 'สมชาย ใจดี',
+    updated_by: 'สมชาย ใจดี',
     subject: 'ติดตั้งโปรแกรมใหม่',
     diff_minutes: 95,
     created_date: '2026-03-03T09:00:00',

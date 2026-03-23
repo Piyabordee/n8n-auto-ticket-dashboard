@@ -95,7 +95,7 @@ describe('ModalProvider', () => {
   it('should throw error when useModal is used outside provider', () => {
     // Suppress console.error for this test
     const consoleError = console.error
-    console.error = jest.fn()
+    console.error = vi.fn()
 
     expect(() => {
       render(<TestComponent />)

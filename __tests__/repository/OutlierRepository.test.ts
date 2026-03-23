@@ -96,7 +96,7 @@ describe('OutlierRepository', () => {
       const mockOutliers = [
         {
           message_id: 'MSG001',
-          assigned_to: 'สมชาย ใจดี',
+          updated_by: 'สมชาย ใจดี',
           subject: 'ปัญหาเครื่องปริ้นเตอร์',
           diff_minutes: 150,
           created_date: new Date('2026-03-01'),
@@ -106,7 +106,7 @@ describe('OutlierRepository', () => {
         },
         {
           message_id: 'MSG002',
-          assigned_to: 'วิภา สุขสันต์',
+          updated_by: 'วิภา สุขสันต์',
           subject: 'เน็ตเวิร์กล่าช้า',
           diff_minutes: 120,
           created_date: new Date('2026-03-02'),
@@ -133,7 +133,7 @@ describe('OutlierRepository', () => {
       const mockOutliers = [
         {
           message_id: 'MSG001',
-          assigned_to: 'Ｓｏｍｃｈａｉ', // Fullwidth characters
+          updated_by: 'Ｓｏｍｃｈａｉ', // Fullwidth characters
           subject: 'Test',
           diff_minutes: 100,
           created_date: new Date('2026-03-01'),
@@ -151,14 +151,14 @@ describe('OutlierRepository', () => {
         new Date('2026-03-31')
       )
 
-      expect(result.outliers[0].assigned_to).toBe('Somchai')
+      expect(result.outliers[0].updated_by).toBe('Somchai')
     })
 
     it('should calculate deviation score correctly', async () => {
       const mockOutliers = [
         {
           message_id: 'MSG001',
-          assigned_to: 'Test User',
+          updated_by: 'Test User',
           subject: 'Test',
           diff_minutes: 120,
           created_date: new Date('2026-03-01'),
@@ -197,7 +197,7 @@ describe('OutlierRepository', () => {
       const mockOutliers = [
         {
           message_id: 'MSG001',
-          assigned_to: 'User1',
+          updated_by: 'User1',
           subject: 'Test1',
           diff_minutes: 100,
           created_date: new Date('2026-03-01'),
@@ -207,7 +207,7 @@ describe('OutlierRepository', () => {
         },
         {
           message_id: 'MSG002',
-          assigned_to: 'User2',
+          updated_by: 'User2',
           subject: 'Test2',
           diff_minutes: 150,
           created_date: new Date('2026-03-02'),
@@ -237,7 +237,7 @@ describe('OutlierRepository', () => {
       const mockOutliers = [
         {
           message_id: 'MSG001',
-          assigned_to: 'User1',
+          updated_by: 'User1',
           subject: 'Test1',
           diff_minutes: 200,
           created_date: new Date('2026-03-01'),
@@ -246,7 +246,7 @@ describe('OutlierRepository', () => {
         },
         {
           message_id: 'MSG002',
-          assigned_to: 'User2',
+          updated_by: 'User2',
           subject: 'Test2',
           diff_minutes: 150,
           created_date: new Date('2026-03-02'),
@@ -255,7 +255,7 @@ describe('OutlierRepository', () => {
         },
         {
           message_id: 'MSG003',
-          assigned_to: 'User3',
+          updated_by: 'User3',
           subject: 'Test3',
           diff_minutes: 120,
           created_date: new Date('2026-03-03'),
@@ -280,7 +280,7 @@ describe('OutlierRepository', () => {
       const mockOutliers = [
         {
           message_id: 'MSG001',
-          assigned_to: 'User1',
+          updated_by: 'User1',
           subject: 'Test1',
           diff_minutes: 100,
           created_date: new Date('2026-03-01'),
@@ -305,7 +305,7 @@ describe('OutlierRepository', () => {
     it('should return staff data with ranking', async () => {
       const mockStaffData = [
         {
-          assigned_to: 'User1',
+          updated_by: 'User1',
           totalAssigned: 50,
           totalClosed: 45,
           totalPending: 5,
@@ -315,7 +315,7 @@ describe('OutlierRepository', () => {
           outlierCount: 2,
         },
         {
-          assigned_to: 'User2',
+          updated_by: 'User2',
           totalAssigned: 45,
           totalClosed: 42,
           totalPending: 3,
@@ -352,7 +352,7 @@ describe('OutlierRepository', () => {
     it('should normalize staff names', async () => {
       const mockStaffData = [
         {
-          assigned_to: 'Ｕｓｅｒ１',
+          updated_by: 'Ｕｓｅｒ１',
           totalAssigned: 10,
           totalClosed: 10,
           totalPending: 0,
@@ -387,7 +387,7 @@ describe('OutlierRepository', () => {
     it('should round average times', async () => {
       const mockStaffData = [
         {
-          assigned_to: 'User1',
+          updated_by: 'User1',
           totalAssigned: 10,
           totalClosed: 10,
           totalPending: 0,
@@ -424,7 +424,7 @@ describe('OutlierRepository', () => {
     it('should handle null values', async () => {
       const mockStaffData = [
         {
-          assigned_to: 'User1',
+          updated_by: 'User1',
           totalAssigned: 10,
           totalClosed: 10,
           totalPending: 0,

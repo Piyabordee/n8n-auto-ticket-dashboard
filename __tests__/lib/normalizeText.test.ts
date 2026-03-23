@@ -12,9 +12,9 @@ describe('normalizeStylizedText', () => {
       expect(normalizeStylizedText('')).toBe('')
     })
 
-    it('should return null/undefined as-is', () => {
-      expect(normalizeStylizedText(null as any)).toBe(null)
-      expect(normalizeStylizedText(undefined as any)).toBe(undefined)
+    it('should return empty string for null/undefined', () => {
+      expect(normalizeStylizedText(null as any)).toBe('')
+      expect(normalizeStylizedText(undefined as any)).toBe('')
     })
   })
 
