@@ -51,7 +51,7 @@ export default function MonthlyBarChart({
   }
 
   // Filter months for the selected year that have data
-  const monthsForSelectedYear = availableMonths
+  const monthsForSelectedYear = availableMonths && year
     ? availableMonths.filter(m => m.year === year)
     : []
 

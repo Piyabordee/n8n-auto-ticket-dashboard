@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import SearchResultsModal from './SearchResultsModal'
 
 interface GlobalSearchProps {
-  year: number
+  year: number | null
   month: number | null
 }
 
@@ -30,7 +30,7 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
   const debounceRef = useRef<NodeJS.Timeout>()
 
   const searchTickets = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
+    if (!searchQuery.trim() || year === null) {
       setResults([])
       setShowResults(false)
       return

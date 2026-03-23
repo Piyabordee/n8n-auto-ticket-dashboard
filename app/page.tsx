@@ -91,9 +91,10 @@ const getFilterTypeLabel = (filterType: FilterType): string => {
 
 export default function TeamDashboard() {
   const router = useRouter()
-  // Filter states - default to year that has data
-  const [year, setYear] = useState(2026)
+  // Filter states - will be initialized from available months data
+  const [year, setYear] = useState<number | null>(null)
   const [month, setMonth] = useState<number | null>(null)
+  const [initialized, setInitialized] = useState(false)
 
   // Data states
   const [stats, setStats] = useState<DashboardStats>({
@@ -152,6 +153,9 @@ export default function TeamDashboard() {
 
   // Fetch all dashboard data
   useEffect(() => {
+    // Skip if year is not yet initialized
+    if (year === null) return
+
     const fetchData = async () => {
       // Only show loading screen on initial load
       if (initialLoading) {
@@ -200,16 +204,26 @@ export default function TeamDashboard() {
         const data = await res.json()
         setAvailableYears(data.years || [])
         setAvailableMonths(data.months || [])
+
+        // Initialize to latest month of latest year (first entry is sorted DESC)
+        if (!initialized && data.months && data.months.length > 0) {
+          const latest = data.months[0]
+          setYear(latest.year)
+          setMonth(latest.month)
+          setInitialized(true)
+        }
       } catch (error) {
         console.error('Error fetching available months:', error)
       }
     }
 
     fetchAvailableMonths()
-  }, [])
+  }, [initialized])
 
   // Handle refresh - fetch all data again
   const handleRefresh = async () => {
+    if (year === null) return // Skip if not yet initialized
+
     setRefreshing(true)
     try {
       // Build query params
@@ -257,6 +271,8 @@ export default function TeamDashboard() {
 
   // Fetch top 3 outliers
   useEffect(() => {
+    if (year === null) return // Skip if not yet initialized
+
     const fetchTopOutliers = async () => {
       setOutliersLoading(true)
       try {
@@ -357,12 +373,14 @@ export default function TeamDashboard() {
 
   // Navigate to outliers page
   const handleViewAllOutliers = () => {
+    if (year === null) return
     const monthParam = month ? `?month=${month}` : ''
     router.push(`/dashboard/outliers?year=${year}${monthParam}`)
   }
 
   // Navigate to outliers page filtered by staff
   const handleViewStaffOutliers = (staffName: string) => {
+    if (year === null) return
     const monthParam = month ? `&month=${month}` : ''
     router.push(`/dashboard/outliers?year=${year}${monthParam}&staff=${encodeURIComponent(staffName)}`)
   }
@@ -468,7 +486,7 @@ export default function TeamDashboard() {
         {/* Chart - Monthly or Daily based on selection */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2">
-            {month ? (
+            {year && month ? (
               <InlineDailyChart
                 key={`daily-${refreshKey}`}
                 year={year}
