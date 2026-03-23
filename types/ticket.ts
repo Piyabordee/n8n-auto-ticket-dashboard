@@ -4,7 +4,8 @@ export interface TicketDetail {
   message_id: string
   subject: string
   status: string
-  assigned_to: string
+  assigned_to?: string  // Changed to optional - kept for historical reference
+  updated_by: string    // NEW: Required field for KPI tracking
   category: string
   sub_category: string
   branch_name: string
@@ -25,7 +26,7 @@ export interface TicketDetail {
   groupid?: string
   created_by?: string
   updated_date?: string
-  updated_by?: string
+  // Note: updated_by is now in basic fields above
   close_cause?: string
   close_reason?: string
 }

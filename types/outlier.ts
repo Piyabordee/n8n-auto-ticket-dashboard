@@ -11,7 +11,7 @@
 
 export interface OutlierTicket {
   message_id: string
-  assigned_to: string
+  updated_by: string  // Changed from assigned_to
   subject: string
   diff_minutes: number
   created_date: string
@@ -81,7 +81,7 @@ export interface StaffPerformanceResponse {
 
 export interface OutlierRow {
   message_id: string
-  assigned_to: string
+  updated_by: string
   subject: string
   diff_minutes: number
   created_date: Date
@@ -93,7 +93,7 @@ export interface OutlierRow {
 }
 
 export interface StaffOutlierRow {
-  assigned_to: string
+  updated_by: string
   totalAssigned: number
   totalClosed: number
   totalPending: number
