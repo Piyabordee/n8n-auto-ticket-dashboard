@@ -130,24 +130,37 @@ export async function initializeOutlierSchema(): Promise<void> {
       PRINT 'is_outlier column already exists'
     `)
 
-    // 2. Create index on is_outlier for query performance
+    // 2. Migration: Drop old index if exists
     await pool.request().query(`
-      IF NOT EXISTS (
+      IF EXISTS (
         SELECT * FROM sys.indexes
         WHERE object_id = OBJECT_ID('[Dev_Born].[dbo].[ticket]')
         AND name = 'IX_ticket_is_outlier'
       )
       BEGIN
-        CREATE INDEX IX_ticket_is_outlier
-        ON [Dev_Born].[dbo].[ticket](is_outlier)
-        INCLUDE (message_id, assigned_to, close_time_minute, created_date)
-        PRINT 'Created index on is_outlier column'
+        DROP INDEX IX_ticket_is_outlier ON [Dev_Born].[dbo].[ticket]
+        PRINT 'Dropped old index IX_ticket_is_outlier'
       END
-      ELSE
-      PRINT 'Index IX_ticket_is_outlier already exists'
     `)
 
-    // 3. Create version tracking table if it doesn't exist
+    // 3. Create new index with updated_by
+    await pool.request().query(`
+      IF NOT EXISTS (
+        SELECT * FROM sys.indexes
+        WHERE object_id = OBJECT_ID('[Dev_Born].[dbo].[ticket]')
+        AND name = 'IX_ticket_is_outlier_updated_by'
+      )
+      BEGIN
+        CREATE INDEX IX_ticket_is_outlier_updated_by
+        ON [Dev_Born].[dbo].[ticket](is_outlier)
+        INCLUDE (message_id, updated_by, close_time_minute, created_date)
+        PRINT 'Created new index IX_ticket_is_outlier_updated_by'
+      END
+      ELSE
+      PRINT 'Index IX_ticket_is_outlier_updated_by already exists'
+    `)
+
+    // 4. Create version tracking table if it doesn't exist
     await pool.request().query(`
       IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'outlier_version')
       BEGIN
@@ -162,7 +175,7 @@ export async function initializeOutlierSchema(): Promise<void> {
       PRINT 'outlier_version table already exists'
     `)
 
-    // 4. Create rollback table to store original schema info
+    // 5. Create rollback table to store original schema info
     await pool.request().query(`
       IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'outlier_rollback_info')
       BEGIN
