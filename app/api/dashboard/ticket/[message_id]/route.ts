@@ -13,7 +13,7 @@ export async function GET(
       .input('message_id', message_id)
       .query(`
         SELECT
-          id, message_id, status, assigned_to, assigned_date,
+          id, message_id, status, updated_by, assigned_date,
           intent, category, sub_category, branch_name, branch_company,
           subject, clean_text, raw_text, email_body, chatname,
           fromuser, userid, groupid, created_date, created_by,

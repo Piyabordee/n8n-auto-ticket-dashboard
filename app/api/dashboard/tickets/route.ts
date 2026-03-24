@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       SELECT
         message_id,
         subject,
-        assigned_to,
+        updated_by,
         status,
         category,
         sub_category,
@@ -115,16 +115,16 @@ export async function GET(request: NextRequest) {
 
     // Add staff filter (sanitize input)
     if (staff) {
-      query += ` AND assigned_to = @staff`
+      query += ` AND updated_by = @staff`
       requestQuery.input('staff', sql.NVarChar, staff)
     }
 
     // Add search filter - searches across multiple fields
     if (search) {
-      // Search in subject, assigned_to, category, sub_category, branch_name, message_id
+      // Search in subject, updated_by, category, sub_category, branch_name, message_id
       query += ` AND (
         subject LIKE @search OR
-        assigned_to LIKE @search OR
+        updated_by LIKE @search OR
         category LIKE @search OR
         sub_category LIKE @search OR
         branch_name LIKE @search OR
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
     const tickets = result.recordset.map((row: any) => ({
       message_id: row.message_id,
       subject: row.subject || '(No subject)',
-      assigned_to: row.assigned_to || 'Unassigned',
+      updated_by: row.updated_by || 'Unassigned',
       status: row.status || 'unknown',
       category: row.category || '-',
       sub_category: row.sub_category || '-',
