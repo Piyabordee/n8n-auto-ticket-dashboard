@@ -12,7 +12,7 @@ interface GlobalSearchProps {
 interface SearchResult {
   message_id: string
   subject: string
-  assigned_to: string
+  updated_by: string
   status: string
   created_date: string | null
 }
@@ -193,7 +193,7 @@ export default function GlobalSearch({ year, month }: GlobalSearchProps) {
                 {ticket.subject}
               </div>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs text-neutral-600">{ticket.assigned_to}</span>
+                <span className="text-xs text-neutral-600">{ticket.updated_by}</span>
                 <span className="text-xs text-neutral-400">•</span>
                 <span className="text-xs text-neutral-500">
                   {ticket.created_date ? new Date(ticket.created_date).toLocaleDateString('th-TH', {

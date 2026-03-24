@@ -16,7 +16,7 @@ interface OutlierTableProps {
   loading?: boolean
 }
 
-type SortColumn = 'diff_minutes' | 'assigned_to' | 'assigned_date' | 'deviation_score'
+type SortColumn = 'diff_minutes' | 'updated_by' | 'assigned_date' | 'deviation_score'
 type SortDirection = 'asc' | 'desc'
 
 export default function OutlierTable({ outliers = [], summary, loading = false }: OutlierTableProps) {
@@ -177,7 +177,7 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
         {sortedOutliers.map((outlier) => (
           <div key={outlier.message_id} className="p-4 hover:bg-neutral-50">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-semibold text-neutral-900">{outlier.assigned_to}</span>
+              <span className="font-semibold text-neutral-900">{outlier.updated_by}</span>
               <span className="badge-error">
                 {outlier.deviation_score.toFixed(1)}x
               </span>
@@ -205,12 +205,12 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
             <tr>
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                onClick={() => handleSort('assigned_to')}
+                onClick={() => handleSort('updated_by')}
                 scope="col"
-                aria-sort={getAriaSort('assigned_to')}
+                aria-sort={getAriaSort('updated_by')}
               >
                 <span className="flex items-center">
-                  พนักงาน <SortIcon column="assigned_to" />
+                  พนักงาน <SortIcon column="updated_by" />
                 </span>
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider" scope="col">
@@ -252,7 +252,7 @@ export default function OutlierTable({ outliers = [], summary, loading = false }
             {sortedOutliers.map((outlier) => (
               <tr key={outlier.message_id} className="hover:bg-neutral-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900">
-                  {outlier.assigned_to}
+                  {outlier.updated_by}
                 </td>
                 <td className="px-6 py-4 text-sm max-w-xs truncate">
                   <ClickableSubject

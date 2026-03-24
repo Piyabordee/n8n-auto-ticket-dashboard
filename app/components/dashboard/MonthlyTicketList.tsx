@@ -6,7 +6,7 @@ import ClickableSubject from './ClickableSubject'
 interface Ticket {
   message_id: string
   subject: string
-  assigned_to: string
+  updated_by: string
   status: string
   category: string
   sub_category: string
@@ -22,7 +22,7 @@ interface MonthlyTicketListProps {
   loading: boolean
 }
 
-type SortColumn = 'created_date' | 'assigned_to' | 'status' | 'close_time_minute' | 'branch_name'
+type SortColumn = 'created_date' | 'updated_by' | 'status' | 'close_time_minute' | 'branch_name'
 type SortDirection = 'asc' | 'desc'
 
 export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketListProps) {
@@ -179,7 +179,7 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
               <span className="text-neutral-600">{formatDate(ticket.created_date)}</span>
-              <span className="text-neutral-700">• {ticket.assigned_to}</span>
+              <span className="text-neutral-700">• {ticket.updated_by}</span>
               <span>{getStatusBadge(ticket.status)}</span>
               <span className="text-neutral-600">{ticket.branch_name}</span>
               {ticket.close_time_minute && (
@@ -212,12 +212,12 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
               </th>
               <th
                 className="px-3 py-2 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                onClick={() => handleSort('assigned_to')}
+                onClick={() => handleSort('updated_by')}
                 scope="col"
-                aria-sort={getAriaSort('assigned_to')}
+                aria-sort={getAriaSort('updated_by')}
               >
                 <span className="flex items-center">
-                  รับงานโดย <SortIcon column="assigned_to" />
+                  ปิดงานโดย <SortIcon column="updated_by" />
                 </span>
               </th>
               <th
@@ -265,7 +265,7 @@ export default function MonthlyTicketList({ tickets, loading }: MonthlyTicketLis
                   />
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap text-neutral-700">
-                  {ticket.assigned_to}
+                  {ticket.updated_by}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {getStatusBadge(ticket.status)}
