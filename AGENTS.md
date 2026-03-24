@@ -78,7 +78,7 @@ A form capturing Category, Sub-category, Branch, Problem details, and an Image U
 - Requires at least 2 tickets per person for MAD calculation
 
 **Key Types**: types/outlier.ts
-- OutlierTicket: message_id, assigned_to, subject, diff_minutes, created_date, assigned_date, deviation_score
+- OutlierTicket: message_id, updated_by, subject, diff_minutes, created_date, assigned_date, deviation_score
 - StaffStats: rank, name, totalAssigned, totalClosed, totalPending, avgTimeAll, avgTimeNormal, avgTimeOutlier, outlierCount
 
 **Repository**: repository/OutlierRepository.ts
@@ -142,7 +142,7 @@ Utility to normalize stylized Unicode text to regular ASCII.
 - **Debounced Search**: 300ms debounce for efficient API calls
 - **Autocomplete Dropdown**: Shows top 10 results as you type
 - **Full Results Modal**: Press Enter to see all results in modal
-- **Search Scope**: Searches across subject, assigned_to, branch, and category
+- **Search Scope**: Searches across subject, updated_by, branch, and category
 - **Click Outside**: Automatically closes dropdown when clicking outside
 
 **API Extension**: `/api/dashboard/tickets` now supports:
@@ -555,7 +555,7 @@ Filtered tickets for modals.
 - Returns: tickets array
 - **New Parameters**:
   - `status=all`: Include all statuses (not just active)
-  - `search=<query>`: Search across subject, assigned_to, branch, category
+  - `search=<query>`: Search across subject, updated_by, branch, category
 
 #### GET /api/dashboard/ticket/[message_id]
 Single ticket detail with full information.
@@ -597,7 +597,7 @@ Get current initialization status.
 | Column | Type | Description |
 |--------|------|-------------|
 | message_id | string | Unique ID |
-| assigned_to | string | Staff name (may be stylized) |
+| updated_by | string | Staff name (may be stylized) |
 | subject | string | Subject |
 | status | string | closed, pending, unsent, etc. |
 | created_date | datetime | Created |
@@ -689,7 +689,7 @@ Used in: /api/dashboard/staff, /api/tickets
 | งานทั้งหมด | All | Filter |
 | ยังไม่ปิด | Pending | Status |
 | ปิดแล้ว | Closed | Status |
-| รับงาน | Assigned | Column |
+| ปิดงาน | Closed By | Column |
 | เวลาเฉลี่ย | Avg Time | Column |
 | ผลงานทีม | Staff Performance | Section |
 | รายงานประจำเดือน | Monthly Report | Feature |
@@ -776,7 +776,7 @@ Added GlobalSearch component with:
 - Debounced autocomplete search (300ms)
 - Top 10 results dropdown
 - Full results modal on Enter key
-- Searches across subject, assigned_to, branch, category
+- Searches across subject, updated_by, branch, category
 
 ### Stat Click Filtering (2026-03-11):
 Added click handlers for stats:

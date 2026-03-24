@@ -94,7 +94,7 @@ Get current initialization status
 
 **Algorithm:**
 1. Get all tickets with assigned_date and close_time_minute
-2. Group by assigned_to (normalized)
+2. Group by updated_by (normalized)
 3. Calculate personal median and MAD for each person
 4. Mark tickets exceeding threshold as outliers
 5. Batch update database in chunks of 1000
@@ -110,21 +110,21 @@ Get current initialization status
 ### Before (Complex CTE)
 ```sql
 WITH Baseline AS (
-  SELECT assigned_to, percentile_cont(0.5) WITHIN GROUP (ORDER BY diff_minutes) as median
+  SELECT updated_by, percentile_cont(0.5) WITHIN GROUP (ORDER BY diff_minutes) as median
   FROM ticket WHERE ...
 ),
 MAD AS (
-  SELECT assigned_to, percentile_cont(0.5) WITHIN GROUP (ORDER BY ABS(diff_minutes - median)) as mad
+  SELECT updated_by, percentile_cont(0.5) WITHIN GROUP (ORDER BY ABS(diff_minutes - median)) as mad
   FROM ticket JOIN Baseline ON ...
 )
 SELECT t.* FROM ticket t
-JOIN MAD m ON t.assigned_to = m.assigned_to
+JOIN MAD m ON t.updated_by = m.updated_by
 WHERE t.diff_minutes > m.median + (15 * m.mad)
 ```
 
 ### After (Simple WHERE)
 ```sql
-SELECT message_id, assigned_to, subject, diff_minutes, created_date, assigned_date
+SELECT message_id, updated_by, subject, diff_minutes, created_date, assigned_date
 FROM [Dev_Born].[dbo].[ticket]
 WHERE is_outlier = 1
   AND assigned_date IS NOT NULL
