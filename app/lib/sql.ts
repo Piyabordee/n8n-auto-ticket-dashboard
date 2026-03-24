@@ -131,20 +131,33 @@ export async function initializeOutlierSchema(): Promise<void> {
     `)
 
     // 2. Create index on is_outlier for query performance
+    // Migration: Drop old index (with assigned_to) and create new index (with updated_by)
     await pool.request().query(`
-      IF NOT EXISTS (
+      IF EXISTS (
         SELECT * FROM sys.indexes
         WHERE object_id = OBJECT_ID('[Dev_Born].[dbo].[ticket]')
         AND name = 'IX_ticket_is_outlier'
       )
       BEGIN
-        CREATE INDEX IX_ticket_is_outlier
+        DROP INDEX IX_ticket_is_outlier ON [Dev_Born].[dbo].[ticket]
+        PRINT 'Dropped old index IX_ticket_is_outlier (with assigned_to)'
+      END
+    `)
+
+    await pool.request().query(`
+      IF NOT EXISTS (
+        SELECT * FROM sys.indexes
+        WHERE object_id = OBJECT_ID('[Dev_Born].[dbo].[ticket]')
+        AND name = 'IX_ticket_is_outlier_updated_by'
+      )
+      BEGIN
+        CREATE INDEX IX_ticket_is_outlier_updated_by
         ON [Dev_Born].[dbo].[ticket](is_outlier)
-        INCLUDE (message_id, assigned_to, close_time_minute, created_date)
-        PRINT 'Created index on is_outlier column'
+        INCLUDE (message_id, updated_by, close_time_minute, created_date)
+        PRINT 'Created index IX_ticket_is_outlier_updated_by'
       END
       ELSE
-      PRINT 'Index IX_ticket_is_outlier already exists'
+      PRINT 'Index IX_ticket_is_outlier_updated_by already exists'
     `)
 
     // 3. Create version tracking table if it doesn't exist
