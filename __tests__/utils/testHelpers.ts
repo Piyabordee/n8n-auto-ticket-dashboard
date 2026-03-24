@@ -33,7 +33,7 @@ export { renderWithProviders as render }
 // Mock data generators
 export const mockTicket = {
   message_id: 'test-message-1',
-  assigned_to: 'Test User',
+  updated_by: 'Test User',
   subject: 'Test Subject',
   status: 'closed',
   created_date: '2026-03-19T10:00:00Z',
@@ -49,7 +49,7 @@ export const mockTicket = {
 
 export const mockOutlierTicket = {
   message_id: 'outlier-message-1',
-  assigned_to: 'Test User',
+  updated_by: 'Test User',
   subject: 'Outlier Subject',
   status: 'closed',
   created_date: '2026-03-19T10:00:00Z',

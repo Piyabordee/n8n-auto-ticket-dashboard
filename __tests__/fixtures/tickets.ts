@@ -1,7 +1,7 @@
 export const ticketFixtures = {
   normal: {
     message_id: 'ticket-normal-001',
-    assigned_to: 'John Doe',
+    updated_by: 'John Doe',
     subject: 'Software Installation Issue',
     status: 'closed',
     created_date: '2026-03-19T10:00:00Z',
@@ -19,7 +19,7 @@ export const ticketFixtures = {
 
   outlier: {
     message_id: 'ticket-outlier-001',
-    assigned_to: 'Jane Smith',
+    updated_by: 'Jane Smith',
     subject: 'Critical Server Failure',
     status: 'closed',
     created_date: '2026-03-19T08:00:00Z',
@@ -37,7 +37,7 @@ export const ticketFixtures = {
 
   pending: {
     message_id: 'ticket-pending-001',
-    assigned_to: 'Bob Johnson',
+    updated_by: 'Bob Johnson',
     subject: 'Network Connectivity Issue',
     status: 'pending',
     created_date: '2026-03-19T14:00:00Z',
@@ -55,7 +55,7 @@ export const ticketFixtures = {
 
   unsent: {
     message_id: 'ticket-unsent-001',
-    assigned_to: null,
+    updated_by: null,
     subject: 'Draft Ticket',
     status: 'unsent',
     created_date: '2026-03-19T16:00:00Z',
@@ -73,7 +73,7 @@ export const ticketFixtures = {
 
   stylized: {
     message_id: 'ticket-stylized-001',
-    assigned_to: '𝓙𝓪𝓷𝓮 𝓢𝓶𝓲𝓽𝓱',
+    updated_by: '𝓙𝓪𝓷𝓮 𝓢𝓶𝓲𝓽𝓱',
     subject: '𝓢𝓸𝓯𝓽𝔀𝓪𝓻𝓮 𝓘𝓼𝓼𝓾𝓮',
     status: 'closed',
     created_date: '2026-03-19T11:00:00Z',

@@ -269,7 +269,7 @@ function generateSingleOutlier(year: number, month: number, deviationScore: numb
 
   return {
     message_id: `TKT${year}${String(m).padStart(2, '0')}${randomInt(1000, 9999)}`,
-    assigned_to: staff,
+    updated_by: staff,
     subject: randomItem(TICKET_SUBJECTS),
     diff_minutes: diffMinutes,
     created_date: createdDate.toISOString(),
@@ -339,7 +339,7 @@ export function generateTickets(
     return {
       message_id: `TKT${year}${String(m).padStart(2, '0')}${randomInt(10000, 99999)}`,
       subject: randomItem(TICKET_SUBJECTS),
-      assigned_to: randomItem(STAFF_NAMES),
+      updated_by: randomItem(STAFF_NAMES),
       status: isClosed ? 'closed' : 'pending',
       category: randomItem(CATEGORIES),
       sub_category: randomItem(SUB_CATEGORIES),
@@ -358,7 +358,7 @@ export function generateTickets(
   }
 
   if (staffName) {
-    tickets = tickets.filter(t => t.assigned_to === staffName)
+    tickets = tickets.filter(t => t.updated_by === staffName)
   }
 
   if (day !== undefined) {

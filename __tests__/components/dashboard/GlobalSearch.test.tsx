@@ -72,7 +72,7 @@ describe('GlobalSearch', () => {
 
   it('displays search results when available', async () => {
     const mockTickets = [
-      { message_id: '1', subject: 'Test ticket', assigned_to: 'John', status: 'pending', created_date: '2026-03-11' }
+      { message_id: '1', subject: 'Test ticket', updated_by: 'John', status: 'pending', created_date: '2026-03-11' }
     ]
 
     global.fetch = jest.fn(() =>
