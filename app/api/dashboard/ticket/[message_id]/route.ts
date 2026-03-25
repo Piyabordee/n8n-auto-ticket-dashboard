@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import sql from 'mssql'
 import { getConnection } from '../../../../lib/sql'
 
 export async function GET(
@@ -10,7 +11,7 @@ export async function GET(
     const pool = await getConnection()
     const result = await pool
       .request()
-      .input('message_id', message_id)
+      .input('message_id', sql.VarChar, message_id)
       .query(`
         SELECT
           t.id, t.message_id, t.status, tm.fromUser AS updated_by, t.assigned_date,
