@@ -23,3 +23,6 @@ export async function ensureOutlierInitialized(): Promise<void> {
   }
   return initPromise
 }
+
+// Re-export app initialization for convenience
+export { ensureAppInitialized, refreshAppCache } from './appInitialization'
