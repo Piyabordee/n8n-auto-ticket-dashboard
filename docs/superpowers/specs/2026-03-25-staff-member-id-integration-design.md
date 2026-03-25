@@ -113,13 +113,6 @@ SELECT
 
 **Note:** Code still uses `normalizeStylizedText()` as legacy. This will be removed after migration is complete.
 
-### ticket Table (Already Migrated)
-
-| Column | Type | Description |
-|--------|------|-------------|
-| updated_by | NVARCHAR | Now stores **userId** (not display name) |
-| assigned_to | NVARCHAR | Now stores **userId** (not display name) |
-
 ## Components
 
 ### 1. TeamMemberCache Service
