@@ -58,92 +58,106 @@ export class OutlierRepository {
       .input('yearStartDate', sql.DateTime, yearStart)
       .input('yearEndDate', sql.DateTime, yearEnd)
       .query(`
-        -- Full year data for baseline calculation
+        -- Full year data for baseline
         WITH full_year_base AS (
           SELECT
-            updated_by,
-            message_id,
-            subject,
-            created_date,
-            assigned_date,
-            close_time_minute AS diff_minutes
-          FROM [Dev_Born].[dbo].[ticket]
+            t.updated_by AS user_id,
+            tm.fromUser AS staff_name,
+            t.message_id,
+            t.subject,
+            t.created_date,
+            t.assigned_date,
+            t.close_time_minute AS diff_minutes
+          FROM [Dev_Born].[dbo].[ticket] t
+          INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
           WHERE
-            close_time_minute IS NOT NULL
-            AND status != 'unsent'
-            AND close_time_minute > 0
-            AND created_date >= @yearStartDate
-            AND created_date <= @yearEndDate
+            t.close_time_minute IS NOT NULL
+            AND t.status != 'unsent'
+            AND t.close_time_minute > 0
+            AND t.created_date >= @yearStartDate
+            AND t.created_date <= @yearEndDate
+            AND tm.active = 'Y'
         ),
-        -- Calculate per-person median using PERCENTILE_CONT
+        -- Calculate per-person median
         per_person_median AS (
           SELECT DISTINCT
-            updated_by,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY updated_by) AS personal_median,
-            COUNT(*) OVER (PARTITION BY updated_by) AS ticket_count
+            user_id,
+            staff_name,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY user_id) AS personal_median,
+            COUNT(*) OVER (PARTITION BY user_id) AS ticket_count
           FROM full_year_base
         ),
         -- Calculate absolute deviations from median
         absolute_deviations AS (
           SELECT
-            f.updated_by,
+            f.user_id,
+            f.staff_name,
             ABS(f.diff_minutes - m.personal_median) AS abs_deviation
           FROM full_year_base f
-          INNER JOIN per_person_median m ON f.updated_by = m.updated_by
-          WHERE m.ticket_count >= 2  -- Need at least 2 tickets
+          INNER JOIN per_person_median m ON f.user_id = m.user_id
+          WHERE m.ticket_count >= 2
         ),
         -- Calculate MAD (Median of Absolute Deviations)
         per_person_mad AS (
           SELECT DISTINCT
-            updated_by,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY updated_by) AS personal_mad
+            user_id,
+            staff_name,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY user_id) AS personal_mad
           FROM absolute_deviations
         ),
         -- Combined stats: median + 15*MAD
         per_person_stats AS (
           SELECT
-            m.updated_by,
+            m.user_id,
+            m.staff_name,
             m.personal_median,
             mad.personal_mad,
             m.personal_median + (15 * mad.personal_mad) AS personal_threshold
           FROM per_person_median m
-          INNER JOIN per_person_mad mad ON m.updated_by = mad.updated_by
+          INNER JOIN per_person_mad mad ON m.user_id = mad.user_id
           WHERE m.ticket_count >= 2
         ),
-        -- Filtered data (for results display)
+        -- Filtered data for results
         filtered_base AS (
           SELECT
-            updated_by,
-            message_id,
-            subject,
-            created_date,
-            assigned_date,
-            close_time_minute AS diff_minutes
-          FROM [Dev_Born].[dbo].[ticket]
+            t.updated_by AS user_id,
+            tm.fromUser AS staff_name,
+            t.message_id,
+            t.subject,
+            t.created_date,
+            t.assigned_date,
+            t.close_time_minute AS diff_minutes
+          FROM [Dev_Born].[dbo].[ticket] t
+          INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
           WHERE
-            close_time_minute IS NOT NULL
-            AND status != 'unsent'
-            AND close_time_minute > 0
-            AND created_date >= @filterStartDate
-            AND created_date <= @filterEndDate
+            t.created_date >= @filterStartDate
+            AND t.created_date <= @filterEndDate
+            AND t.status != 'unsent'
+            AND tm.active = 'Y'
         ),
         classified AS (
           SELECT
-            b.*,
+            b.user_id,
+            b.staff_name,
+            b.message_id,
+            b.subject,
+            b.created_date,
+            b.assigned_date,
+            b.diff_minutes,
             s.personal_median,
             s.personal_mad,
             s.personal_threshold,
             CASE
-              WHEN s.personal_median IS NULL THEN 'Insufficient Data'
-              WHEN b.diff_minutes > s.personal_threshold THEN 'Outlier'
-              ELSE 'Normal'
+              WHEN s.personal_median IS NULL THEN 0
+              WHEN b.diff_minutes > s.personal_threshold THEN 1
+              ELSE 0
             END AS is_outlier
           FROM filtered_base b
-          LEFT JOIN per_person_stats s ON b.updated_by = s.updated_by
+          INNER JOIN per_person_stats s ON b.user_id = s.user_id
+          WHERE is_outlier = 1
         )
         SELECT *
         FROM classified
-        WHERE is_outlier = 'Outlier'
         ORDER BY diff_minutes DESC
       `)
 
@@ -155,10 +169,10 @@ export class OutlierRepository {
       ? outlierTimes.reduce((a, b) => a + b, 0) / outlierTimes.length
       : 0
 
-    // Convert to OutlierTicket format
+    // Convert to OutlierTicket format - staff_name now comes from SQL
     const outliers: OutlierTicket[] = rows.map(row => ({
       message_id: row.message_id,
-      updated_by: normalizeStylizedText(row.updated_by),
+      updated_by: row.staff_name,
       subject: row.subject || '(No subject)',
       diff_minutes: row.diff_minutes,
       created_date: row.created_date.toISOString(),
@@ -202,85 +216,99 @@ export class OutlierRepository {
         -- Full year data for baseline
         WITH full_year_base AS (
           SELECT
-            updated_by,
-            message_id,
-            subject,
-            created_date,
-            assigned_date,
-            close_time_minute AS diff_minutes
-          FROM [Dev_Born].[dbo].[ticket]
+            t.updated_by AS user_id,
+            tm.fromUser AS staff_name,
+            t.message_id,
+            t.subject,
+            t.created_date,
+            t.assigned_date,
+            t.close_time_minute AS diff_minutes
+          FROM [Dev_Born].[dbo].[ticket] t
+          INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
           WHERE
-            close_time_minute IS NOT NULL
-            AND status != 'unsent'
-            AND close_time_minute > 0
-            AND created_date >= @yearStartDate
-            AND created_date <= @yearEndDate
+            t.close_time_minute IS NOT NULL
+            AND t.status != 'unsent'
+            AND t.close_time_minute > 0
+            AND t.created_date >= @yearStartDate
+            AND t.created_date <= @yearEndDate
+            AND tm.active = 'Y'
         ),
         -- Calculate per-person median
         per_person_median AS (
           SELECT DISTINCT
-            updated_by,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY updated_by) AS personal_median,
-            COUNT(*) OVER (PARTITION BY updated_by) AS ticket_count
+            user_id,
+            staff_name,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY user_id) AS personal_median,
+            COUNT(*) OVER (PARTITION BY user_id) AS ticket_count
           FROM full_year_base
         ),
         -- Calculate absolute deviations from median
         absolute_deviations AS (
           SELECT
-            f.updated_by,
+            f.user_id,
+            f.staff_name,
             ABS(f.diff_minutes - m.personal_median) AS abs_deviation
           FROM full_year_base f
-          INNER JOIN per_person_median m ON f.updated_by = m.updated_by
+          INNER JOIN per_person_median m ON f.user_id = m.user_id
           WHERE m.ticket_count >= 2
         ),
         -- Calculate MAD (Median of Absolute Deviations)
         per_person_mad AS (
           SELECT DISTINCT
-            updated_by,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY updated_by) AS personal_mad
+            user_id,
+            staff_name,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY user_id) AS personal_mad
           FROM absolute_deviations
         ),
         -- Combined stats: median + 15*MAD
         per_person_stats AS (
           SELECT
-            m.updated_by,
+            m.user_id,
+            m.staff_name,
             m.personal_median,
             mad.personal_mad,
             m.personal_median + (15 * mad.personal_mad) AS personal_threshold
           FROM per_person_median m
-          INNER JOIN per_person_mad mad ON m.updated_by = mad.updated_by
+          INNER JOIN per_person_mad mad ON m.user_id = mad.user_id
           WHERE m.ticket_count >= 2
         ),
         -- Filtered data for results
         filtered_base AS (
           SELECT
-            updated_by,
-            message_id,
-            subject,
-            created_date,
-            assigned_date,
-            close_time_minute AS diff_minutes
-          FROM [Dev_Born].[dbo].[ticket]
+            t.updated_by AS user_id,
+            tm.fromUser AS staff_name,
+            t.message_id,
+            t.subject,
+            t.created_date,
+            t.assigned_date,
+            t.close_time_minute AS diff_minutes
+          FROM [Dev_Born].[dbo].[ticket] t
+          INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
           WHERE
-            close_time_minute IS NOT NULL
-            AND status != 'unsent'
-            AND close_time_minute > 0
-            AND created_date >= @filterStartDate
-            AND created_date <= @filterEndDate
+            t.created_date >= @filterStartDate
+            AND t.created_date <= @filterEndDate
+            AND t.status != 'unsent'
+            AND tm.active = 'Y'
         ),
         classified AS (
           SELECT
-            b.*,
+            b.user_id,
+            b.staff_name,
+            b.message_id,
+            b.subject,
+            b.created_date,
+            b.assigned_date,
+            b.diff_minutes,
             s.personal_median,
             s.personal_mad,
             s.personal_threshold
           FROM filtered_base b
-          INNER JOIN per_person_stats s ON b.updated_by = s.updated_by
+          INNER JOIN per_person_stats s ON b.user_id = s.user_id
           WHERE b.diff_minutes > s.personal_threshold
         )
         SELECT TOP 3
           message_id,
-          updated_by,
+          staff_name AS updated_by,
           subject,
           diff_minutes,
           created_date,
@@ -292,7 +320,7 @@ export class OutlierRepository {
 
     return result.recordset.map((row: any) => ({
       message_id: row.message_id,
-      updated_by: normalizeStylizedText(row.updated_by),
+      updated_by: row.updated_by,
       subject: row.subject || '(No subject)',
       diff_minutes: row.diff_minutes,
       created_date: row.created_date.toISOString(),
