@@ -100,6 +100,11 @@ temp/
 *.tmp
 .cache/
 
+# ============ Temporary debug/test scripts ============
+check_*.js
+debug-*.js
+test-normalize.js
+
 # ============ Package manager ============
 # package-lock.json (comment out if you commit this)
 # yarn.lock (comment out if you commit this)
