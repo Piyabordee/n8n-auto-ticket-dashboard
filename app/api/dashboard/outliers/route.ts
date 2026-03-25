@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
           AND t.created_date <= @filterEndDate
           AND t.status != 'unsent'
           AND tm.active = 'Y'
-        ORDER BY t.diff_minutes DESC
+        ORDER BY diff_minutes DESC
       `)
 
     const rows: any[] = result.recordset
