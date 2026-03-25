@@ -52,25 +52,27 @@ export async function GET(request: NextRequest) {
     const startDate = new Date(currentYear, startMonth - 1, 1)
     const endDate = new Date(currentYear, endMonth, 0, 23, 59, 59)
 
-    // Simple query to get outliers from stored column
+    // Simple query to get outliers from stored column with JOIN to it_team for display names
     const result = await pool.request()
       .input('filterStartDate', sql.DateTime, startDate)
       .input('filterEndDate', sql.DateTime, endDate)
       .query(`
         SELECT
-          message_id,
-          updated_by,
-          subject,
-          close_time_minute AS diff_minutes,
-          created_date,
-          assigned_date
-        FROM [Dev_Born].[dbo].[ticket]
+          t.message_id,
+          tm.fromUser AS updated_by,
+          t.subject,
+          t.close_time_minute AS diff_minutes,
+          t.created_date,
+          t.assigned_date
+        FROM [Dev_Born].[dbo].[ticket] t
+        INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
         WHERE
-          is_outlier = 1
-          AND created_date >= @filterStartDate
-          AND created_date <= @filterEndDate
-          AND status != 'unsent'
-        ORDER BY diff_minutes DESC
+          t.is_outlier = 1
+          AND t.created_date >= @filterStartDate
+          AND t.created_date <= @filterEndDate
+          AND t.status != 'unsent'
+          AND tm.active = 'Y'
+        ORDER BY t.diff_minutes DESC
       `)
 
     const rows: any[] = result.recordset
