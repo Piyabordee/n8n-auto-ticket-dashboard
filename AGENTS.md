@@ -1,9 +1,9 @@
 # IT Helpdesk Dashboard - Project Context
 
-> **Version**: 1.12.0
+> **Version**: 1.13.0
 > **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
 > **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
-> **Last Updated**: 2026-03-19 - Monthly Report Customization Enhancement
+> **Last Updated**: 2026-03-25 - Staff Member ID Integration
 
 ---
 
@@ -597,7 +597,7 @@ Get current initialization status.
 | Column | Type | Description |
 |--------|------|-------------|
 | message_id | string | Unique ID |
-| updated_by | string | Staff name (may be stylized) |
+| updated_by | string | Staff userId (references it_team.userId) |
 | subject | string | Subject |
 | status | string | closed, pending, unsent, etc. |
 | created_date | datetime | Created |
@@ -608,7 +608,8 @@ Get current initialization status.
 **Important**:
 - Pending tickets: close_time_minute = NULL
 - Active filter: status != 'unsent'
-- Use normalizeStylizedText() for names
+- Staff names stored as userId, join with it_team table for display names
+- See docs/migrations/staff-member-id-integration.md for details
 
 ---
 
