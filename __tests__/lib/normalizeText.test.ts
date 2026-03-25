@@ -12,15 +12,15 @@ describe('normalizeStylizedText', () => {
       expect(normalizeStylizedText('')).toBe('')
     })
 
-    it('should return null/undefined as-is', () => {
-      expect(normalizeStylizedText(null as any)).toBe(null)
-      expect(normalizeStylizedText(undefined as any)).toBe(undefined)
+    it('should return empty string for null/undefined', () => {
+      expect(normalizeStylizedText(null as any)).toBe('')
+      expect(normalizeStylizedText(undefined as any)).toBe('')
     })
   })
 
   describe('Enclosed Alphanumerics (squared letters)', () => {
     it('should convert squared uppercase letters to regular ASCII', () => {
-      expect(normalizeStylizedText('🆃🅾🅲🆃🅰🅲🅺')).toBe('TOCTACK')
+      expect(normalizeStylizedText('🆃🅾🅲🅺🆃🅰🅲🅺')).toBe('TOCKTACK')
       expect(normalizeStylizedText('🅰🅱🅲')).toBe('ABC')
       expect(normalizeStylizedText('🆇🆈🆉')).toBe('XYZ')
     })
@@ -69,7 +69,7 @@ describe('normalizeStylizedText', () => {
   describe('real-world examples', () => {
     it('should handle stylized names from the database', () => {
       // Example of how a stylized name might appear
-      expect(normalizeStylizedText('🆃🅾🅲🆃🅰🅲🅺')).toBe('TOCTACK')
+      expect(normalizeStylizedText('🆃🅾🅲🅺🆃🅰🅲🅺')).toBe('TOCKTACK')
       expect(normalizeStylizedText('Ｓｏｍｃｈａｉ')).toBe('Somchai')
     })
 

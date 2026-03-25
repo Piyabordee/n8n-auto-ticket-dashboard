@@ -1,6 +1,6 @@
 /**
  * Normalize stylized Unicode text to regular text
- * Converts characters like 🆃🅾🅲🅺🆃🅰🅲🅺 to TOCTACK
+ * Converts characters like 🆃🅾🅲🅺🆃🅰🅲🅺 to TOCKTACK
  */
 export function normalizeStylizedText(text: string): string {
   if (!text) return ''

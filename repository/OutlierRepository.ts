@@ -517,22 +517,102 @@ export class OutlierRepository {
 
     const summaryRow = summaryResult.recordset[0]
 
-    // Format staff results with ranking and normalization
-    const staffData: StaffStats[] = staffResult.recordset.map((row: any, index: number) => ({
-      rank: index + 1,
-      name: normalizeStylizedText(row.updated_by),
-      totalAssigned: row.totalAssigned,
-      totalClosed: row.totalClosed,
-      totalPending: row.totalPending || 0,
-      avgTimeAll: row.avgTimeAll ? Math.round(row.avgTimeAll * 10) / 10 : 0,
-      avgTimeNormal: row.avgTimeNormal ? Math.round(row.avgTimeNormal * 10) / 10 : 0,
-      avgTimeOutlier: row.avgTimeOutlier ? Math.round(row.avgTimeOutlier * 10) / 10 : 0,
-      outlierCount: row.outlierCount || 0,
-      // Personal outlier calculation fields
-      personalMedian: row.personal_median || undefined,
-      personalMAD: row.personal_mad || undefined,
-      personalThreshold: row.personal_threshold || undefined
-    }))
+    // DEBUG: Log raw SQL results
+    console.log('[DEBUG] Raw SQL results count:', staffResult.recordset.length)
+    console.log('[DEBUG] Raw updated_by values:', staffResult.recordset.map(r => ({
+      updated_by: r.updated_by,
+      totalAssigned: r.totalAssigned,
+      totalClosed: r.totalClosed
+    })))
+
+    // Format staff results with normalization and merge duplicates
+    // First, normalize all names and group by normalized name
+    const normalizedMap = new Map<string, {
+      totalAssigned: number
+      totalClosed: number
+      totalPending: number
+      avgTimeAllSum: number
+      avgTimeAllCount: number
+      avgTimeNormalSum: number
+      avgTimeNormalCount: number
+      avgTimeOutlierSum: number
+      avgTimeOutlierCount: number
+      outlierCount: number
+      personalMedian: number | undefined
+      personalMAD: number | undefined
+      personalThreshold: number | undefined
+    }>()
+
+    for (const row of staffResult.recordset) {
+      const normalizedName = normalizeStylizedText(row.updated_by)
+      console.log(`[DEBUG] Normalizing: '${row.updated_by}' -> '${normalizedName}'`)
+      const existing = normalizedMap.get(normalizedName)
+
+      if (existing) {
+        // Merge with existing entry - sum up counts
+        existing.totalAssigned += row.totalAssigned
+        existing.totalClosed += row.totalClosed
+        existing.totalPending += row.totalPending || 0
+        existing.outlierCount += row.outlierCount || 0
+
+        // For averages, we need to track sum and count for weighted average
+        if (row.avgTimeAll) {
+          existing.avgTimeAllSum += row.avgTimeAll * row.totalAssigned
+          existing.avgTimeAllCount += row.totalAssigned
+        }
+        if (row.avgTimeNormal) {
+          existing.avgTimeNormalSum += row.avgTimeNormal * row.totalClosed
+          existing.avgTimeNormalCount += row.totalClosed
+        }
+        if (row.avgTimeOutlier) {
+          existing.avgTimeOutlierSum += row.avgTimeOutlier * (row.outlierCount || 0)
+          existing.avgTimeOutlierCount += row.outlierCount || 0
+        }
+      } else {
+        // Create new entry
+        normalizedMap.set(normalizedName, {
+          totalAssigned: row.totalAssigned,
+          totalClosed: row.totalClosed,
+          totalPending: row.totalPending || 0,
+          avgTimeAllSum: row.avgTimeAll ? row.avgTimeAll * row.totalAssigned : 0,
+          avgTimeAllCount: row.avgTimeAll ? row.totalAssigned : 0,
+          avgTimeNormalSum: row.avgTimeNormal ? row.avgTimeNormal * row.totalClosed : 0,
+          avgTimeNormalCount: row.avgTimeNormal ? row.totalClosed : 0,
+          avgTimeOutlierSum: row.avgTimeOutlier ? row.avgTimeOutlier * (row.outlierCount || 0) : 0,
+          avgTimeOutlierCount: row.avgTimeOutlier ? (row.outlierCount || 0) : 0,
+          outlierCount: row.outlierCount || 0,
+          personalMedian: row.personal_median || undefined,
+          personalMAD: row.personal_mad || undefined,
+          personalThreshold: row.personal_threshold || undefined
+        })
+      }
+    }
+
+    // Convert map to array and calculate final averages
+    const staffData: StaffStats[] = Array.from(normalizedMap.entries())
+      .map(([name, data]) => ({
+        rank: 0, // Will be set after sorting
+        name,
+        totalAssigned: data.totalAssigned,
+        totalClosed: data.totalClosed,
+        totalPending: data.totalPending,
+        avgTimeAll: data.avgTimeAllCount > 0 ? Math.round((data.avgTimeAllSum / data.avgTimeAllCount) * 10) / 10 : 0,
+        avgTimeNormal: data.avgTimeNormalCount > 0 ? Math.round((data.avgTimeNormalSum / data.avgTimeNormalCount) * 10) / 10 : 0,
+        avgTimeOutlier: data.avgTimeOutlierCount > 0 ? Math.round((data.avgTimeOutlierSum / data.avgTimeOutlierCount) * 10) / 10 : 0,
+        outlierCount: data.outlierCount,
+        personalMedian: data.personalMedian,
+        personalMAD: data.personalMAD,
+        personalThreshold: data.personalThreshold
+      }))
+      .sort((a, b) => b.totalAssigned - a.totalAssigned)
+      .map((staff, index) => ({ ...staff, rank: index + 1 }))
+
+    // DEBUG: Log final merged results
+    console.log('[DEBUG] Final staff data after merge:', staffData.map(s => ({
+      rank: s.rank,
+      name: s.name,
+      totalAssigned: s.totalAssigned
+    })))
 
     const summary: OutlierSummaryStats = {
       totalOutliers: summaryRow.totalOutliers || 0,

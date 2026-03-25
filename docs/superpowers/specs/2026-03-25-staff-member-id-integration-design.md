@@ -67,13 +67,51 @@ Migrate from storing staff names directly in `ticket.updated_by` to using `userI
 
 | Column | Type | Description |
 |--------|------|-------------|
-| id | INT | Primary key |
+| id | INT | Primary key (auto-increment) |
 | fromUser | NVARCHAR | Display name (e.g., "หลวิชัย") |
 | userId | NVARCHAR | Unique ID (e.g., "Ub4c47e7e4f26bc5cee8868372fb6d759") |
 | active | CHAR(1) | 'Y' or 'N' |
 | email_spiceworks | NVARCHAR | Email address |
 | createdAt | DATETIME | Creation timestamp |
 | updatedAt | DATETIME | Last update timestamp |
+
+**Sample Data:**
+```
+id | fromUser   | userId                          | active | email_spiceworks
+---|------------|---------------------------------|--------|------------------
+1  | พชร       | Ub5f95381fdd39c0468e01f813ed50631 | Y      | pachara.s@...
+2  | อภิสิทธิ์ | Ufac40f3d56ef2360068d8d98fb3abe10 | Y      | apisit.s@...
+3  | หลวิชัย   | Ub4c47e7e4f26bc5cee8868372fb6d759 | Y      | holvichai.k@...
+```
+
+### Database Verification
+
+Run these queries to verify database state before implementation:
+
+```sql
+-- Check if updated_by contains userIds (UUID-like format starting with 'U')
+SELECT TOP 10 updated_by FROM [Dev_Born].[dbo].[ticket]
+
+-- Verify it_team table exists
+SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'it_team'
+
+-- Sample it_team data
+SELECT TOP 5 * FROM [Dev_Born].[dbo].[it_team] WHERE active = 'Y'
+
+-- Count tickets vs staff mappings
+SELECT
+  (SELECT COUNT(*) FROM [Dev_Born].[dbo].[ticket] WHERE updated_by IS NOT NULL) as total_tickets,
+  (SELECT COUNT(*) FROM [Dev_Born].[dbo].[it_team] WHERE active = 'Y') as active_staff
+```
+
+### ticket Table (Already Migrated)
+
+| Column | Type | Description |
+|--------|------|-------------|
+| updated_by | NVARCHAR | Now stores **userId** (not display name) |
+| assigned_to | NVARCHAR | Now stores **userId** (not display name) |
+
+**Note:** Code still uses `normalizeStylizedText()` as legacy. This will be removed after migration is complete.
 
 ### ticket Table (Already Migrated)
 
@@ -108,6 +146,7 @@ class TeamMemberCache {
   async init(): Promise<void>
   getDisplayName(userId: string): string
   getEmail(userId: string): string | null
+  getUserIdByDisplayName(displayName: string): string | null  // NEW
   has(userId: string): boolean
   getStats(): { size: number, initialized: boolean }
   reset(): void
@@ -119,6 +158,12 @@ export const teamMemberCache = new TeamMemberCache()
 **Configuration:**
 - `fallbackToUserId: true` - Return userId if not found in cache
 - `unknownLabel: 'Unknown Staff'` - Label for empty/null userId
+
+**UserId Format:**
+- Format: `U` + 32 hexadecimal characters (e.g., `Ub4c47e7e4f26bc5cee8868372fb6d759`)
+- Pattern: `^U[a-f0-9]{32}$` (case-insensitive)
+- Empty string should be treated as NULL
+- Validation is NOT enforced - any non-empty value is accepted
 
 ### 2. Report Queries (SQL JOIN)
 
@@ -145,13 +190,24 @@ WHERE
   -- ... other filters
 ```
 
-**Important:** Use `LEFT JOIN` + `COALESCE` if you want to include tickets with inactive staff:
+**Handling Orphaned UserIds:**
 
+Tickets with `updated_by` values that don't match any `it_team.userId` (legacy data, deleted staff, data errors):
+
+**Option A: Strict Mode (Recommended for Reports)**
+- Use `INNER JOIN` to exclude orphaned tickets
+- Report counts may be slightly lower than total ticket count
+
+**Option B: Inclusive Mode (Recommended for Debugging)**
 ```sql
 LEFT JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
 WHERE
   (tm.active = 'Y' OR tm.active IS NULL)
+-- Use COALESCE for display name fallback:
+COALESCE(tm.fromUser, t.updated_by, 'Unknown Staff') AS staff_name
 ```
+
+**Decision:** Use Option A (INNER JOIN) for production reports to ensure data quality. Use Option B (LEFT JOIN) only for debugging queries.
 
 ### 3. Real-time Queries (Cache)
 
@@ -260,9 +316,62 @@ Server Start → First API Request
 |----------|----------|
 | userId not in cache | Returns `userId` (fallback) or `"Unknown Staff"` |
 | userId is NULL/empty | Returns `"Unknown Staff"` |
-| DB connection fails during init | Logs error, continues with empty cache |
+| DB connection fails during init | Logs error, continues with empty cache, APIs return fallback values |
 | LEFT JOIN no match | Returns `NULL` (use `COALESCE` for fallback) |
 | Staff deactivated | Not loaded in cache, excluded from INNER JOIN |
+| Cache not initialized on first API call | Auto-initializes before proceeding (lazy init) |
+
+**Cache Initialization Failure Behavior:**
+
+When `teamMemberCache.init()` fails:
+1. Log error: `❌ TeamMemberCache init failed: {error}`
+2. Set `initialized = false` to allow retry
+3. APIs continue working with fallback behavior:
+   - `getDisplayName()` returns userId or "Unknown Staff"
+   - No exceptions thrown to API consumers
+4. Next API call will retry initialization
+
+## Staff Filter Parameter Handling
+
+**Problem:** The `/api/dashboard/tickets` endpoint accepts a `staff` parameter for filtering. After migration:
+- Database stores `userId` in `updated_by`
+- UI sends display name (e.g., "หลวิชัย") as `staff` parameter
+
+**Solution:** Add reverse lookup in TeamMemberCache
+
+```typescript
+// Add to TeamMemberCache class
+getUserIdByDisplayName(displayName: string): string | null {
+  for (const [userId, name] of this.cache.entries()) {
+    if (name === displayName) {
+      return userId
+    }
+  }
+  return null
+}
+```
+
+**Implementation in API:**
+
+```typescript
+// Before: Direct filter (OLD - no longer works)
+if (staff) {
+  query += ` AND updated_by = @staff`
+}
+
+// After: Reverse lookup (NEW)
+if (staff) {
+  const userId = teamMemberCache.getUserIdByDisplayName(staff)
+  if (userId) {
+    query += ` AND updated_by = @userId`
+  } else {
+    // Staff name not found - return empty result
+    return []
+  }
+}
+```
+
+**Alternative:** Change UI to send `userId` directly instead of display name (requires frontend changes).
 
 ## Query Classification
 
@@ -299,9 +408,34 @@ Server Start → First API Request
 | `types/outlier.ts` | Add TeamMember types |
 | `app/lib/apiInitializer.ts` | Integrate with app initialization |
 
-## Migration Notes
+## Monitoring & Observability
 
-**Database Status:** Already migrated
+**Logs to Track:**
+```
+✅ TeamMemberCache loaded: {size} staff members
+❌ TeamMemberCache init failed: {error}
+🔄 App cache refreshed
+```
+
+**Metrics to Monitor:**
+- Cache hit rate (should be near 100% after warmup)
+- Orphaned userId count (tickets with userId not in it_team)
+- Cache initialization time (expected < 100ms)
+- Staff member count (expected 5-20 for typical teams)
+
+**Health Check Endpoint (Optional):**
+```typescript
+// GET /api/health/cache
+{
+  cache: {
+    initialized: true,
+    size: 8,
+    lastRefresh: "2026-03-25T10:30:00Z"
+  }
+}
+```
+
+## Migration Notes
 - `ticket.updated_by` contains `userId` values
 - `ticket.assigned_to` contains `userId` values
 - `it_team` table exists with staff mappings
@@ -350,6 +484,37 @@ If issues arise:
 2. Database remains in migrated state (userId in updated_by)
 3. Temporary: Map userId → names using existing normalize logic
 4. Long-term: Database rollback script to restore names
+
+## Cache Refresh Strategy
+
+**Design Decision:** Load cache once at server startup with no automatic invalidation.
+
+**Rationale:**
+- Staff names change infrequently
+- Cache is small (~100 bytes per staff member)
+- Simpler implementation
+- Server restart is acceptable for name updates
+
+**Manual Refresh (Optional):**
+
+If manual refresh is needed:
+1. Restart server
+2. Or call `POST /api/admin/refresh-cache` endpoint:
+
+```typescript
+// POST /api/admin/refresh-cache
+import { refreshAppCache } from '@/lib/appInitialization'
+
+export async function POST() {
+  await refreshAppCache()
+  return NextResponse.json({ success: true, message: 'Cache refreshed' })
+}
+```
+
+**Future Enhancement:** If staff names change frequently, consider:
+- Cache TTL with auto-refresh (e.g., every 15 minutes)
+- Event-based refresh when `it_team` table is updated
+- Pub/sub mechanism for real-time updates
 
 ## Open Questions
 
