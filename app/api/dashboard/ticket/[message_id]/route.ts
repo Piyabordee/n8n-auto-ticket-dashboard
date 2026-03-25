@@ -13,14 +13,16 @@ export async function GET(
       .input('message_id', message_id)
       .query(`
         SELECT
-          id, message_id, status, updated_by, assigned_date,
-          intent, category, sub_category, branch_name, branch_company,
-          subject, clean_text, raw_text, email_body, chatname,
-          fromuser, userid, groupid, created_date, created_by,
-          updated_date, updated_by, close_cause, close_reason, close_time_minute
-        FROM Dev_Born.dbo.ticket
-        WHERE message_id = @message_id
-        AND status != 'unsent'
+          t.id, t.message_id, t.status, tm.fromUser AS updated_by, t.assigned_date,
+          t.intent, t.category, t.sub_category, t.branch_name, t.branch_company,
+          t.subject, t.clean_text, t.raw_text, t.email_body, t.chatname,
+          t.fromuser, t.userid, t.groupid, t.created_date, t.created_by,
+          t.updated_date, t.close_cause, t.close_reason, t.close_time_minute
+        FROM Dev_Born.dbo.ticket t
+        INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
+        WHERE t.message_id = @message_id
+          AND t.status != 'unsent'
+          AND tm.active = 'Y'
       `)
 
     if (result.recordset.length === 0) {

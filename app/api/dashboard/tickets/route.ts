@@ -64,19 +64,21 @@ export async function GET(request: NextRequest) {
 
     let query = `
       SELECT
-        message_id,
-        subject,
-        updated_by,
-        status,
-        category,
-        sub_category,
-        branch_name,
-        created_date,
-        assigned_date,
-        close_time_minute,
-        is_outlier
-      FROM [Dev_Born].[dbo].[ticket]
-      WHERE status != 'unsent'
+        t.message_id,
+        t.subject,
+        tm.fromUser AS updated_by,
+        t.status,
+        t.category,
+        t.sub_category,
+        t.branch_name,
+        t.created_date,
+        t.assigned_date,
+        t.close_time_minute,
+        t.is_outlier
+      FROM [Dev_Born].[dbo].[ticket] t
+      INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
+      WHERE t.status != 'unsent'
+        AND tm.active = 'Y'
     `
 
     const requestQuery = pool.request()
@@ -114,27 +116,27 @@ export async function GET(request: NextRequest) {
       query += ` AND status = 'closed'`
     }
 
-    // Add staff filter (sanitize input)
+    // Add staff filter (sanitize input) - now filters on fromUser display name
     if (staff) {
-      query += ` AND updated_by = @staff`
+      query += ` AND tm.fromUser = @staff`
       requestQuery.input('staff', sql.NVarChar, staff)
     }
 
     // Add search filter - searches across multiple fields
     if (search) {
-      // Search in subject, updated_by, category, sub_category, branch_name, message_id
+      // Search in subject, fromUser (display name), category, sub_category, branch_name, message_id
       query += ` AND (
-        subject LIKE @search OR
-        updated_by LIKE @search OR
-        category LIKE @search OR
-        sub_category LIKE @search OR
-        branch_name LIKE @search OR
-        message_id LIKE @search
+        t.subject LIKE @search OR
+        tm.fromUser LIKE @search OR
+        t.category LIKE @search OR
+        t.sub_category LIKE @search OR
+        t.branch_name LIKE @search OR
+        t.message_id LIKE @search
       )`
       requestQuery.input('search', sql.NVarChar, `%${search}%`)
     }
 
-    query += ` ORDER BY created_date DESC`
+    query += ` ORDER BY t.created_date DESC`
 
     const result = await requestQuery.query(query)
 

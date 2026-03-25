@@ -53,23 +53,25 @@ export async function GET(request: NextRequest) {
       .input('endDate', sql.DateTime, endDate)
       .query(`
         SELECT
-          message_id,
-          subject,
-          updated_by,
-          status,
-          category,
-          sub_category,
-          branch_name,
-          created_date,
-          assigned_date,
-          close_time_minute,
-          is_outlier
-        FROM [Dev_Born].[dbo].[ticket]
+          t.message_id,
+          t.subject,
+          tm.fromUser AS updated_by,
+          t.status,
+          t.category,
+          t.sub_category,
+          t.branch_name,
+          t.created_date,
+          t.assigned_date,
+          t.close_time_minute,
+          t.is_outlier
+        FROM [Dev_Born].[dbo].[ticket] t
+        INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
         WHERE
-          created_date >= @startDate
-          AND created_date <= @endDate
-          AND status != 'unsent'
-        ORDER BY created_date DESC
+          t.created_date >= @startDate
+          AND t.created_date <= @endDate
+          AND t.status != 'unsent'
+          AND tm.active = 'Y'
+        ORDER BY t.created_date DESC
       `)
 
     const tickets = result.recordset.map((row: any) => ({
