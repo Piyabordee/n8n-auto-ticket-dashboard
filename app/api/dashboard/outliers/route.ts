@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
-import { normalizeStylizedText } from '../../../lib/normalizeText'
 import { getConnection } from '../../../lib/sql'
 import type { OutliersResponse, OutlierTicket, OutlierSummary } from '@/types/outlier'
 import { ensureOutlierInitialized } from '../../../lib/apiInitializer'
@@ -86,7 +85,7 @@ export async function GET(request: NextRequest) {
     // Convert to OutlierTicket format
     const outliers: OutlierTicket[] = rows.map(row => ({
       message_id: row.message_id,
-      updated_by: normalizeStylizedText(row.updated_by),
+      updated_by: row.updated_by,
       subject: row.subject || '(No subject)',
       diff_minutes: row.diff_minutes,
       created_date: row.created_date.toISOString(),

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import sql from 'mssql'
 import { getConnection } from '../../../lib/sql'
 import { ensureOutlierInitialized } from '../../../lib/apiInitializer'
-import { normalizeStylizedText } from '../../../lib/normalizeText'
 
 // Use shared connection from lib/sql
 async function getPool() {
@@ -77,7 +76,7 @@ export async function GET(request: NextRequest) {
     const tickets = result.recordset.map((row: any) => ({
       message_id: row.message_id,
       subject: row.subject || '(No subject)',
-      updated_by: row.updated_by ? normalizeStylizedText(row.updated_by) : 'Unassigned',
+      updated_by: row.updated_by || 'Unassigned',
       status: row.status || 'unknown',
       category: row.category || '-',
       sub_category: row.sub_category || '-',

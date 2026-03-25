@@ -10,7 +10,6 @@
 
 import sql from 'mssql'
 import { getConnection } from '../app/lib/sql'
-import { normalizeStylizedText } from '../app/lib/normalizeText'
 import type {
   OutlierRow,
   OutlierTicket,
