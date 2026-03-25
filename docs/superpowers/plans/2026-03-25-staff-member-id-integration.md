@@ -111,8 +111,15 @@ Create `__tests__/lib/teamMemberCache.test.ts`:
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { teamMemberCache } from '@/lib/teamMemberCache'
 
-// Mock the sql.ts module, not mssql directly
-// This ensures getConnection() returns our mock pool
+// Mock both mssql and the sql.ts module (following existing test pattern)
+vi.mock('mssql', () => ({
+  default: {
+    connect: vi.fn(),
+    DateTime: vi.fn(),
+    ConnectionPool: vi.fn(),
+  }
+}))
+
 vi.mock('@/lib/sql', () => ({
   getConnection: vi.fn().mockResolvedValue({
     connected: true,
@@ -123,29 +130,33 @@ vi.mock('@/lib/sql', () => ({
   })
 }))
 
+import { getConnection } from '@/lib/sql'
+
 describe('TeamMemberCache', () => {
   beforeEach(() => {
     // Reset cache before each test
     teamMemberCache.reset()
+    // Clear mock calls
+    vi.clearAllMocks()
   })
 
   describe('initialization', () => {
     it('should load staff from database', async () => {
       // Mock SQL response
-      const mockPool = {
-        connected: true,
-        request: vi.fn().mockReturnValue({
-          input: vi.fn().mockReturnThis(),
-          query: vi.fn().mockResolvedValue({
-            recordset: [
-              { userId: 'Ub4c47e7e4f26bc5cee8868372fb6d759', fromUser: 'หลวิชัย', email_spiceworks: 'holvichai.k@superrich1965.co.th', active: 'Y' },
-              { userId: 'Ufac40f3d56ef2360068d8d98fb3abe10', fromUser: 'อภิสิทธิ์', email_spiceworks: 'apisit.s@superrich1965.co.th', active: 'Y' }
-            ]
-          })
+      const mockRequest = {
+        input: vi.fn().mockReturnThis(),
+        query: vi.fn().mockResolvedValue({
+          recordset: [
+            { userId: 'Ub4c47e7e4f26bc5cee8868372fb6d759', fromUser: 'หลวิชัย', email_spiceworks: 'holvichai.k@superrich1965.co.th', active: 'Y' },
+            { userId: 'Ufac40f3d56ef2360068d8d98fb3abe10', fromUser: 'อภิสิทธิ์', email_spiceworks: 'apisit.s@superrich1965.co.th', active: 'Y' }
+          ]
         })
       }
 
-      vi.mocked(sql.connect).mockResolvedValue(mockPool as any)
+      vi.mocked(getConnection()).mockResolvedValue({
+        connected: true,
+        request: vi.fn().mockReturnValue(mockRequest)
+      } as any)
 
       await teamMemberCache.init()
 
@@ -155,38 +166,39 @@ describe('TeamMemberCache', () => {
     })
 
     it('should not initialize twice', async () => {
-      const mockPool = {
-        connected: true,
-        request: vi.fn().mockReturnValue({
-          input: vi.fn().mockReturnThis(),
-          query: vi.fn().mockResolvedValue({ recordset: [] })
-        })
+      const mockRequest = {
+        input: vi.fn().mockReturnThis(),
+        query: vi.fn().mockResolvedValue({ recordset: [] })
       }
 
-      vi.mocked(sql.connect).mockResolvedValue(mockPool as any)
+      vi.mocked(getConnection()).mockResolvedValue({
+        connected: true,
+        request: vi.fn().mockReturnValue(mockRequest)
+      } as any)
 
       await teamMemberCache.init()
       await teamMemberCache.init() // Second call should be no-op
 
-      expect(mockPool.request).toHaveBeenCalledTimes(1)
+      expect(getConnection()).toHaveBeenCalledTimes(1)
     })
   })
 
   describe('getDisplayName', () => {
     it('should return display name for valid userId', async () => {
-      const mockPool = {
-        connected: true,
-        request: vi.fn().mockReturnValue({
-          input: vi.fn().mockReturnThis(),
-          query: vi.fn().mockResolvedValue({
-            recordset: [
-              { userId: 'Ub4c47e7e4f26bc5cee8868372fb6d759', fromUser: 'หลวิชัย', active: 'Y' }
-            ]
-          })
+      const mockRequest = {
+        input: vi.fn().mockReturnThis(),
+        query: vi.fn().mockResolvedValue({
+          recordset: [
+            { userId: 'Ub4c47e7e4f26bc5cee8868372fb6d759', fromUser: 'หลวิชัย', active: 'Y' }
+          ]
         })
       }
 
-      vi.mocked(sql.connect).mockResolvedValue(mockPool as any)
+      vi.mocked(getConnection()).mockResolvedValue({
+        connected: true,
+        request: vi.fn().mockReturnValue(mockRequest)
+      } as any)
+
       await teamMemberCache.init()
 
       const name = teamMemberCache.getDisplayName('Ub4c47e7e4f26bc5cee8868372fb6d759')
@@ -207,19 +219,20 @@ describe('TeamMemberCache', () => {
 
   describe('getEmail', () => {
     it('should return email for valid userId', async () => {
-      const mockPool = {
-        connected: true,
-        request: vi.fn().mockReturnValue({
-          input: vi.fn().mockReturnThis(),
-          query: vi.fn().mockResolvedValue({
-            recordset: [
-              { userId: 'Ub4c47e7e4f26bc5cee8868372fb6d759', fromUser: 'หลวิชัย', email_spiceworks: 'holvichai.k@superrich1965.co.th', active: 'Y' }
-            ]
-          })
+      const mockRequest = {
+        input: vi.fn().mockReturnThis(),
+        query: vi.fn().mockResolvedValue({
+          recordset: [
+            { userId: 'Ub4c47e7e4f26bc5cee8868372fb6d759', fromUser: 'หลวิชัย', email_spiceworks: 'holvichai.k@superrich1965.co.th', active: 'Y' }
+          ]
         })
       }
 
-      vi.mocked(sql.connect).mockResolvedValue(mockPool as any)
+      vi.mocked(getConnection()).mockResolvedValue({
+        connected: true,
+        request: vi.fn().mockReturnValue(mockRequest)
+      } as any)
+
       await teamMemberCache.init()
 
       const email = teamMemberCache.getEmail('Ub4c47e7e4f26bc5cee8868372fb6d759')
@@ -394,7 +407,25 @@ Create app initialization that loads cache on startup, and add type definitions.
 
 - [ ] **Step 1: Add TeamMember types to types/outlier.ts**
 
-Add to the end of `types/outlier.ts`:
+Add at the END of `types/outlier.ts` (after line 129, before any existing exports):
+
+```typescript
+// ============================================================================
+// Team Member Types (for userId → fromUser mapping)
+// ============================================================================
+
+export interface TeamMember {
+  userId: string
+  fromUser: string
+  email: string | null
+  active: 'Y' | 'N'
+}
+
+export interface TeamMemberCacheConfig {
+  fallbackToUserId: boolean
+  unknownLabel: string
+}
+```
 
 ```typescript
 // ============================================================================
@@ -486,12 +517,14 @@ export async function refreshAppCache(): Promise<void> {
 
 - [ ] **Step 2: Update apiInitializer.ts to export initialization**
 
-Add to the END of `app/lib/apiInitializer.ts` (after line 25):
+Add at the END of `app/lib/apiInitializer.ts` (after the last line, line 25):
 
 ```typescript
 // Re-export app initialization for convenience
 export { ensureAppInitialized, refreshAppCache } from './appInitialization'
 ```
+
+The file should now end with these two lines (lines 26-27).
 
 - [ ] **Step 3: Write test for app initialization**
 
@@ -703,24 +736,123 @@ git commit -m "feat(staff): add SQL JOIN with it_team for staff performance quer
 ### Task 3.2: Update getOutliers Query
 
 **Files:**
-- Modify: `repository/OutlierRepository.ts` (getOutliers method)
+- Modify: `repository/OutlierRepository.ts` (getOutliers method, around line 140-180)
 
 - [ ] **Step 1: Find the getOutliers method**
 
-Search for the `getOutliers` method in `repository/OutlierRepository.ts` (around line 200-300).
+The `getOutliers` method starts around line 140 in `repository/OutlierRepository.ts`.
 
 - [ ] **Step 2: Update SQL query with JOIN**
 
-Add the same JOIN pattern:
+Replace the query (around line 150-170) with this updated version:
 
 ```sql
-INNER JOIN [Dev_Born].[dbo].[it_team] tm
-  ON t.updated_by = tm.userId
-...
-AND tm.active = 'Y'
-...
-tm.fromUser AS updated_by
+-- Full year data for baseline
+WITH full_year_base AS (
+  SELECT
+    t.updated_by AS user_id,
+    tm.fromUser AS staff_name,
+    t.message_id,
+    t.subject,
+    t.created_date,
+    t.assigned_date,
+    t.close_time_minute AS diff_minutes
+  FROM [Dev_Born].[dbo].[ticket] t
+  INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
+  WHERE
+    t.close_time_minute IS NOT NULL
+    AND t.status != 'unsent'
+    AND t.close_time_minute > 0
+    AND t.created_date >= @yearStartDate
+    AND t.created_date <= @yearEndDate
+    AND tm.active = 'Y'
+),
+-- Calculate per-person median
+per_person_median AS (
+  SELECT DISTINCT
+    user_id,
+    staff_name,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY user_id) AS personal_median,
+    COUNT(*) OVER (PARTITION BY user_id) AS ticket_count
+  FROM full_year_base
+),
+-- Calculate absolute deviations from median
+absolute_deviations AS (
+  SELECT
+    f.user_id,
+    f.staff_name,
+    ABS(f.diff_minutes - m.personal_median) AS abs_deviation
+  FROM full_year_base f
+  INNER JOIN per_person_median m ON f.user_id = m.user_id
+  WHERE m.ticket_count >= 2
+),
+-- Calculate MAD (Median of Absolute Deviations)
+per_person_mad AS (
+  SELECT DISTINCT
+    user_id,
+    staff_name,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY user_id) AS personal_mad
+  FROM absolute_deviations
+),
+-- Combined stats: median + 15*MAD
+per_person_stats AS (
+  SELECT
+    m.user_id,
+    m.staff_name,
+    m.personal_median,
+    mad.personal_mad,
+    m.personal_median + (15 * mad.personal_mad) AS personal_threshold
+  FROM per_person_median m
+  INNER JOIN per_person_mad mad ON m.user_id = mad.user_id
+  WHERE m.ticket_count >= 2
+),
+-- Filtered data for results
+filtered_base AS (
+  SELECT
+    t.updated_by AS user_id,
+    tm.fromUser AS staff_name,
+    t.message_id,
+    t.subject,
+    t.created_date,
+    t.assigned_date,
+    t.close_time_minute AS diff_minutes
+  FROM [Dev_Born].[dbo].[ticket] t
+  INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
+  WHERE
+    t.created_date >= @filterStartDate
+    AND t.created_date <= @filterEndDate
+    AND t.status != 'unsent'
+    AND tm.active = 'Y'
+),
+classified AS (
+  SELECT
+    b.user_id,
+    b.staff_name,
+    b.message_id,
+    b.subject,
+    b.created_date,
+    b.assigned_date,
+    b.diff_minutes,
+    s.personal_median,
+    s.personal_mad,
+    s.personal_threshold,
+    CASE
+      WHEN s.personal_median IS NULL THEN 0
+      WHEN b.diff_minutes > s.personal_threshold THEN 1
+      ELSE 0
+    END AS is_outlier
+  FROM filtered_base b
+  INNER JOIN per_person_stats s ON b.user_id = s.user_id
+  WHERE is_outlier = 1
+)
+ORDER BY diff_minutes DESC
 ```
+
+The key pattern is the same as Task 3.1:
+- Add `INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId`
+- Add `AND tm.active = 'Y'`
+- Select both `user_id` and `staff_name`
+- Use `staff_name` for display in the final mapping
 
 - [ ] **Step 3: Test the API endpoint**
 
@@ -737,11 +869,129 @@ git commit -m "feat(outliers): add SQL JOIN with it_team for outliers query"
 ### Task 3.3: Update getTopOutliers Query
 
 **Files:**
-- Modify: `repository/OutlierRepository.ts` (getTopOutliers method)
+- Modify: `repository/OutlierRepository.ts` (getTopOutliers method, around line 186-280)
 
 - [ ] **Step 1: Update SQL query with JOIN**
 
-Same pattern as Task 3.2 - add INNER JOIN with it_team.
+Replace the query (around line 201-270) with this updated version. The structure is similar to getOutliers but uses `TOP 3`:
+
+```sql
+-- Full year data for baseline
+WITH full_year_base AS (
+  SELECT
+    t.updated_by AS user_id,
+    tm.fromUser AS staff_name,
+    t.message_id,
+    t.subject,
+    t.created_date,
+    t.assigned_date,
+    t.close_time_minute AS diff_minutes
+  FROM [Dev_Born].[dbo].[ticket] t
+  INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
+  WHERE
+    t.close_time_minute IS NOT NULL
+    AND t.status != 'unsent'
+    AND t.close_time_minute > 0
+    AND t.created_date >= @yearStartDate
+    AND t.created_date <= @yearEndDate
+    AND tm.active = 'Y'
+),
+-- Calculate per-person median
+per_person_median AS (
+  SELECT DISTINCT
+    user_id,
+    staff_name,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY user_id) AS personal_median,
+    COUNT(*) OVER (PARTITION BY user_id) AS ticket_count
+  FROM full_year_base
+),
+-- Calculate absolute deviations from median
+absolute_deviations AS (
+  SELECT
+    f.user_id,
+    f.staff_name,
+    ABS(f.diff_minutes - m.personal_median) AS abs_deviation
+  FROM full_year_base f
+  INNER JOIN per_person_median m ON f.user_id = m.user_id
+  WHERE m.ticket_count >= 2
+),
+-- Calculate MAD (Median of Absolute Deviations)
+per_person_mad AS (
+  SELECT DISTINCT
+    user_id,
+    staff_name,
+    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY user_id) AS personal_mad
+  FROM absolute_deviations
+),
+-- Combined stats: median + 15*MAD
+per_person_stats AS (
+  SELECT
+    m.user_id,
+    m.staff_name,
+    m.personal_median,
+    mad.personal_mad,
+    m.personal_median + (15 * mad.personal_mad) AS personal_threshold
+  FROM per_person_median m
+  INNER JOIN per_person_mad mad ON m.user_id = mad.user_id
+  WHERE m.ticket_count >= 2
+),
+-- Filtered data for results
+filtered_base AS (
+  SELECT
+    t.updated_by AS user_id,
+    tm.fromUser AS staff_name,
+    t.message_id,
+    t.subject,
+    t.created_date,
+    t.assigned_date,
+    t.close_time_minute AS diff_minutes
+  FROM [Dev_Born].[dbo].[ticket] t
+  INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
+  WHERE
+    t.created_date >= @filterStartDate
+    AND t.created_date <= @filterEndDate
+    AND t.status != 'unsent'
+    AND tm.active = 'Y'
+),
+classified AS (
+  SELECT TOP 3
+    b.user_id,
+    b.staff_name,
+    b.message_id,
+    b.subject,
+    b.created_date,
+    b.assigned_date,
+    b.diff_minutes,
+    s.personal_median,
+    s.personal_mad,
+    s.personal_threshold,
+    CASE
+      WHEN s.personal_median IS NULL THEN 0
+      WHEN b.diff_minutes > s.personal_threshold THEN 1
+      ELSE 0
+    END AS is_outlier
+  FROM filtered_base b
+  INNER JOIN per_person_stats s ON b.user_id = s.user_id
+  WHERE is_outlier = 1
+)
+SELECT
+  staff_name AS updated_by,
+  message_id,
+  subject,
+  diff_minutes,
+  created_date,
+  assigned_date,
+  personal_median,
+  personal_threshold,
+  CAST(diff_minutes AS FLOAT) / personal_median AS deviation_score
+FROM classified
+ORDER BY diff_minutes DESC
+```
+
+Note the key differences from getOutliers:
+- Uses `TOP 3` in the classified CTE
+- Final SELECT includes additional fields for display
+- Returns only 3 results for preview
 
 - [ ] **Step 2: Test the API endpoint**
 
@@ -1070,7 +1320,7 @@ Expected: Staff count should match active staff count (may exclude orphaned tick
 
 Note: Orphaned tickets (userId not in it_team) are excluded by INNER JOIN in report queries. For real-time queries, they show userId or "Unknown Staff" depending on config.
 
-### Task 5.4: Final Documentation
+### Task 5.5: Final Documentation
 
 - [ ] **Step 1: Update CLAUDE.md or AGENTS.md if needed**
 
