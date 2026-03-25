@@ -126,3 +126,19 @@ export interface OutlierInitializationStatus {
   isInitialized: boolean
   isRecalculating: boolean
 }
+
+// ============================================================================
+// Team Member Types (for userId → fromUser mapping)
+// ============================================================================
+
+export interface TeamMember {
+  userId: string
+  fromUser: string
+  email: string | null
+  active: 'Y' | 'N'
+}
+
+export interface TeamMemberCacheConfig {
+  fallbackToUserId: boolean
+  unknownLabel: string
+}
