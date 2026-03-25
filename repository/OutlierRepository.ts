@@ -327,72 +327,83 @@ export class OutlierRepository {
         -- Full year data for baseline
         WITH full_year_base AS (
           SELECT
-            updated_by,
-            message_id,
-            close_time_minute AS diff_minutes
-          FROM [Dev_Born].[dbo].[ticket]
+            t.updated_by AS user_id,
+            tm.fromUser AS staff_name,
+            t.message_id,
+            t.close_time_minute AS diff_minutes
+          FROM [Dev_Born].[dbo].[ticket] t
+          INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
           WHERE
-            close_time_minute IS NOT NULL
-            AND created_date >= @yearStartDate
-            AND created_date <= @yearEndDate
-            AND updated_by IS NOT NULL
-            AND updated_by != ''
-            AND status != 'unsent'
+            t.close_time_minute IS NOT NULL
+            AND t.created_date >= @yearStartDate
+            AND t.created_date <= @yearEndDate
+            AND t.updated_by IS NOT NULL
+            AND t.updated_by != ''
+            AND t.status != 'unsent'
+            AND tm.active = 'Y'
         ),
         -- Calculate per-person median
         per_person_median AS (
           SELECT DISTINCT
-            updated_by,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY updated_by) AS personal_median,
-            COUNT(*) OVER (PARTITION BY updated_by) AS ticket_count
+            user_id,
+            staff_name,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY user_id) AS personal_median,
+            COUNT(*) OVER (PARTITION BY user_id) AS ticket_count
           FROM full_year_base
         ),
         -- Calculate absolute deviations from median
         absolute_deviations AS (
           SELECT
-            f.updated_by,
+            f.user_id,
+            f.staff_name,
             ABS(f.diff_minutes - m.personal_median) AS abs_deviation
           FROM full_year_base f
-          INNER JOIN per_person_median m ON f.updated_by = m.updated_by
+          INNER JOIN per_person_median m ON f.user_id = m.user_id
           WHERE m.ticket_count >= 2
         ),
         -- Calculate MAD (Median of Absolute Deviations)
         per_person_mad AS (
           SELECT DISTINCT
-            updated_by,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY updated_by) AS personal_mad
+            user_id,
+            staff_name,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY user_id) AS personal_mad
           FROM absolute_deviations
         ),
         -- Combined stats: median + 15*MAD
         per_person_stats AS (
           SELECT
-            m.updated_by,
+            m.user_id,
+            m.staff_name,
             m.personal_median,
             mad.personal_mad,
             m.personal_median + (15 * mad.personal_mad) AS personal_threshold
           FROM per_person_median m
-          INNER JOIN per_person_mad mad ON m.updated_by = mad.updated_by
+          INNER JOIN per_person_mad mad ON m.user_id = mad.user_id
           WHERE m.ticket_count >= 2
         ),
         -- Filtered data for results display - ALL tickets including pending
         filtered_base AS (
           SELECT
-            updated_by,
-            message_id,
-            status,
-            close_time_minute AS diff_minutes
-          FROM [Dev_Born].[dbo].[ticket]
+            t.updated_by AS user_id,
+            tm.fromUser AS staff_name,
+            t.message_id,
+            t.status,
+            t.close_time_minute AS diff_minutes
+          FROM [Dev_Born].[dbo].[ticket] t
+          INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
           WHERE
-            created_date >= @filterStartDate
-            AND created_date <= @filterEndDate
-            AND updated_by IS NOT NULL
-            AND updated_by != ''
-            AND status != 'unsent'
+            t.created_date >= @filterStartDate
+            AND t.created_date <= @filterEndDate
+            AND t.updated_by IS NOT NULL
+            AND t.updated_by != ''
+            AND t.status != 'unsent'
+            AND tm.active = 'Y'
         ),
         classified AS (
           -- Classify each ticket based on FULL YEAR baseline
           SELECT
-            b.updated_by,
+            b.user_id,
+            b.staff_name,
             b.message_id,
             b.status,
             b.diff_minutes,
@@ -406,10 +417,10 @@ export class OutlierRepository {
               ELSE 0
             END AS is_outlier
           FROM filtered_base b
-          LEFT JOIN per_person_stats s ON b.updated_by = s.updated_by
+          LEFT JOIN per_person_stats s ON b.user_id = s.user_id
         )
         SELECT
-          CAST(updated_by AS NVARCHAR(MAX)) as updated_by,
+          staff_name AS updated_by,
           COUNT(*) as totalAssigned,
           SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as totalClosed,
           SUM(CASE WHEN status != 'closed' THEN 1 ELSE 0 END) as totalPending,
@@ -422,7 +433,7 @@ export class OutlierRepository {
           MAX(c.personal_mad) as personal_mad,
           MAX(c.personal_threshold) as personal_threshold
         FROM classified c
-        GROUP BY CAST(updated_by AS NVARCHAR(MAX))
+        GROUP BY staff_name
         ORDER BY totalAssigned DESC
       `)
 
@@ -436,62 +447,72 @@ export class OutlierRepository {
         -- Full year data for baseline
         WITH full_year_base AS (
           SELECT
-            updated_by,
-            close_time_minute AS diff_minutes
-          FROM [Dev_Born].[dbo].[ticket]
+            t.updated_by AS user_id,
+            tm.fromUser AS staff_name,
+            t.close_time_minute AS diff_minutes
+          FROM [Dev_Born].[dbo].[ticket] t
+          INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
           WHERE
-            close_time_minute IS NOT NULL
-            AND created_date >= @yearStartDate
-            AND created_date <= @yearEndDate
-            AND status != 'unsent'
+            t.close_time_minute IS NOT NULL
+            AND t.created_date >= @yearStartDate
+            AND t.created_date <= @yearEndDate
+            AND t.status != 'unsent'
+            AND tm.active = 'Y'
         ),
         -- Calculate per-person median
         per_person_median AS (
           SELECT DISTINCT
-            updated_by,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY updated_by) AS personal_median,
-            COUNT(*) OVER (PARTITION BY updated_by) AS ticket_count
+            user_id,
+            staff_name,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY diff_minutes) OVER (PARTITION BY user_id) AS personal_median,
+            COUNT(*) OVER (PARTITION BY user_id) AS ticket_count
           FROM full_year_base
         ),
         -- Calculate absolute deviations from median
         absolute_deviations AS (
           SELECT
-            f.updated_by,
+            f.user_id,
+            f.staff_name,
             ABS(f.diff_minutes - m.personal_median) AS abs_deviation
           FROM full_year_base f
-          INNER JOIN per_person_median m ON f.updated_by = m.updated_by
+          INNER JOIN per_person_median m ON f.user_id = m.user_id
           WHERE m.ticket_count >= 2
         ),
         -- Calculate MAD (Median of Absolute Deviations)
         per_person_mad AS (
           SELECT DISTINCT
-            updated_by,
-            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY updated_by) AS personal_mad
+            user_id,
+            staff_name,
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY abs_deviation) OVER (PARTITION BY user_id) AS personal_mad
           FROM absolute_deviations
         ),
         -- Combined stats: median + 15*MAD
         per_person_stats AS (
           SELECT
-            m.updated_by,
+            m.user_id,
+            m.staff_name,
             m.personal_median,
             mad.personal_mad,
             m.personal_median + (15 * mad.personal_mad) AS personal_threshold
           FROM per_person_median m
-          INNER JOIN per_person_mad mad ON m.updated_by = mad.updated_by
+          INNER JOIN per_person_mad mad ON m.user_id = mad.user_id
           WHERE m.ticket_count >= 2
         ),
         -- Filtered data for results
         filtered_base AS (
           SELECT
-            updated_by,
-            close_time_minute AS diff_minutes
-          FROM [Dev_Born].[dbo].[ticket]
+            t.updated_by AS user_id,
+            tm.fromUser AS staff_name,
+            t.close_time_minute AS diff_minutes
+          FROM [Dev_Born].[dbo].[ticket] t
+          INNER JOIN [Dev_Born].[dbo].[it_team] tm ON t.updated_by = tm.userId
           WHERE
-            created_date >= @filterStartDate
-            AND created_date <= @filterEndDate
-            AND close_time_minute IS NOT NULL
-            AND status != 'unsent'
-            AND close_time_minute > 0
+            t.created_date >= @filterStartDate
+            AND t.created_date <= @filterEndDate
+            AND t.close_time_minute IS NOT NULL
+            AND t.status != 'unsent'
+            AND t.close_time_minute > 0
+            AND tm.active = 'Y'
         ),
         classified AS (
           SELECT
@@ -504,7 +525,7 @@ export class OutlierRepository {
               ELSE 0
             END AS is_outlier
           FROM filtered_base b
-          LEFT JOIN per_person_stats s ON b.updated_by = s.updated_by
+          LEFT JOIN per_person_stats s ON b.user_id = s.user_id
         )
         SELECT
           AVG(diff_minutes) as avgTimeAll,
@@ -517,102 +538,24 @@ export class OutlierRepository {
 
     const summaryRow = summaryResult.recordset[0]
 
-    // DEBUG: Log raw SQL results
-    console.log('[DEBUG] Raw SQL results count:', staffResult.recordset.length)
-    console.log('[DEBUG] Raw updated_by values:', staffResult.recordset.map(r => ({
-      updated_by: r.updated_by,
-      totalAssigned: r.totalAssigned,
-      totalClosed: r.totalClosed
-    })))
-
-    // Format staff results with normalization and merge duplicates
-    // First, normalize all names and group by normalized name
-    const normalizedMap = new Map<string, {
-      totalAssigned: number
-      totalClosed: number
-      totalPending: number
-      avgTimeAllSum: number
-      avgTimeAllCount: number
-      avgTimeNormalSum: number
-      avgTimeNormalCount: number
-      avgTimeOutlierSum: number
-      avgTimeOutlierCount: number
-      outlierCount: number
-      personalMedian: number | undefined
-      personalMAD: number | undefined
-      personalThreshold: number | undefined
-    }>()
-
-    for (const row of staffResult.recordset) {
-      const normalizedName = normalizeStylizedText(row.updated_by)
-      console.log(`[DEBUG] Normalizing: '${row.updated_by}' -> '${normalizedName}'`)
-      const existing = normalizedMap.get(normalizedName)
-
-      if (existing) {
-        // Merge with existing entry - sum up counts
-        existing.totalAssigned += row.totalAssigned
-        existing.totalClosed += row.totalClosed
-        existing.totalPending += row.totalPending || 0
-        existing.outlierCount += row.outlierCount || 0
-
-        // For averages, we need to track sum and count for weighted average
-        if (row.avgTimeAll) {
-          existing.avgTimeAllSum += row.avgTimeAll * row.totalAssigned
-          existing.avgTimeAllCount += row.totalAssigned
-        }
-        if (row.avgTimeNormal) {
-          existing.avgTimeNormalSum += row.avgTimeNormal * row.totalClosed
-          existing.avgTimeNormalCount += row.totalClosed
-        }
-        if (row.avgTimeOutlier) {
-          existing.avgTimeOutlierSum += row.avgTimeOutlier * (row.outlierCount || 0)
-          existing.avgTimeOutlierCount += row.outlierCount || 0
-        }
-      } else {
-        // Create new entry
-        normalizedMap.set(normalizedName, {
-          totalAssigned: row.totalAssigned,
-          totalClosed: row.totalClosed,
-          totalPending: row.totalPending || 0,
-          avgTimeAllSum: row.avgTimeAll ? row.avgTimeAll * row.totalAssigned : 0,
-          avgTimeAllCount: row.avgTimeAll ? row.totalAssigned : 0,
-          avgTimeNormalSum: row.avgTimeNormal ? row.avgTimeNormal * row.totalClosed : 0,
-          avgTimeNormalCount: row.avgTimeNormal ? row.totalClosed : 0,
-          avgTimeOutlierSum: row.avgTimeOutlier ? row.avgTimeOutlier * (row.outlierCount || 0) : 0,
-          avgTimeOutlierCount: row.avgTimeOutlier ? (row.outlierCount || 0) : 0,
-          outlierCount: row.outlierCount || 0,
-          personalMedian: row.personal_median || undefined,
-          personalMAD: row.personal_mad || undefined,
-          personalThreshold: row.personal_threshold || undefined
-        })
-      }
-    }
-
-    // Convert map to array and calculate final averages
-    const staffData: StaffStats[] = Array.from(normalizedMap.entries())
-      .map(([name, data]) => ({
+    // Format staff results - SQL now returns display names directly from it_team table
+    const staffData: StaffStats[] = staffResult.recordset
+      .map((row: any) => ({
         rank: 0, // Will be set after sorting
-        name,
-        totalAssigned: data.totalAssigned,
-        totalClosed: data.totalClosed,
-        totalPending: data.totalPending,
-        avgTimeAll: data.avgTimeAllCount > 0 ? Math.round((data.avgTimeAllSum / data.avgTimeAllCount) * 10) / 10 : 0,
-        avgTimeNormal: data.avgTimeNormalCount > 0 ? Math.round((data.avgTimeNormalSum / data.avgTimeNormalCount) * 10) / 10 : 0,
-        avgTimeOutlier: data.avgTimeOutlierCount > 0 ? Math.round((data.avgTimeOutlierSum / data.avgTimeOutlierCount) * 10) / 10 : 0,
-        outlierCount: data.outlierCount,
-        personalMedian: data.personalMedian,
-        personalMAD: data.personalMAD,
-        personalThreshold: data.personalThreshold
+        name: row.updated_by,
+        totalAssigned: row.totalAssigned,
+        totalClosed: row.totalClosed,
+        totalPending: row.totalPending,
+        avgTimeAll: row.avgTimeAll ? Math.round(row.avgTimeAll * 10) / 10 : 0,
+        avgTimeNormal: row.avgTimeNormal ? Math.round(row.avgTimeNormal * 10) / 10 : 0,
+        avgTimeOutlier: row.avgTimeOutlier ? Math.round(row.avgTimeOutlier * 10) / 10 : 0,
+        outlierCount: row.outlierCount || 0,
+        personalMedian: row.personal_median || undefined,
+        personalMAD: row.personal_mad || undefined,
+        personalThreshold: row.personal_threshold || undefined
       }))
       .sort((a, b) => b.totalAssigned - a.totalAssigned)
       .map((staff, index) => ({ ...staff, rank: index + 1 }))
-
-    // DEBUG: Log final merged results
-    console.log('[DEBUG] Final staff data after merge:', staffData.map(s => ({
-      rank: s.rank,
-      name: s.name,
-      totalAssigned: s.totalAssigned
-    })))
 
     const summary: OutlierSummaryStats = {
       totalOutliers: summaryRow.totalOutliers || 0,
