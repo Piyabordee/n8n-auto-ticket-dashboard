@@ -10,7 +10,7 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
 
 **Built with 99% Vibe Code (AI-assisted development)** - This project demonstrates the power of AI-assisted software development.
 
-**Latest Version**: 1.12.0 (2026-03-19) - Monthly Report Customization Enhancement
+**Latest Version**: 1.14.0 (2026-03-25) - Staff Member ID Integration & Security Fixes
 
 ## Features
 
@@ -95,6 +95,13 @@ A modern enterprise IT helpdesk system built with Next.js 14, featuring a compre
   - Dynamic dropdown options fetched from database
   - createPortal for proper modal rendering to avoid layout issues
 - **Status Filter Enhancement**: Excludes 'unsent' tickets from queries for cleaner statistics
+- **Staff Member ID Integration**: Centralized staff management with userId references and it_team table lookup
+  - TeamMemberCache service for fast userId → displayName mapping
+  - SQL JOIN pattern for report queries with it_team table
+  - Thai staff names (หลวิชัย, พชร, อภิสิทธิ์) from database
+  - Active staff filter to exclude inactive team members
+  - Removed text normalization - no longer needed
+- **Security Fixes**: Removed temporary debug scripts with hardcoded credentials from git history
 
 ## Tech Stack
 
@@ -172,12 +179,23 @@ n8n-auto-ticket-dashboard/
 | Column | Type | Description |
 |--------|------|-------------|
 | message_id | varchar(50) | Unique ID |
-| assigned_to | nvarchar(255) | Staff name |
+| assigned_to | nvarchar(255) | Staff userId (references it_team.userId) |
 | subject | nvarchar(max) | Subject |
 | status | varchar(50) | closed, pending, unsent |
 | created_date | datetime | Created at |
 | assigned_date | datetime | Assigned at |
 | close_time_minute | int | Minutes to close (NULL if pending) |
+| is_outlier | bit | Outlier classification (1=outlier, 0/NULL=normal) |
+
+### [Dev_Born].[dbo].[it_team]
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT | Primary key |
+| fromUser | nvarchar(255) | Display name (e.g., "หลวิชัย") |
+| userId | nvarchar(255) | Unique ID (e.g., "Ub4c47e7e4f26bc5cee8868372fb6d759") |
+| active | char(1) | 'Y' or 'N' |
+| email_spiceworks | nvarchar(255) | Email address |
 
 ## Outlier Detection
 
@@ -422,6 +440,11 @@ The project includes custom test utilities in `__tests__/utils/test-utils.tsx`:
 - ✅ Report options API for dynamic dropdown values
 - ✅ createPortal modal rendering for proper layout
 - ✅ LocalStorage persistence for custom names
+- ✅ Staff Member ID Integration with TeamMemberCache service
+- ✅ SQL JOIN pattern for report queries with it_team table
+- ✅ Thai staff names displayed from database (หลวิชัย, พชร, อภิสิทธิ์)
+- ✅ Active staff filtering to exclude inactive team members
+- ✅ Security fixes: removed hardcoded credentials from git history
 
 ### Writing New Tests
 

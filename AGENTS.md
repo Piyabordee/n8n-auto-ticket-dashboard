@@ -1,9 +1,9 @@
 # IT Helpdesk Dashboard - Project Context
 
-> **Version**: 1.13.0
+> **Version**: 1.14.0
 > **Purpose**: Web application for submitting and tracking IT Helpdesk tickets, including image attachments and Team KPI Dashboard.
 > **Integration**: Next.js + n8n Webhook + Microsoft SQL Server
-> **Last Updated**: 2026-03-25 - Staff Member ID Integration
+> **Last Updated**: 2026-03-25 - Staff Member ID Integration & Security Fixes
 
 ---
 
@@ -109,10 +109,39 @@ A form capturing Category, Sub-category, Branch, Problem details, and an Image U
 
 **Documentation**: See `docs/mobile-responsive.md` for detailed patterns
 
-### Feature 6: Text Normalization
+### Feature 6: Staff Member ID Integration (Version 1.14.0)
+**Centralized staff management with userId references and it_team table lookup**
+
+**Key Changes**:
+- **TeamMemberCache Service**: Loads staff from `it_team` table at startup for fast lookups
+- **SQL JOIN Pattern**: Report queries use `INNER JOIN it_team` to get display names
+- **Database Schema**: `updated_by` and `assigned_to` now store userId (e.g., "Ub4c47e7e4f26bc5cee8868372fb6d759")
+- **Display Names**: Thai names (หลวิชัย, พชร, อภิสิทธิ์) come from `it_team.fromUser`
+- **Active Staff Filter**: `WHERE tm.active = 'Y'` excludes inactive staff
+- **Removed normalizeStylizedText**: No longer needed since stylized names are stored in database
+
+**Files**:
+- `app/lib/teamMemberCache.ts` - Cache service for userId → displayName mapping
+- `app/lib/appInitialization.ts` - App startup initialization
+- `types/outlier.ts` - Added TeamMember and TeamMemberCacheConfig types
+- All report queries updated with SQL JOIN pattern
+
+**API Changes**:
+- `/api/dashboard/staff` - Added SQL JOIN with it_team
+- `/api/dashboard/report` - Added SQL JOIN with it_team
+- `/api/dashboard/outliers/*` - Added SQL JOIN with it_team
+- `/api/dashboard/tickets` - Uses TeamMemberCache for name lookup
+- `/api/dashboard/ticket/[message_id]` - Uses TeamMemberCache for name lookup
+- `/api/dashboard/monthly-tickets` - Uses TeamMemberCache for name lookup
+
+**Documentation**: See `docs/migrations/staff-member-id-integration.md` for details
+
+### Feature 7: Text Normalization
 Utility to normalize stylized Unicode text to regular ASCII.
 
 **File**: app/lib/normalizeText.ts
+
+**Status**: Legacy - No longer used after Staff Member ID Integration
 
 ### Feature 7: Outlier Explanation Modal
 **Modal explaining the outlier detection methodology with ELI5, technical, and per-person stats sections**
@@ -598,6 +627,7 @@ Get current initialization status.
 |--------|------|-------------|
 | message_id | string | Unique ID |
 | updated_by | string | Staff userId (references it_team.userId) |
+| assigned_to | string | Staff userId (references it_team.userId) |
 | subject | string | Subject |
 | status | string | closed, pending, unsent, etc. |
 | created_date | datetime | Created |
@@ -605,10 +635,22 @@ Get current initialization status.
 | close_time_minute | int | Minutes to close (NULL if pending) |
 | is_outlier | bit | Outlier classification (1=outlier, 0/NULL=normal) |
 
+**it_team Table**:
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INT | Primary key |
+| fromUser | NVARCHAR | Display name (e.g., "หลวิชัย") |
+| userId | NVARCHAR | Unique ID (e.g., "Ub4c47e7e4f26bc5cee8868372fb6d759") |
+| active | CHAR(1) | 'Y' or 'N' |
+| email_spiceworks | NVARCHAR | Email address |
+| createdAt | DATETIME | Creation timestamp |
+| updatedAt | DATETIME | Last update timestamp |
+
 **Important**:
 - Pending tickets: close_time_minute = NULL
 - Active filter: status != 'unsent'
-- Staff names stored as userId, join with it_team table for display names
+- Staff names stored as userId in ticket table
+- Display names fetched via INNER JOIN with it_team table
 - See docs/migrations/staff-member-id-integration.md for details
 
 ---
